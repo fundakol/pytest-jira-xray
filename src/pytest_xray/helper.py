@@ -38,7 +38,7 @@ class TestCase:
 class TestExecution:
 
     def __init__(self,
-                 test_execution_key: str, *,
+                 test_execution_key: str = None,
                  test_plan_key: str = None,
                  user: str = None,
                  revision: str = None,
@@ -56,13 +56,16 @@ class TestExecution:
         self.tests.append(test)
 
     def as_dict(self) -> Dict[str, Any]:
-        info = dict(startDate=self.start_date.strftime(DATETIME_FORMAT),
-                    finishDate=dt.datetime.now(tz=dt.timezone.utc).strftime(DATETIME_FORMAT),
-        )
         tests = [test.as_dict() for test in self.tests]
-        return dict(testExecutionKey=self.test_execution_key,
-                    info=info,
+        info = dict(startDate=self.start_date.strftime(DATETIME_FORMAT),
+                    finishDate=dt.datetime.now(tz=dt.timezone.utc).strftime(DATETIME_FORMAT))
+        data = dict(info=info,
                     tests=tests)
+        if self.test_plan_key:
+            info['testPlanKey'] = self.test_plan_key
+        if self.test_execution_key:
+            data['testExecutionKey'] = self.test_execution_key
+        return data
 
 
 def _get_xray_marker(item):

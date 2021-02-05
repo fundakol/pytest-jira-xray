@@ -34,6 +34,9 @@ class XrayPublisher:
 
     def publish(self, test_execution: TestExecution) -> None:
         try:
-            self.publish_xray_results(self.endpoint_url, self.auth, test_execution.as_dict())
+            result = self.publish_xray_results(self.endpoint_url, self.auth, test_execution.as_dict())
         except XrayError as e:
             print('Could not publish to Jira:', e)
+        else:
+            key = result['testExecIssue']['key']
+            print('Uploaded results to XRAY Test Execution:', key)

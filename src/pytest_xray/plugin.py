@@ -1,6 +1,6 @@
 from os import environ
 
-from pytest_xray.constant import JIRA_XRAY_FLAG, XRAY_PLUGIN
+from pytest_xray.constant import JIRA_XRAY_FLAG, XRAY_PLUGIN, XRAY_TESTPLAN_ID, XRAY_EXECUTION_ID
 from pytest_xray.helper import (associate_marker_metadata_for, get_test_key_for, Status, TestCase,
                                 TestExecution)
 from pytest_xray.xray_publisher import XrayPublisher
@@ -24,9 +24,17 @@ def pytest_configure(config):
 def pytest_addoption(parser):
     xray = parser.getgroup('Jira Xray report')
     xray.addoption(JIRA_XRAY_FLAG,
+                   action="store_true",
+                   default=False,
+                   help="Upload test results to JIRA XRAY")
+    xray.addoption(XRAY_EXECUTION_ID,
                    action="store",
                    default=None,
-                   help="Upload test results to JIRA XRAY Test Execution")
+                   help="XRAY Test Execution ID")
+    xray.addoption(XRAY_TESTPLAN_ID,
+                   action="store",
+                   default=None,
+                   help="XRAY Test Plan ID")
 
 
 def pytest_collection_modifyitems(config, items):
@@ -38,11 +46,13 @@ def pytest_collection_modifyitems(config, items):
 
 
 def pytest_terminal_summary(terminalreporter):
-    test_execution_id = terminalreporter.config.getoption(JIRA_XRAY_FLAG)
-    if not test_execution_id:
+    if not terminalreporter.config.getoption(JIRA_XRAY_FLAG):
         return
+    test_execution_id = terminalreporter.config.getoption(XRAY_EXECUTION_ID)
+    test_plan_id = terminalreporter.config.getoption(XRAY_TESTPLAN_ID)
 
-    test_execution = TestExecution(test_execution_id)
+    test_execution = TestExecution(test_execution_key=test_execution_id,
+                                   test_plan_key=test_plan_id)
 
     if "passed" in terminalreporter.stats:
         for each in terminalreporter.stats["passed"]:
