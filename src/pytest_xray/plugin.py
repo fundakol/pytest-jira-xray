@@ -10,8 +10,8 @@ def pytest_configure(config):
     if not config.getoption(JIRA_XRAY_FLAG):
         return
 
-    jira_url = str(environ["XRAY_API_BASE_URL"])
-    auth = (str(environ["XRAY_API_USER"]), str(environ["XRAY_API_PASSWORD"]))
+    jira_url = environ["XRAY_API_BASE_URL"]
+    auth = (environ["XRAY_API_USER"], environ["XRAY_API_PASSWORD"])
 
     plugin = XrayPublisher(base_url=jira_url, auth=auth)
     config.pluginmanager.register(plugin, XRAY_PLUGIN)

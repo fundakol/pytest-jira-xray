@@ -26,6 +26,7 @@ setup(
     author_email='fundakol@yahoo.com',
     description='pytest plugin to integrate tests with JIRA XRAY',
     long_description=long_description,
+    long_description_content_type='text/markdown',
     python_requires='>=3.6',
     install_requires=[
         'pytest',
