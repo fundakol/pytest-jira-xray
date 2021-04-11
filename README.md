@@ -1,8 +1,16 @@
 # pytest-jira-xray
 
+[![PyPi](https://img.shields.io/pypi/v/pytest-jira-xray.png)](https://pypi.python.org/pypi/pytest-jira-xray)
+
 pytest-jira-xray is a plugin for pytest that uploads test results to JIRA XRAY.
 
 ### Installation
+
+```commandline
+pip install pytest-jira-xray
+```
+
+or
 
 ```commandline
 python setup.py install

@@ -1,27 +1,36 @@
 from os import environ
+from typing import List
+
+from _pytest.config import Config
+from _pytest.config.argparsing import Parser
+from _pytest.nodes import Item
+from _pytest.terminal import TerminalReporter
 
 from pytest_xray.constant import JIRA_XRAY_FLAG, XRAY_PLUGIN, XRAY_TESTPLAN_ID, XRAY_EXECUTION_ID
-from pytest_xray.helper import (associate_marker_metadata_for, get_test_key_for, Status, TestCase,
+from pytest_xray.helper import (associate_marker_metadata_for,
+                                get_test_key_for,
+                                Status,
+                                TestCase,
                                 TestExecution)
 from pytest_xray.xray_publisher import XrayPublisher
 
 
-def pytest_configure(config):
+def pytest_configure(config: Config) -> None:
     if not config.getoption(JIRA_XRAY_FLAG):
         return
 
-    jira_url = str(environ["XRAY_API_BASE_URL"])
-    auth = (str(environ["XRAY_API_USER"]), str(environ["XRAY_API_PASSWORD"]))
+    jira_url = environ["XRAY_API_BASE_URL"]
+    auth = (environ["XRAY_API_USER"], environ["XRAY_API_PASSWORD"])
 
     plugin = XrayPublisher(base_url=jira_url, auth=auth)
     config.pluginmanager.register(plugin, XRAY_PLUGIN)
 
     config.addinivalue_line(
-        "markers", "xray: mark test to run only on named environment"
+        "markers", "xray(JIRA_ID): mark test with JIRA XRAY test case ID"
     )
 
 
-def pytest_addoption(parser):
+def pytest_addoption(parser: Parser):
     xray = parser.getgroup('Jira Xray report')
     xray.addoption(JIRA_XRAY_FLAG,
                    action="store_true",
@@ -37,7 +46,7 @@ def pytest_addoption(parser):
                    help="XRAY Test Plan ID")
 
 
-def pytest_collection_modifyitems(config, items):
+def pytest_collection_modifyitems(config: Config, items: List[Item]) -> None:
     if not config.getoption(JIRA_XRAY_FLAG):
         return
 
@@ -45,7 +54,7 @@ def pytest_collection_modifyitems(config, items):
         associate_marker_metadata_for(item)
 
 
-def pytest_terminal_summary(terminalreporter):
+def pytest_terminal_summary(terminalreporter: TerminalReporter) -> None:
     if not terminalreporter.config.getoption(JIRA_XRAY_FLAG):
         return
     test_execution_id = terminalreporter.config.getoption(XRAY_EXECUTION_ID)
@@ -75,4 +84,6 @@ def pytest_terminal_summary(terminalreporter):
                 test_execution.append(tc)
 
     publish_results = terminalreporter.config.pluginmanager.get_plugin(XRAY_PLUGIN)
-    publish_results.publish(test_execution)
+    status = publish_results.publish(test_execution)
+    if status:
+        print('Test results published to JIRA-XRAY:', publish_results.base_url)

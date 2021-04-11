@@ -1,10 +1,16 @@
 import json
+import logging
 from typing import Union
 
 import requests
+from requests.auth import AuthBase
+
 from pytest_xray.constant import TEST_EXEXUTION_ENDPOINT
 from pytest_xray.helper import TestExecution
-from requests.auth import AuthBase
+
+logging.basicConfig()
+_logger = logging.getLogger(__name__)
+_logger.setLevel(logging.INFO)
 
 
 class XrayError(Exception):
@@ -25,18 +31,27 @@ class XrayPublisher:
         headers = {'Accept': 'application/json',
                    'Content-Type': 'application/json'}
         data = json.dumps(data)
-        response = requests.request(method='POST', url=url, headers=headers, data=data, auth=auth)
         try:
-            response.raise_for_status()
-        except Exception as e:
+            response = requests.request(method='POST', url=url, headers=headers, data=data, auth=auth)
+        except requests.exceptions.ConnectionError as e:
+            _logger.exception('ConnectionError to JIRA service %s', self.base_url)
             raise XrayError(e)
-        return response.json()
+        else:
+            try:
+                response.raise_for_status()
+            except Exception as e:
+                _logger.error('Could not post to JIRA service %s. Response status code: %s',
+                              self.base_url, response.status_code)
+                raise XrayError(e)
+            return response.json()
 
-    def publish(self, test_execution: TestExecution) -> None:
+    def publish(self, test_execution: TestExecution) -> bool:
         try:
             result = self.publish_xray_results(self.endpoint_url, self.auth, test_execution.as_dict())
-        except XrayError as e:
-            print('Could not publish to Jira:', e)
+        except XrayError:
+            _logger.error('Could not publish results to Jira XRAY')
+            return False
         else:
             key = result['testExecIssue']['key']
-            print('Uploaded results to XRAY Test Execution:', key)
+            _logger.info('Uploaded results to JIRA XRAY Test Execution: %s', key)
+            return True
