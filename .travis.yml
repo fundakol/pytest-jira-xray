@@ -9,4 +9,4 @@ install:
     - pip install tox
 services: docker
 script:
-    - tox
+    - tox -e $(echo py$TRAVIS_PYTHON_VERSION | tr -d .)
