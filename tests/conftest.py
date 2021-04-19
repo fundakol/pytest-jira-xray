@@ -7,7 +7,7 @@ from .mock_server import MockServer
 def http_server():
     server = MockServer(5002)
     server.add_json_response('/rest/raven/2.0/import/execution',
-                             {'testExecIssue': {'key': 1000}},
+                             {'testExecIssue': {'key': '1000'}},
                              methods=('POST',))
     server.start()
     yield

@@ -53,5 +53,5 @@ class XrayPublisher:
             return False
         else:
             key = result['testExecIssue']['key']
-            _logger.info('Uploaded results to JIRA XRAY Test Execution: %d', key)
+            _logger.info('Uploaded results to JIRA XRAY Test Execution: %s', key)
             return True
