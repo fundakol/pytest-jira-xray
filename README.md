@@ -30,11 +30,21 @@ def test_one():
     assert True
 ```
 
-Set system environment:
-```commandline
+Set system environments (Basic authentication):
+```shell
 export XRAY_API_BASE_URL=<jira URL>
 export XRAY_API_USER=<jria username>
 export XRAY_API_PASSWORD=<user password>
+```
+
+To disable SSL certificate verification, at the client side (no case-sensitive): 
+```shell
+export XRAY_API_VERIFY_SSL=False
+```
+
+Or you can provide path to certificate file
+```shell
+export XRAY_API_VERIFY_SSL=</path/to/PEM file>
 ```
 
 Upload results to new test execution:

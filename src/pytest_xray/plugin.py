@@ -1,5 +1,6 @@
+import os
 from os import environ
-from typing import List
+from typing import List, Dict, Any
 
 from _pytest.config import Config
 from _pytest.config.argparsing import Parser
@@ -15,14 +16,35 @@ from pytest_xray.helper import (associate_marker_metadata_for,
 from pytest_xray.xray_publisher import XrayPublisher
 
 
+def get_request_options() -> Dict[str, Any]:
+    options = {}
+    jira_url = environ["XRAY_API_BASE_URL"]
+    user, password = environ["XRAY_API_USER"], environ["XRAY_API_PASSWORD"]
+    verify = os.environ.get('XRAY_API_VERIFY_SSL', 'True')
+    if verify.upper() == 'TRUE':
+        verify = True
+    elif verify.upper() == 'FALSE':
+        verify = False
+    else:
+        if not os.path.exists(verify):
+            raise FileNotFoundError(f'Cannot find certificate file "{verify}"')
+    options['BASE_URL'] = jira_url
+    options['USER'] = user
+    options['PASSWORD'] = password
+    options['VERIFY'] = verify
+
+    return options
+
+
 def pytest_configure(config: Config) -> None:
     if not config.getoption(JIRA_XRAY_FLAG):
         return
 
-    jira_url = environ["XRAY_API_BASE_URL"]
-    auth = (environ["XRAY_API_USER"], environ["XRAY_API_PASSWORD"])
+    options = get_request_options()
+    plugin = XrayPublisher(base_url=options['BASE_URL'],
+                           auth=(options['USER'], options['PASSWORD']),
+                           verify=options['VERIFY'])
 
-    plugin = XrayPublisher(base_url=jira_url, auth=auth)
     config.pluginmanager.register(plugin, XRAY_PLUGIN)
 
     config.addinivalue_line(

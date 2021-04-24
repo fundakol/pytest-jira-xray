@@ -1,4 +1,3 @@
-import json
 import logging
 from typing import Union
 
@@ -19,9 +18,14 @@ class XrayError(Exception):
 
 class XrayPublisher:
 
-    def __init__(self, base_url: str, auth: Union[AuthBase, tuple]) -> None:
+    def __init__(self, base_url: str,
+                 auth: Union[AuthBase, tuple],
+                 verify: Union[bool, str] = True) -> None:
+        if base_url.endswith('/'):
+            base_url = base_url[:-1]
         self.base_url = base_url
         self.auth = auth
+        self.verify = verify
 
     @property
     def endpoint_url(self) -> str:
@@ -30,9 +34,9 @@ class XrayPublisher:
     def publish_xray_results(self, url: str, auth: AuthBase, data: dict) -> dict:
         headers = {'Accept': 'application/json',
                    'Content-Type': 'application/json'}
-        data = json.dumps(data)
         try:
-            response = requests.request(method='POST', url=url, headers=headers, data=data, auth=auth)
+            response = requests.request(method='POST', url=url, headers=headers, json=data,
+                                        auth=auth, verify=self.verify)
         except requests.exceptions.ConnectionError as e:
             _logger.exception('ConnectionError to JIRA service %s', self.base_url)
             raise XrayError(e)
