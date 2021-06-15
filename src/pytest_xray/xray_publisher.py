@@ -4,12 +4,11 @@ from typing import Union
 import requests
 from requests.auth import AuthBase
 
-from pytest_xray.constant import TEST_EXEXUTION_ENDPOINT
+from pytest_xray.constant import TEST_EXECUTION_ENDPOINT
 from pytest_xray.helper import TestExecution
 
 logging.basicConfig()
 _logger = logging.getLogger(__name__)
-_logger.setLevel(logging.INFO)
 
 
 class XrayError(Exception):
@@ -18,7 +17,8 @@ class XrayError(Exception):
 
 class XrayPublisher:
 
-    def __init__(self, base_url: str,
+    def __init__(self,
+                 base_url: str,
                  auth: Union[AuthBase, tuple],
                  verify: Union[bool, str] = True) -> None:
         if base_url.endswith('/'):
@@ -29,11 +29,13 @@ class XrayPublisher:
 
     @property
     def endpoint_url(self) -> str:
-        return self.base_url + TEST_EXEXUTION_ENDPOINT
+        return self.base_url + TEST_EXECUTION_ENDPOINT
 
     def publish_xray_results(self, url: str, auth: AuthBase, data: dict) -> dict:
-        headers = {'Accept': 'application/json',
-                   'Content-Type': 'application/json'}
+        headers = {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        }
         try:
             response = requests.request(method='POST', url=url, headers=headers, json=data,
                                         auth=auth, verify=self.verify)
@@ -46,16 +48,21 @@ class XrayPublisher:
             except Exception as e:
                 _logger.error('Could not post to JIRA service %s. Response status code: %s',
                               self.base_url, response.status_code)
-                raise XrayError(e)
+                raise XrayError from e
             return response.json()
 
-    def publish(self, test_execution: TestExecution) -> bool:
+    def publish(self, test_execution: TestExecution) -> str:
+        """
+        Publish results to Jira.
+
+        :param test_execution: instance of TestExecution class
+        :return: test execution issue id
+        """
         try:
             result = self.publish_xray_results(self.endpoint_url, self.auth, test_execution.as_dict())
         except XrayError:
-            _logger.error('Could not publish results to Jira XRAY')
-            return False
+            return ''
         else:
             key = result['testExecIssue']['key']
             _logger.info('Uploaded results to JIRA XRAY Test Execution: %s', key)
-            return True
+            return key

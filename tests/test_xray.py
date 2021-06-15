@@ -26,4 +26,4 @@ def test_jira_xray_plugin(testdir):
     result = testdir.runpytest('--jira-xray')
     result.assert_outcomes(passed=1, failed=1, skipped=1)
     assert len(result.errlines) == 0
-    assert re.search('Test results published to JIRA-XRAY', '\n'.join(result.outlines))
+    assert re.search('Uploaded results to JIRA XRAY', '\n'.join(result.outlines))
