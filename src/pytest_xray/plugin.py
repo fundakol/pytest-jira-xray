@@ -19,7 +19,9 @@ from pytest_xray.helper import (
     get_test_key_for,
     Status,
     TestCase,
-    TestExecution, StatusBuilder, CloudStatus
+    TestExecution,
+    StatusBuilder,
+    CloudStatus
 )
 from pytest_xray.xray_publisher import XrayPublisher
 
