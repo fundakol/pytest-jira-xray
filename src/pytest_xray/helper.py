@@ -1,6 +1,6 @@
 import datetime as dt
 import enum
-from typing import List, Dict, Union, Any
+from typing import List, Dict, Union, Any, Type
 
 from pytest_xray.constant import XRAY_MARKER_NAME, DATETIME_FORMAT
 
@@ -8,6 +8,7 @@ _test_keys = {}
 
 
 class Status(str, enum.Enum):
+    """Mapping status to string accepted by Jira DC server"""
     TODO = 'TODO'
     EXECUTING = 'EXECUTING'
     PENDING = 'PENDING'
@@ -17,15 +18,36 @@ class Status(str, enum.Enum):
     BLOCKED = 'BLOCKED'
 
 
+class CloudStatus(str, enum.Enum):
+    """Mapping status to string accepted by Jira cloud"""
+    TODO = 'TODO'
+    EXECUTING = 'EXECUTING'
+    PENDING = 'PENDING'
+    PASS = 'PASSED'
+    FAIL = 'FAILED'
+    ABORTED = 'ABORTED'
+    BLOCKED = 'BLOCKED'
+
+
+class StatusBuilder:
+    """Class helps to get proper status for Jira Server/DC"""
+
+    def __init__(self, status_enum: Type[enum.Enum]):
+        self.status = status_enum
+
+    def __call__(self, status: str) -> str:
+        return self.status(getattr(self.status, status))
+
+
 class TestCase:
 
     def __init__(self,
                  test_key: str,
-                 status: str,
+                 status: Union[enum.Enum, str],
                  comment: str = None,
                  duration: float = 0.0):
         self.test_key = test_key
-        self.status = Status(status)
+        self.status = status
         self.comment = comment or ''
         self.duration = duration
 

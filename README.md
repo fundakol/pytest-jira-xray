@@ -61,3 +61,8 @@ Upload results to existing test plan (new test execution will be created):
 ```commandline
 pytest . --jira-xray --testplan TestPlanId
 ```
+
+Use with Jira cloud:
+```commandline
+pytest . --jira-xray --jira-cloud
+```

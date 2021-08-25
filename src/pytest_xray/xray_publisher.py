@@ -7,7 +7,6 @@ from requests.auth import AuthBase
 from pytest_xray.constant import TEST_EXECUTION_ENDPOINT
 from pytest_xray.helper import TestExecution
 
-logging.basicConfig()
 _logger = logging.getLogger(__name__)
 
 
