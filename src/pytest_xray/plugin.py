@@ -2,6 +2,7 @@ import os
 from os import environ
 from typing import List, Dict, Any
 
+import pytest
 from _pytest.config import Config
 from _pytest.config.argparsing import Parser
 from _pytest.nodes import Item
@@ -23,13 +24,16 @@ from pytest_xray.helper import (
     StatusBuilder,
     CloudStatus
 )
-from pytest_xray.xray_publisher import XrayPublisher
+from pytest_xray.xray_publisher import XrayPublisher, BearerAuth
 
 
 def get_request_options() -> Dict[str, Any]:
     options = {}
     jira_url = environ['XRAY_API_BASE_URL']
-    user, password = environ['XRAY_API_USER'], environ['XRAY_API_PASSWORD']
+    user = environ.get('XRAY_API_USER', '')
+    password = environ.get('XRAY_API_PASSWORD', '')
+    client_id = environ.get('XRAY_CLIENT_ID', '')
+    client_secret = environ.get('XRAY_CLIENT_SECRET', '')
     verify = os.environ.get('XRAY_API_VERIFY_SSL', 'True')
     if verify.upper() == 'TRUE':
         verify = True
@@ -38,22 +42,38 @@ def get_request_options() -> Dict[str, Any]:
     else:
         if not os.path.exists(verify):
             raise FileNotFoundError(f'Cannot find certificate file "{verify}"')
+
     options['BASE_URL'] = jira_url
     options['USER'] = user
     options['PASSWORD'] = password
     options['VERIFY'] = verify
+    options['CLIENT_ID'] = client_id
+    options['CLIENT_SECRET'] = client_secret
 
     return options
 
 
 def pytest_configure(config: Config) -> None:
-    if not config.getoption(JIRA_XRAY_FLAG):
+    if not (config.getoption(JIRA_XRAY_FLAG) or config.getoption(JIRA_CLOUD)):
         return
+    if config.getoption(JIRA_XRAY_FLAG) and config.getoption(JIRA_CLOUD):
+        pytest.exit(f'Both options are not allowed: {JIRA_XRAY_FLAG}, {JIRA_CLOUD}')
 
     options = get_request_options()
-    plugin = XrayPublisher(base_url=options['BASE_URL'],
-                           auth=(options['USER'], options['PASSWORD']),
-                           verify=options['VERIFY'])
+    if config.getoption(JIRA_CLOUD):
+        auth = BearerAuth(
+            options['BASE_URL'],
+            options['CLIENT_ID'],
+            options['CLIENT_SECRET']
+        )
+    else:
+        auth = (options['USER'], options['PASSWORD'])
+
+    plugin = XrayPublisher(
+        base_url=options['BASE_URL'],
+        auth=auth,
+        verify=options['VERIFY']
+    )
 
     config.pluginmanager.register(plugin, XRAY_PLUGIN)
     config.addinivalue_line(
@@ -67,6 +87,10 @@ def pytest_addoption(parser: Parser):
                    action='store_true',
                    default=False,
                    help='Upload test results to JIRA XRAY')
+    xray.addoption(JIRA_CLOUD,
+                   action='store_true',
+                   default=False,
+                   help='Upload test results to JIRA XRAY could server')
     xray.addoption(XRAY_EXECUTION_ID,
                    action='store',
                    default=None,
@@ -75,14 +99,10 @@ def pytest_addoption(parser: Parser):
                    action='store',
                    default=None,
                    help='XRAY Test Plan ID')
-    xray.addoption(JIRA_CLOUD,
-                   action='store_true',
-                   default=False,
-                   help='JIRA could server')
 
 
 def pytest_collection_modifyitems(config: Config, items: List[Item]) -> None:
-    if not config.getoption(JIRA_XRAY_FLAG):
+    if not (config.getoption(JIRA_XRAY_FLAG) or config.getoption(JIRA_CLOUD)):
         return
 
     for item in items:
@@ -90,8 +110,10 @@ def pytest_collection_modifyitems(config: Config, items: List[Item]) -> None:
 
 
 def pytest_terminal_summary(terminalreporter: TerminalReporter) -> None:
-    if not terminalreporter.config.getoption(JIRA_XRAY_FLAG):
+    if not (terminalreporter.config.getoption(JIRA_XRAY_FLAG) or
+            terminalreporter.config.getoption(JIRA_CLOUD)):
         return
+
     test_execution_id = terminalreporter.config.getoption(XRAY_EXECUTION_ID)
     test_plan_id = terminalreporter.config.getoption(XRAY_TEST_PLAN_ID)
     is_cloud_server = terminalreporter.config.getoption(JIRA_CLOUD)

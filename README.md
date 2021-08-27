@@ -33,8 +33,12 @@ def test_one():
 Set system environments (Basic authentication):
 ```shell
 export XRAY_API_BASE_URL=<jira URL>
+# for Jira DC sever basic authentication
 export XRAY_API_USER=<jria username>
 export XRAY_API_PASSWORD=<user password>
+# for Jira cloud authentication:
+export XRAY_CLIENT_ID=<client id>
+export XRAY_CLIENT_SECRET=<client secret>
 ```
 
 To disable SSL certificate verification, at the client side (no case-sensitive): 
@@ -64,5 +68,5 @@ pytest . --jira-xray --testplan TestPlanId
 
 Use with Jira cloud:
 ```commandline
-pytest . --jira-xray --jira-cloud
+pytest . --jira-xray-cloud
 ```

@@ -5,4 +5,4 @@ XRAY_MARKER_NAME = "xray"
 JIRA_XRAY_FLAG = "--jira-xray"
 XRAY_TEST_PLAN_ID = '--testplan'
 XRAY_EXECUTION_ID = '--execution'
-JIRA_CLOUD = '--jira-cloud'
+JIRA_CLOUD = '--jira-xray-cloud'
