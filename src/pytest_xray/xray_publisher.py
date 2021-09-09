@@ -1,3 +1,4 @@
+import json
 import logging
 from typing import Union
 
@@ -7,12 +8,43 @@ from requests.auth import AuthBase
 from pytest_xray.constant import TEST_EXECUTION_ENDPOINT
 from pytest_xray.helper import TestExecution
 
-logging.basicConfig()
 _logger = logging.getLogger(__name__)
 
 
 class XrayError(Exception):
     """Custom exception for Jira XRAY"""
+
+
+class BearerAuth(AuthBase):
+
+    def __init__(self, base_url: str, client_id: str, client_secret: str) -> None:
+        self.base_url = base_url
+        self.client_id = client_id
+        self.client_secret = client_secret
+
+    def __call__(self, r):
+        headers = {
+            'Content-type': 'application/json',
+            'Accept': 'text/plain'
+        }
+        auth_data = {
+            'client_id': self.client_id,
+            'client_secret': self.client_secret
+        }
+
+        try:
+            response = requests.post(
+                f'{self.base_url}/api/v2/authenticate',
+                data=json.dumps(auth_data),
+                headers=headers
+            )
+        except requests.exceptions.ConnectionError as exc:
+            _logger.exception(exc)
+            raise XrayError(f'Connection error for "{self.base_url}/api/v2/authenticate"') from exc
+        else:
+            auth_token = response.text
+            r.headers['Authorization'] = f'Bearer {auth_token}'
+        return r
 
 
 class XrayPublisher:

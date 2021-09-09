@@ -2,6 +2,7 @@ import os
 from os import environ
 from typing import List, Dict, Any
 
+import pytest
 from _pytest.config import Config
 from _pytest.config.argparsing import Parser
 from _pytest.nodes import Item
@@ -11,22 +12,28 @@ from pytest_xray.constant import (
     JIRA_XRAY_FLAG,
     XRAY_PLUGIN,
     XRAY_TEST_PLAN_ID,
-    XRAY_EXECUTION_ID
+    XRAY_EXECUTION_ID,
+    JIRA_CLOUD
 )
 from pytest_xray.helper import (
     associate_marker_metadata_for,
     get_test_key_for,
     Status,
     TestCase,
-    TestExecution
+    TestExecution,
+    StatusBuilder,
+    CloudStatus
 )
-from pytest_xray.xray_publisher import XrayPublisher
+from pytest_xray.xray_publisher import XrayPublisher, BearerAuth
 
 
 def get_request_options() -> Dict[str, Any]:
     options = {}
     jira_url = environ['XRAY_API_BASE_URL']
-    user, password = environ['XRAY_API_USER'], environ['XRAY_API_PASSWORD']
+    user = environ.get('XRAY_API_USER', '')
+    password = environ.get('XRAY_API_PASSWORD', '')
+    client_id = environ.get('XRAY_CLIENT_ID', '')
+    client_secret = environ.get('XRAY_CLIENT_SECRET', '')
     verify = os.environ.get('XRAY_API_VERIFY_SSL', 'True')
     if verify.upper() == 'TRUE':
         verify = True
@@ -35,10 +42,13 @@ def get_request_options() -> Dict[str, Any]:
     else:
         if not os.path.exists(verify):
             raise FileNotFoundError(f'Cannot find certificate file "{verify}"')
+
     options['BASE_URL'] = jira_url
     options['USER'] = user
     options['PASSWORD'] = password
     options['VERIFY'] = verify
+    options['CLIENT_ID'] = client_id
+    options['CLIENT_SECRET'] = client_secret
 
     return options
 
@@ -48,12 +58,22 @@ def pytest_configure(config: Config) -> None:
         return
 
     options = get_request_options()
-    plugin = XrayPublisher(base_url=options['BASE_URL'],
-                           auth=(options['USER'], options['PASSWORD']),
-                           verify=options['VERIFY'])
+    if config.getoption(JIRA_CLOUD):
+        auth = BearerAuth(
+            options['BASE_URL'],
+            options['CLIENT_ID'],
+            options['CLIENT_SECRET']
+        )
+    else:
+        auth = (options['USER'], options['PASSWORD'])
+
+    plugin = XrayPublisher(
+        base_url=options['BASE_URL'],
+        auth=auth,
+        verify=options['VERIFY']
+    )
 
     config.pluginmanager.register(plugin, XRAY_PLUGIN)
-
     config.addinivalue_line(
         'markers', 'xray(JIRA_ID): mark test with JIRA XRAY test case ID'
     )
@@ -65,6 +85,10 @@ def pytest_addoption(parser: Parser):
                    action='store_true',
                    default=False,
                    help='Upload test results to JIRA XRAY')
+    xray.addoption(JIRA_CLOUD,
+                   action='store_true',
+                   default=False,
+                   help='Upload test results to JIRA XRAY could server')
     xray.addoption(XRAY_EXECUTION_ID,
                    action='store',
                    default=None,
@@ -86,30 +110,39 @@ def pytest_collection_modifyitems(config: Config, items: List[Item]) -> None:
 def pytest_terminal_summary(terminalreporter: TerminalReporter) -> None:
     if not terminalreporter.config.getoption(JIRA_XRAY_FLAG):
         return
+
     test_execution_id = terminalreporter.config.getoption(XRAY_EXECUTION_ID)
     test_plan_id = terminalreporter.config.getoption(XRAY_TEST_PLAN_ID)
+    is_cloud_server = terminalreporter.config.getoption(JIRA_CLOUD)
 
-    test_execution = TestExecution(test_execution_key=test_execution_id,
-                                   test_plan_key=test_plan_id)
+    if is_cloud_server:
+        status_builder = StatusBuilder(CloudStatus)
+    else:
+        status_builder = StatusBuilder(Status)
+
+    test_execution = TestExecution(
+        test_execution_key=test_execution_id,
+        test_plan_key=test_plan_id
+    )
 
     if 'passed' in terminalreporter.stats:
         for each in terminalreporter.stats['passed']:
             test_key = get_test_key_for(each)
             if test_key:
-                tc = TestCase(test_key, Status.PASS)
+                tc = TestCase(test_key, status_builder('PASS'))
                 test_execution.append(tc)
 
     if 'failed' in terminalreporter.stats:
         for each in terminalreporter.stats['failed']:
             test_key = get_test_key_for(each)
             if test_key:
-                tc = TestCase(test_key, Status.FAIL, each.longreprtext)
+                tc = TestCase(test_key, status_builder('FAIL'), each.longreprtext)
                 test_execution.append(tc)
     if 'skipped' in terminalreporter.stats:
         for each in terminalreporter.stats['skipped']:
             test_key = get_test_key_for(each)
             if test_key:
-                tc = TestCase(test_key, Status.ABORTED, each.longreprtext)
+                tc = TestCase(test_key, status_builder('ABORTED'), each.longreprtext)
                 test_execution.append(tc)
 
     publish_results = terminalreporter.config.pluginmanager.get_plugin(XRAY_PLUGIN)

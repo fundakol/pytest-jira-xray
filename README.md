@@ -30,34 +30,54 @@ def test_one():
     assert True
 ```
 
-Set system environments (Basic authentication):
-```shell
-export XRAY_API_BASE_URL=<jira URL>
-export XRAY_API_USER=<jria username>
-export XRAY_API_PASSWORD=<user password>
+### Jira Xray configuration can be provided via Environment Variables:
+
+* Jira base URL:
+```commandline
+$ export XRAY_API_BASE_URL=<Jira base URL>
+```
+- Basic authentication:
+```commandline
+$ export XRAY_API_USER=<jria username>
+$ export XRAY_API_PASSWORD=<user password>
 ```
 
+- SSL Client Certificate
+
 To disable SSL certificate verification, at the client side (no case-sensitive): 
-```shell
-export XRAY_API_VERIFY_SSL=False
+```commandline
+$ export XRAY_API_VERIFY_SSL=False
 ```
 
 Or you can provide path to certificate file
-```shell
-export XRAY_API_VERIFY_SSL=</path/to/PEM file>
+```commandline
+$ export XRAY_API_VERIFY_SSL=</path/to/PEM file>
 ```
 
-Upload results to new test execution:
+* Cloud authentication:
 ```commandline
-pytest . --jira-xray
+$ export XRAY_CLIENT_ID=<client id>
+$ export XRAY_CLIENT_SECRET=<client secret>
 ```
 
-Upload results to existing test execution:
+### Upload results 
+
+* Upload results to new test execution:
 ```commandline
-pytest . --jira-xray --execution TestExecutionId
+$ pytest --jira-xray
 ```
 
-Upload results to existing test plan (new test execution will be created):
+* Upload results to existing test execution:
 ```commandline
-pytest . --jira-xray --testplan TestPlanId
+$ pytest --jira-xray --execution TestExecutionId
+```
+
+* Upload results to existing test plan (new test execution will be created):
+```commandline
+$ pytest --jira-xray --testplan TestPlanId
+```
+
+* Use with Jira cloud:
+```commandline
+$ pytest --jira-xray --cloud
 ```
