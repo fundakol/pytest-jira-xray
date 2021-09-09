@@ -54,10 +54,8 @@ def get_request_options() -> Dict[str, Any]:
 
 
 def pytest_configure(config: Config) -> None:
-    if not (config.getoption(JIRA_XRAY_FLAG) or config.getoption(JIRA_CLOUD)):
+    if not config.getoption(JIRA_XRAY_FLAG):
         return
-    if config.getoption(JIRA_XRAY_FLAG) and config.getoption(JIRA_CLOUD):
-        pytest.exit(f'Both options are not allowed: {JIRA_XRAY_FLAG}, {JIRA_CLOUD}')
 
     options = get_request_options()
     if config.getoption(JIRA_CLOUD):
@@ -102,7 +100,7 @@ def pytest_addoption(parser: Parser):
 
 
 def pytest_collection_modifyitems(config: Config, items: List[Item]) -> None:
-    if not (config.getoption(JIRA_XRAY_FLAG) or config.getoption(JIRA_CLOUD)):
+    if not config.getoption(JIRA_XRAY_FLAG):
         return
 
     for item in items:
@@ -110,8 +108,7 @@ def pytest_collection_modifyitems(config: Config, items: List[Item]) -> None:
 
 
 def pytest_terminal_summary(terminalreporter: TerminalReporter) -> None:
-    if not (terminalreporter.config.getoption(JIRA_XRAY_FLAG) or
-            terminalreporter.config.getoption(JIRA_CLOUD)):
+    if not terminalreporter.config.getoption(JIRA_XRAY_FLAG):
         return
 
     test_execution_id = terminalreporter.config.getoption(XRAY_EXECUTION_ID)
@@ -123,8 +120,10 @@ def pytest_terminal_summary(terminalreporter: TerminalReporter) -> None:
     else:
         status_builder = StatusBuilder(Status)
 
-    test_execution = TestExecution(test_execution_key=test_execution_id,
-                                   test_plan_key=test_plan_id)
+    test_execution = TestExecution(
+        test_execution_key=test_execution_id,
+        test_plan_key=test_plan_id
+    )
 
     if 'passed' in terminalreporter.stats:
         for each in terminalreporter.stats['passed']:

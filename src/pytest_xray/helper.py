@@ -35,7 +35,7 @@ class StatusBuilder:
     def __init__(self, status_enum: Type[enum.Enum]):
         self.status = status_enum
 
-    def __call__(self, status: str) -> str:
+    def __call__(self, status: str) -> enum.Enum:
         return self.status(getattr(self.status, status))
 
 
@@ -53,7 +53,7 @@ class TestCase:
 
     def as_dict(self) -> Dict[str, str]:
         return dict(testKey=self.test_key,
-                    status=self.status,
+                    status=str(self.status),
                     comment=self.comment)
 
 
