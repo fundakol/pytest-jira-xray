@@ -44,7 +44,7 @@ $ export XRAY_API_PASSWORD=<user password>
 
 - SSL Client Certificate
 
-To disable SSL certificate verification, at the client side (no case-sensitive): 
+To disable SSL certificate verification, at the client side (no case-sensitive), default is True: 
 ```commandline
 $ export XRAY_API_VERIFY_SSL=False
 ```
