@@ -2,7 +2,6 @@ import os
 from os import environ
 from typing import List, Dict, Any
 
-import pytest
 from _pytest.config import Config
 from _pytest.config.argparsing import Parser
 from _pytest.nodes import Item
@@ -28,6 +27,7 @@ from pytest_xray.xray_publisher import XrayPublisher, BearerAuth
 
 
 def get_request_options() -> Dict[str, Any]:
+    """Read configuration from environment variables."""
     options = {}
     jira_url = environ['XRAY_API_BASE_URL']
     user = environ.get('XRAY_API_USER', '')
@@ -35,6 +35,7 @@ def get_request_options() -> Dict[str, Any]:
     client_id = environ.get('XRAY_CLIENT_ID', '')
     client_secret = environ.get('XRAY_CLIENT_SECRET', '')
     verify = os.environ.get('XRAY_API_VERIFY_SSL', 'True')
+
     if verify.upper() == 'TRUE':
         verify = True
     elif verify.upper() == 'FALSE':
@@ -81,22 +82,30 @@ def pytest_configure(config: Config) -> None:
 
 def pytest_addoption(parser: Parser):
     xray = parser.getgroup('Jira Xray report')
-    xray.addoption(JIRA_XRAY_FLAG,
-                   action='store_true',
-                   default=False,
-                   help='Upload test results to JIRA XRAY')
-    xray.addoption(JIRA_CLOUD,
-                   action='store_true',
-                   default=False,
-                   help='Upload test results to JIRA XRAY could server')
-    xray.addoption(XRAY_EXECUTION_ID,
-                   action='store',
-                   default=None,
-                   help='XRAY Test Execution ID')
-    xray.addoption(XRAY_TEST_PLAN_ID,
-                   action='store',
-                   default=None,
-                   help='XRAY Test Plan ID')
+    xray.addoption(
+        JIRA_XRAY_FLAG,
+        action='store_true',
+        default=False,
+        help='Upload test results to JIRA XRAY'
+    )
+    xray.addoption(
+        JIRA_CLOUD,
+        action='store_true',
+        default=False,
+        help='Upload test results to JIRA XRAY could server'
+    )
+    xray.addoption(
+        XRAY_EXECUTION_ID,
+        action='store',
+        default=None,
+        help='XRAY Test Execution ID'
+    )
+    xray.addoption(
+        XRAY_TEST_PLAN_ID,
+        action='store',
+        default=None,
+        help='XRAY Test Plan ID'
+    )
 
 
 def pytest_collection_modifyitems(config: Config, items: List[Item]) -> None:
@@ -131,7 +140,6 @@ def pytest_terminal_summary(terminalreporter: TerminalReporter) -> None:
             if test_key:
                 tc = TestCase(test_key, status_builder('PASS'))
                 test_execution.append(tc)
-
     if 'failed' in terminalreporter.stats:
         for each in terminalreporter.stats['failed']:
             test_key = get_test_key_for(each)
@@ -145,7 +153,7 @@ def pytest_terminal_summary(terminalreporter: TerminalReporter) -> None:
                 tc = TestCase(test_key, status_builder('ABORTED'), each.longreprtext)
                 test_execution.append(tc)
 
-    publish_results = terminalreporter.config.pluginmanager.get_plugin(XRAY_PLUGIN)
-    issue_id = publish_results.publish(test_execution)
+    xray_publisher = terminalreporter.config.pluginmanager.get_plugin(XRAY_PLUGIN)
+    issue_id = xray_publisher.publish(test_execution)
     if issue_id:
         terminalreporter.write_sep('-', f'Uploaded results to JIRA XRAY. Test Execution Id: {issue_id}')

@@ -22,7 +22,7 @@ class BearerAuth(AuthBase):
         self.client_id = client_id
         self.client_secret = client_secret
 
-    def __call__(self, r):
+    def __call__(self, r: requests.PreparedRequest) -> requests.PreparedRequest:
         headers = {
             'Content-type': 'application/json',
             'Accept': 'text/plain'
@@ -49,10 +49,12 @@ class BearerAuth(AuthBase):
 
 class XrayPublisher:
 
-    def __init__(self,
-                 base_url: str,
-                 auth: Union[AuthBase, tuple],
-                 verify: Union[bool, str] = True) -> None:
+    def __init__(
+            self,
+            base_url: str,
+            auth: Union[AuthBase, tuple],
+            verify: Union[bool, str] = True
+    ) -> None:
         if base_url.endswith('/'):
             base_url = base_url[:-1]
         self.base_url = base_url
@@ -63,14 +65,16 @@ class XrayPublisher:
     def endpoint_url(self) -> str:
         return self.base_url + TEST_EXECUTION_ENDPOINT
 
-    def publish_xray_results(self, url: str, auth: AuthBase, data: dict) -> dict:
+    def _send_data(self, url: str, auth: Union[AuthBase, tuple], data: dict) -> dict:
         headers = {
             'Accept': 'application/json',
             'Content-Type': 'application/json'
         }
         try:
-            response = requests.request(method='POST', url=url, headers=headers, json=data,
-                                        auth=auth, verify=self.verify)
+            response = requests.request(
+                method='POST', url=url, headers=headers, json=data,
+                auth=auth, verify=self.verify
+            )
         except requests.exceptions.ConnectionError as e:
             _logger.exception('ConnectionError to JIRA service %s', self.base_url)
             raise XrayError(e)
@@ -91,10 +95,10 @@ class XrayPublisher:
         :return: test execution issue id
         """
         try:
-            result = self.publish_xray_results(self.endpoint_url, self.auth, test_execution.as_dict())
+            response_data = self._send_data(self.endpoint_url, self.auth, test_execution.as_dict())
         except XrayError:
             return ''
         else:
-            key = result['testExecIssue']['key']
+            key = response_data['testExecIssue']['key']
             _logger.info('Uploaded results to JIRA XRAY Test Execution: %s', key)
             return key
