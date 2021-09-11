@@ -32,7 +32,7 @@ def xray_tests(testdir):
     'cli_options',
     [
         ('--jira-xray',),
-        ('--jira-xray', '--cloud',)
+        ('--jira-xray', '--cloud')
     ],
     ids=['DC Server', 'Cloud']
 )
