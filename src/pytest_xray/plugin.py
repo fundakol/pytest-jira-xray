@@ -2,7 +2,7 @@ import os
 from os import environ
 from typing import List, Dict, Any
 
-from _pytest.config import Config
+from _pytest.config import Config, ExitCode
 from _pytest.config.argparsing import Parser
 from _pytest.nodes import Item
 from _pytest.terminal import TerminalReporter
@@ -23,7 +23,7 @@ from pytest_xray.helper import (
     StatusBuilder,
     CloudStatus
 )
-from pytest_xray.xray_publisher import XrayPublisher, BearerAuth
+from pytest_xray.xray_publisher import XrayPublisher, BearerAuth, XrayError
 
 
 def get_request_options() -> Dict[str, Any]:
@@ -116,8 +116,8 @@ def pytest_collection_modifyitems(config: Config, items: List[Item]) -> None:
         associate_marker_metadata_for(item)
 
 
-def pytest_terminal_summary(terminalreporter: TerminalReporter) -> None:
-    if not terminalreporter.config.getoption(JIRA_XRAY_FLAG):
+def pytest_terminal_summary(terminalreporter: TerminalReporter, exitstatus: ExitCode, config: Config) -> None:
+    if not config.getoption(JIRA_XRAY_FLAG):
         return
 
     test_execution_id = terminalreporter.config.getoption(XRAY_EXECUTION_ID)
@@ -134,26 +134,35 @@ def pytest_terminal_summary(terminalreporter: TerminalReporter) -> None:
         test_plan_key=test_plan_id
     )
 
-    if 'passed' in terminalreporter.stats:
-        for each in terminalreporter.stats['passed']:
-            test_key = get_test_key_for(each)
+    stats = terminalreporter.stats
+    if 'passed' in stats:
+        for item in stats['passed']:
+            test_key = get_test_key_for(item)
             if test_key:
                 tc = TestCase(test_key, status_builder('PASS'))
                 test_execution.append(tc)
-    if 'failed' in terminalreporter.stats:
-        for each in terminalreporter.stats['failed']:
-            test_key = get_test_key_for(each)
+    if 'failed' in stats:
+        for item in stats['failed']:
+            test_key = get_test_key_for(item)
             if test_key:
-                tc = TestCase(test_key, status_builder('FAIL'), each.longreprtext)
+                tc = TestCase(test_key, status_builder('FAIL'), item.longreprtext)
                 test_execution.append(tc)
-    if 'skipped' in terminalreporter.stats:
-        for each in terminalreporter.stats['skipped']:
-            test_key = get_test_key_for(each)
+    if 'skipped' in stats:
+        for item in stats['skipped']:
+            test_key = get_test_key_for(item)
             if test_key:
-                tc = TestCase(test_key, status_builder('ABORTED'), each.longreprtext)
+                tc = TestCase(test_key, status_builder('ABORTED'), item.longreprtext)
                 test_execution.append(tc)
 
     xray_publisher = terminalreporter.config.pluginmanager.get_plugin(XRAY_PLUGIN)
-    issue_id = xray_publisher.publish(test_execution)
-    if issue_id:
-        terminalreporter.write_sep('-', f'Uploaded results to JIRA XRAY. Test Execution Id: {issue_id}')
+    try:
+        issue_id = xray_publisher.publish(test_execution)
+    except XrayError as exc:
+        terminalreporter.ensure_newline()
+        terminalreporter.section('Jira XRAY', sep='-', red=True, bold=True)
+        terminalreporter.write_line('Could not publish results to Jira XRAY!')
+        if exc.message:
+            terminalreporter.write_line(exc.message)
+    else:
+        if issue_id:
+            terminalreporter.write_sep('-', f'Uploaded results to JIRA XRAY. Test Execution Id: {issue_id}')

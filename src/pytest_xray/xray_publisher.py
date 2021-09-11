@@ -14,6 +14,9 @@ _logger = logging.getLogger(__name__)
 class XrayError(Exception):
     """Custom exception for Jira XRAY"""
 
+    def __init__(self, message=''):
+        self.message = message
+
 
 class BearerAuth(AuthBase):
 
@@ -21,6 +24,10 @@ class BearerAuth(AuthBase):
         self.base_url = base_url
         self.client_id = client_id
         self.client_secret = client_secret
+
+    @property
+    def endpoint_url(self) -> str:
+        return f'{self.base_url}/api/v2/authenticate'
 
     def __call__(self, r: requests.PreparedRequest) -> requests.PreparedRequest:
         headers = {
@@ -34,13 +41,14 @@ class BearerAuth(AuthBase):
 
         try:
             response = requests.post(
-                f'{self.base_url}/api/v2/authenticate',
+                self.endpoint_url,
                 data=json.dumps(auth_data),
                 headers=headers
             )
         except requests.exceptions.ConnectionError as exc:
-            _logger.exception(exc)
-            raise XrayError(f'Connection error for "{self.base_url}/api/v2/authenticate"') from exc
+            err_message = f'ConnectionError: cannot authenticate with {self.endpoint_url}'
+            _logger.exception(err_message)
+            raise XrayError(err_message) from exc
         else:
             auth_token = response.text
             r.headers['Authorization'] = f'Bearer {auth_token}'
@@ -75,30 +83,27 @@ class XrayPublisher:
                 method='POST', url=url, headers=headers, json=data,
                 auth=auth, verify=self.verify
             )
-        except requests.exceptions.ConnectionError as e:
-            _logger.exception('ConnectionError to JIRA service %s', self.base_url)
-            raise XrayError(e)
+        except requests.exceptions.ConnectionError as exc:
+            err_message = f'ConnectionError: cannot connect to JIRA service at {url}'
+            _logger.exception(err_message)
+            raise XrayError(err_message) from exc
         else:
             try:
                 response.raise_for_status()
-            except Exception as e:
-                _logger.error('Could not post to JIRA service %s. Response status code: %s',
-                              self.base_url, response.status_code)
-                raise XrayError from e
+            except requests.exceptions.HTTPError as exc:
+                err_message = (f'HTTPError: Could not post to JIRA service at {url}. '
+                               f'Response status code: {response.status_code}')
+                _logger.exception(err_message)
+                raise XrayError(err_message) from exc
             return response.json()
 
     def publish(self, test_execution: TestExecution) -> str:
         """
-        Publish results to Jira.
+        Publish results to Jira and return testExecutionId or raise XrayError.
 
         :param test_execution: instance of TestExecution class
         :return: test execution issue id
         """
-        try:
-            response_data = self._send_data(self.endpoint_url, self.auth, test_execution.as_dict())
-        except XrayError:
-            return ''
-        else:
-            key = response_data['testExecIssue']['key']
-            _logger.info('Uploaded results to JIRA XRAY Test Execution: %s', key)
-            return key
+        response_data = self._send_data(self.endpoint_url, self.auth, test_execution.as_dict())
+        key = response_data['testExecIssue']['key']
+        return key
