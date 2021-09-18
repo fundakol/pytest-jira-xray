@@ -2,6 +2,7 @@ import datetime as dt
 from unittest.mock import patch
 
 import pytest
+
 from pytest_xray.helper import TestCase, TestExecution
 
 
