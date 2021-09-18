@@ -5,7 +5,7 @@ from typing import Union
 import requests
 from requests.auth import AuthBase
 
-from pytest_xray.constant import TEST_EXECUTION_ENDPOINT
+from pytest_xray.constant import TEST_EXECUTION_ENDPOINT, AUTHENTICATE_ENDPOINT
 from pytest_xray.helper import TestExecution
 
 _logger = logging.getLogger(__name__)
@@ -21,13 +21,15 @@ class XrayError(Exception):
 class BearerAuth(AuthBase):
 
     def __init__(self, base_url: str, client_id: str, client_secret: str) -> None:
+        if base_url.endswith('/'):
+            base_url = base_url[:-1]
         self.base_url = base_url
         self.client_id = client_id
         self.client_secret = client_secret
 
     @property
     def endpoint_url(self) -> str:
-        return f'{self.base_url}/api/v2/authenticate'
+        return f'{self.base_url}{AUTHENTICATE_ENDPOINT}'
 
     def __call__(self, r: requests.PreparedRequest) -> requests.PreparedRequest:
         headers = {

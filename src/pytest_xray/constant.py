@@ -1,4 +1,5 @@
 TEST_EXECUTION_ENDPOINT = '/rest/raven/2.0/import/execution'
+AUTHENTICATE_ENDPOINT = '/api/v2/authenticate'
 DATETIME_FORMAT = '%Y-%m-%dT%H:%M:%S%z'
 XRAY_PLUGIN = "JIRA_XRAY"
 XRAY_MARKER_NAME = "xray"
