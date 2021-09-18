@@ -26,14 +26,15 @@ from pytest_xray.helper import (
 from pytest_xray.xray_publisher import XrayPublisher, BearerAuth, XrayError
 
 
-def get_request_options() -> Dict[str, Any]:
-    """Read configuration from environment variables."""
+def get_base_options() -> dict:
     options = {}
-    jira_url = environ['XRAY_API_BASE_URL']
-    user = environ.get('XRAY_API_USER', '')
-    password = environ.get('XRAY_API_PASSWORD', '')
-    client_id = environ.get('XRAY_CLIENT_ID', '')
-    client_secret = environ.get('XRAY_CLIENT_SECRET', '')
+    try:
+        base_url = environ['XRAY_API_BASE_URL']
+    except KeyError as e:
+        raise XrayError(
+            'pytest-jira-xray plugin requires environment variable: XRAY_API_BASE_URL'
+        ) from e
+
     verify = os.environ.get('XRAY_API_VERIFY_SSL', 'True')
 
     if verify.upper() == 'TRUE':
@@ -42,15 +43,42 @@ def get_request_options() -> Dict[str, Any]:
         verify = False
     else:
         if not os.path.exists(verify):
-            raise FileNotFoundError(f'Cannot find certificate file "{verify}"')
+            raise XrayError(f'Cannot find certificate file "{verify}"')
 
-    options['BASE_URL'] = jira_url
+    options['VERIFY'] = verify
+    options['BASE_URL'] = base_url
+    return options
+
+
+def get_basic_auth() -> dict:
+    options = get_base_options()
+    try:
+        user = environ['XRAY_API_USER']
+        password = environ['XRAY_API_PASSWORD']
+    except KeyError as e:
+        raise XrayError(
+            'Basic authentication requires environment variables: '
+            'XRAY_API_USER, XRAY_API_PASSWORD'
+        ) from e
+
     options['USER'] = user
     options['PASSWORD'] = password
-    options['VERIFY'] = verify
+    return options
+
+
+def get_bearer_auth() -> dict:
+    options = get_base_options()
+    try:
+        client_id = environ['XRAY_CLIENT_ID']
+        client_secret = environ['XRAY_CLIENT_SECRET']
+    except KeyError as e:
+        raise XrayError(
+            'Bearer authentication requires environment variables: '
+            'XRAY_CLIENT_ID, XRAY_CLIENT_SECRET'
+        ) from e
+
     options['CLIENT_ID'] = client_id
     options['CLIENT_SECRET'] = client_secret
-
     return options
 
 
@@ -58,14 +86,15 @@ def pytest_configure(config: Config) -> None:
     if not config.getoption(JIRA_XRAY_FLAG):
         return
 
-    options = get_request_options()
     if config.getoption(JIRA_CLOUD):
+        options = get_bearer_auth()
         auth = BearerAuth(
             options['BASE_URL'],
             options['CLIENT_ID'],
             options['CLIENT_SECRET']
         )
     else:
+        options = get_basic_auth()
         auth = (options['USER'], options['PASSWORD'])
 
     plugin = XrayPublisher(
@@ -92,7 +121,7 @@ def pytest_addoption(parser: Parser):
         JIRA_CLOUD,
         action='store_true',
         default=False,
-        help='Upload test results to JIRA XRAY could server'
+        help='Use with JIRA XRAY could server'
     )
     xray.addoption(
         XRAY_EXECUTION_ID,
