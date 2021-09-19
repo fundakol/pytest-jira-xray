@@ -1,6 +1,6 @@
 import os
 from os import environ
-from typing import List, Dict, Any
+from typing import List
 
 from _pytest.config import Config, ExitCode
 from _pytest.config.argparsing import Parser
