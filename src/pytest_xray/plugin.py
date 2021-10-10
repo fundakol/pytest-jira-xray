@@ -11,7 +11,8 @@ from pytest_xray.constant import (
     XRAY_PLUGIN,
     XRAY_TEST_PLAN_ID,
     XRAY_EXECUTION_ID,
-    JIRA_CLOUD, XRAYPATH
+    JIRA_CLOUD,
+    XRAYPATH
 )
 from pytest_xray.exceptions import XrayError
 from pytest_xray.file_publisher import FilePublisher
@@ -22,7 +23,9 @@ from pytest_xray.helper import (
     TestCase,
     TestExecution,
     StatusBuilder,
-    CloudStatus, get_bearer_auth, get_basic_auth
+    CloudStatus,
+    get_bearer_auth,
+    get_basic_auth
 )
 from pytest_xray.xray_publisher import BearerAuth, XrayPublisher
 
