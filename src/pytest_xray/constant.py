@@ -7,3 +7,4 @@ JIRA_XRAY_FLAG = "--jira-xray"
 XRAY_TEST_PLAN_ID = '--testplan'
 XRAY_EXECUTION_ID = '--execution'
 JIRA_CLOUD = '--cloud'
+XRAYPATH = '--xraypath'

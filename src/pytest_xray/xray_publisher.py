@@ -6,16 +6,9 @@ import requests
 from requests.auth import AuthBase
 
 from pytest_xray.constant import TEST_EXECUTION_ENDPOINT, AUTHENTICATE_ENDPOINT
-from pytest_xray.helper import TestExecution
+from pytest_xray.exceptions import XrayError
 
 _logger = logging.getLogger(__name__)
-
-
-class XrayError(Exception):
-    """Custom exception for Jira XRAY"""
-
-    def __init__(self, message=''):
-        self.message = message
 
 
 class BearerAuth(AuthBase):
@@ -99,13 +92,13 @@ class XrayPublisher:
                 raise XrayError(err_message) from exc
             return response.json()
 
-    def publish(self, test_execution: TestExecution) -> str:
+    def publish(self, data: dict) -> str:
         """
         Publish results to Jira and return testExecutionId or raise XrayError.
 
-        :param test_execution: instance of TestExecution class
+        :param data: data to send
         :return: test execution issue id
         """
-        response_data = self._send_data(self.endpoint_url, self.auth, test_execution.as_dict())
+        response_data = self._send_data(self.endpoint_url, self.auth, data)
         key = response_data['testExecIssue']['key']
         return key
