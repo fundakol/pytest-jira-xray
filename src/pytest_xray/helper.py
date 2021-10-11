@@ -39,7 +39,7 @@ class StatusBuilder:
         self.status = status_enum
 
     def __call__(self, status: str) -> enum.Enum:
-        return self.status(getattr(self.status, status))
+        return self.status(getattr(self.status, status)).value
 
 
 class TestCase:
