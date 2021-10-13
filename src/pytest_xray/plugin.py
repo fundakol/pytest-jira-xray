@@ -1,10 +1,11 @@
 from pathlib import Path
-from typing import List
+from typing import List, Tuple, Union
 
 from _pytest.config import Config, ExitCode
 from _pytest.config.argparsing import Parser
 from _pytest.nodes import Item
 from _pytest.terminal import TerminalReporter
+from requests.auth import AuthBase
 
 from pytest_xray.constant import (
     JIRA_XRAY_FLAG,
@@ -71,11 +72,11 @@ def pytest_configure(config: Config) -> None:
     xray_path = config.getoption(XRAYPATH)
 
     if xray_path:
-        plugin = FilePublisher(xray_path)
+        plugin = FilePublisher(xray_path)  # type: ignore
     else:
         if config.getoption(JIRA_CLOUD):
             options = get_bearer_auth()
-            auth = BearerAuth(
+            auth: Union[AuthBase, Tuple[str, str]] = BearerAuth(
                 options['BASE_URL'],
                 options['CLIENT_ID'],
                 options['CLIENT_SECRET']
@@ -84,7 +85,7 @@ def pytest_configure(config: Config) -> None:
             options = get_basic_auth()
             auth = (options['USER'], options['PASSWORD'])
 
-        plugin = XrayPublisher(
+        plugin = XrayPublisher(  # type: ignore
             base_url=options['BASE_URL'],
             auth=auth,
             verify=options['VERIFY']
