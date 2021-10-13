@@ -81,3 +81,8 @@ $ pytest --jira-xray --testplan TestPlanId
 ```commandline
 $ pytest --jira-xray --cloud
 ```
+
+* Store results in a file instead of exporting directly to a XRAY server
+```commandline
+$ pytest --jira-xray --xraypath=xray.json
+```
