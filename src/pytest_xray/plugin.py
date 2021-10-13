@@ -1,5 +1,4 @@
-import os
-from os import environ
+from pathlib import Path
 from typing import List
 
 from _pytest.config import Config, ExitCode
@@ -12,8 +11,11 @@ from pytest_xray.constant import (
     XRAY_PLUGIN,
     XRAY_TEST_PLAN_ID,
     XRAY_EXECUTION_ID,
-    JIRA_CLOUD
+    JIRA_CLOUD,
+    XRAYPATH
 )
+from pytest_xray.exceptions import XrayError
+from pytest_xray.file_publisher import FilePublisher
 from pytest_xray.helper import (
     associate_marker_metadata_for,
     get_test_key_for,
@@ -21,92 +23,11 @@ from pytest_xray.helper import (
     TestCase,
     TestExecution,
     StatusBuilder,
-    CloudStatus
+    CloudStatus,
+    get_bearer_auth,
+    get_basic_auth
 )
-from pytest_xray.xray_publisher import XrayPublisher, BearerAuth, XrayError
-
-
-def get_base_options() -> dict:
-    options = {}
-    try:
-        base_url = environ['XRAY_API_BASE_URL']
-    except KeyError as e:
-        raise XrayError(
-            'pytest-jira-xray plugin requires environment variable: XRAY_API_BASE_URL'
-        ) from e
-
-    verify = os.environ.get('XRAY_API_VERIFY_SSL', 'True')
-
-    if verify.upper() == 'TRUE':
-        verify = True
-    elif verify.upper() == 'FALSE':
-        verify = False
-    else:
-        if not os.path.exists(verify):
-            raise XrayError(f'Cannot find certificate file "{verify}"')
-
-    options['VERIFY'] = verify
-    options['BASE_URL'] = base_url
-    return options
-
-
-def get_basic_auth() -> dict:
-    options = get_base_options()
-    try:
-        user = environ['XRAY_API_USER']
-        password = environ['XRAY_API_PASSWORD']
-    except KeyError as e:
-        raise XrayError(
-            'Basic authentication requires environment variables: '
-            'XRAY_API_USER, XRAY_API_PASSWORD'
-        ) from e
-
-    options['USER'] = user
-    options['PASSWORD'] = password
-    return options
-
-
-def get_bearer_auth() -> dict:
-    options = get_base_options()
-    try:
-        client_id = environ['XRAY_CLIENT_ID']
-        client_secret = environ['XRAY_CLIENT_SECRET']
-    except KeyError as e:
-        raise XrayError(
-            'Bearer authentication requires environment variables: '
-            'XRAY_CLIENT_ID, XRAY_CLIENT_SECRET'
-        ) from e
-
-    options['CLIENT_ID'] = client_id
-    options['CLIENT_SECRET'] = client_secret
-    return options
-
-
-def pytest_configure(config: Config) -> None:
-    if not config.getoption(JIRA_XRAY_FLAG):
-        return
-
-    if config.getoption(JIRA_CLOUD):
-        options = get_bearer_auth()
-        auth = BearerAuth(
-            options['BASE_URL'],
-            options['CLIENT_ID'],
-            options['CLIENT_SECRET']
-        )
-    else:
-        options = get_basic_auth()
-        auth = (options['USER'], options['PASSWORD'])
-
-    plugin = XrayPublisher(
-        base_url=options['BASE_URL'],
-        auth=auth,
-        verify=options['VERIFY']
-    )
-
-    config.pluginmanager.register(plugin, XRAY_PLUGIN)
-    config.addinivalue_line(
-        'markers', 'xray(JIRA_ID): mark test with JIRA XRAY test case ID'
-    )
+from pytest_xray.xray_publisher import BearerAuth, XrayPublisher
 
 
 def pytest_addoption(parser: Parser):
@@ -134,6 +55,44 @@ def pytest_addoption(parser: Parser):
         action='store',
         default=None,
         help='XRAY Test Plan ID'
+    )
+    xray.addoption(
+        XRAYPATH,
+        action='store',
+        default=None,
+        help='Do not upload to a server but create JSON report file at given path'
+    )
+
+
+def pytest_configure(config: Config) -> None:
+    if not config.getoption(JIRA_XRAY_FLAG):
+        return
+
+    xray_path = config.getoption(XRAYPATH)
+
+    if xray_path:
+        plugin = FilePublisher(xray_path)
+    else:
+        if config.getoption(JIRA_CLOUD):
+            options = get_bearer_auth()
+            auth = BearerAuth(
+                options['BASE_URL'],
+                options['CLIENT_ID'],
+                options['CLIENT_SECRET']
+            )
+        else:
+            options = get_basic_auth()
+            auth = (options['USER'], options['PASSWORD'])
+
+        plugin = XrayPublisher(
+            base_url=options['BASE_URL'],
+            auth=auth,
+            verify=options['VERIFY']
+        )
+
+    config.pluginmanager.register(plugin, XRAY_PLUGIN)
+    config.addinivalue_line(
+        'markers', 'xray(JIRA_ID): mark test with JIRA XRAY test case ID'
     )
 
 
@@ -183,9 +142,9 @@ def pytest_terminal_summary(terminalreporter: TerminalReporter, exitstatus: Exit
                 tc = TestCase(test_key, status_builder('ABORTED'), item.longreprtext)
                 test_execution.append(tc)
 
-    xray_publisher = terminalreporter.config.pluginmanager.get_plugin(XRAY_PLUGIN)
+    publisher = terminalreporter.config.pluginmanager.get_plugin(XRAY_PLUGIN)
     try:
-        issue_id = xray_publisher.publish(test_execution)
+        issue_id = publisher.publish(test_execution.as_dict())
     except XrayError as exc:
         terminalreporter.ensure_newline()
         terminalreporter.section('Jira XRAY', sep='-', red=True, bold=True)
@@ -193,5 +152,11 @@ def pytest_terminal_summary(terminalreporter: TerminalReporter, exitstatus: Exit
         if exc.message:
             terminalreporter.write_line(exc.message)
     else:
-        if issue_id:
-            terminalreporter.write_sep('-', f'Uploaded results to JIRA XRAY. Test Execution Id: {issue_id}')
+        if issue_id and terminalreporter.config.getoption(XRAYPATH):
+            terminalreporter.write_sep(
+                '-', f'Generated XRAY execution report file: {Path(issue_id).absolute()}'
+            )
+        elif issue_id:
+            terminalreporter.write_sep(
+                '-', f'Uploaded results to JIRA XRAY. Test Execution Id: {issue_id}'
+            )

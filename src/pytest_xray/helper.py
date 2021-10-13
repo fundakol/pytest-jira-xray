@@ -1,11 +1,14 @@
 import datetime as dt
 import enum
+import os
+from os import environ
 from typing import List, Dict, Union, Any, Type, Optional
 
 from _pytest.mark import Mark
 from _pytest.nodes import Item
 
 from pytest_xray.constant import XRAY_MARKER_NAME, DATETIME_FORMAT
+from pytest_xray.exceptions import XrayError
 
 _test_keys = {}
 
@@ -117,3 +120,59 @@ def get_test_key_for(item: Item) -> Optional[str]:
     if test_id:
         return test_id
     return None
+
+
+def get_base_options() -> dict:
+    options = {}
+    try:
+        base_url = environ['XRAY_API_BASE_URL']
+    except KeyError as e:
+        raise XrayError(
+            'pytest-jira-xray plugin requires environment variable: XRAY_API_BASE_URL'
+        ) from e
+
+    verify = os.environ.get('XRAY_API_VERIFY_SSL', 'True')
+
+    if verify.upper() == 'TRUE':
+        verify = True
+    elif verify.upper() == 'FALSE':
+        verify = False
+    else:
+        if not os.path.exists(verify):
+            raise XrayError(f'Cannot find certificate file "{verify}"')
+
+    options['VERIFY'] = verify
+    options['BASE_URL'] = base_url
+    return options
+
+
+def get_basic_auth() -> dict:
+    options = get_base_options()
+    try:
+        user = environ['XRAY_API_USER']
+        password = environ['XRAY_API_PASSWORD']
+    except KeyError as e:
+        raise XrayError(
+            'Basic authentication requires environment variables: '
+            'XRAY_API_USER, XRAY_API_PASSWORD'
+        ) from e
+
+    options['USER'] = user
+    options['PASSWORD'] = password
+    return options
+
+
+def get_bearer_auth() -> dict:
+    options = get_base_options()
+    try:
+        client_id = environ['XRAY_CLIENT_ID']
+        client_secret = environ['XRAY_CLIENT_SECRET']
+    except KeyError as e:
+        raise XrayError(
+            'Bearer authentication requires environment variables: '
+            'XRAY_CLIENT_ID, XRAY_CLIENT_SECRET'
+        ) from e
+
+    options['CLIENT_ID'] = client_id
+    options['CLIENT_SECRET'] = client_secret
+    return options
