@@ -24,7 +24,7 @@ def xray_tests(testdir):
         @pytest.mark.xray('JIRA-5')
         def test_skip():
             assert True, 'Not passed'
-        """)
+        """)  # noqa: W293,W291
     testdir.makepyfile(test_example)
 
 

@@ -134,9 +134,9 @@ def get_base_options() -> dict:
     verify = os.environ.get('XRAY_API_VERIFY_SSL', 'True')
 
     if verify.upper() == 'TRUE':
-        verify = True
+        verify = True  # type: ignore
     elif verify.upper() == 'FALSE':
-        verify = False
+        verify = False  # type: ignore
     else:
         if not os.path.exists(verify):
             raise XrayError(f'Cannot find certificate file "{verify}"')
