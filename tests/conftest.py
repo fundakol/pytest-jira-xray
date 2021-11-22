@@ -4,6 +4,8 @@ import pytest
 
 from .mock_server import MockServer
 
+pytest_plugins = ['pytester']
+
 
 @pytest.fixture(scope='session')
 def environment_variables():
