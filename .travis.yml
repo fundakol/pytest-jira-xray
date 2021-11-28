@@ -6,6 +6,8 @@ python:
     - "3.8"
     - "3.9"
 #    - "3.10"  # TODO: uncomment when supported by travis
+    - "flake8"
+    - "coverage"
 install:
     - pip install tox-travis
 services: docker
