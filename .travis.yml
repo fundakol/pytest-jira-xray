@@ -6,8 +6,14 @@ python:
     - "3.8"
     - "3.9"
 #    - "3.10"  # TODO: uncomment when supported by travis
+matrix:
+    include:
+        - { python: 3.9, env: TOXENV=flake8 }
+        - { python: 3.9, env: TOXENV=coverage }
 install:
-    - pip install tox-travis
+    - pip install tox-travis codecov
 services: docker
 script:
     - tox
+after_success:
+    - codecov

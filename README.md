@@ -2,6 +2,7 @@
 
 [![PyPi](https://img.shields.io/pypi/v/pytest-jira-xray.png)](https://pypi.python.org/pypi/pytest-jira-xray)
 [![Build Status](https://travis-ci.com/fundakol/pytest-jira-xray.svg?branch=master)](https://travis-ci.com/github/fundakol/pytest-jira-xray)
+[![codecov](https://codecov.io/gh/fundakol/pytest-jira-xray/branch/master/graph/badge.svg)](https://codecov.io/gh/fundakol/pytest-jira-xray)
 
 pytest-jira-xray is a plugin for pytest that uploads test results to JIRA XRAY.
 
