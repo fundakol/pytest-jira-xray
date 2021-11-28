@@ -15,3 +15,5 @@ install:
 services: docker
 script:
     - tox
+after_success:
+    - codecov
