@@ -1,8 +1,10 @@
+import os
 from pathlib import Path
-from typing import List, Tuple, Union
+from typing import List, Tuple, Union, Optional, Dict
 
 from _pytest.config import Config, ExitCode
 from _pytest.config.argparsing import Parser
+from _pytest.mark import Mark
 from _pytest.nodes import Item
 from _pytest.terminal import TerminalReporter
 from requests.auth import AuthBase
@@ -13,20 +15,19 @@ from pytest_xray.constant import (
     XRAY_TEST_PLAN_ID,
     XRAY_EXECUTION_ID,
     JIRA_CLOUD,
-    XRAYPATH
+    XRAYPATH,
+    XRAY_MARKER_NAME
 )
 from pytest_xray.exceptions import XrayError
 from pytest_xray.file_publisher import FilePublisher
 from pytest_xray.helper import (
-    associate_marker_metadata_for,
-    get_test_key_for,
     Status,
     TestCase,
     TestExecution,
     StatusBuilder,
     CloudStatus,
     get_bearer_auth,
-    get_basic_auth
+    get_basic_auth,
 )
 from pytest_xray.xray_publisher import BearerAuth, XrayPublisher
 
@@ -48,18 +49,21 @@ def pytest_addoption(parser: Parser):
     xray.addoption(
         XRAY_EXECUTION_ID,
         action='store',
+        metavar='ExecutionId',
         default=None,
         help='XRAY Test Execution ID'
     )
     xray.addoption(
         XRAY_TEST_PLAN_ID,
         action='store',
+        metavar='TestplanId',
         default=None,
         help='XRAY Test Plan ID'
     )
     xray.addoption(
         XRAYPATH,
         action='store',
+        metavar='path',
         default=None,
         help='Do not upload to a server but create JSON report file at given path'
     )
@@ -72,7 +76,7 @@ def pytest_configure(config: Config) -> None:
     xray_path = config.getoption(XRAYPATH)
 
     if xray_path:
-        plugin = FilePublisher(xray_path)  # type: ignore
+        publisher = FilePublisher(xray_path)  # type: ignore
     else:
         if config.getoption(JIRA_CLOUD):
             options = get_bearer_auth()
@@ -85,79 +89,120 @@ def pytest_configure(config: Config) -> None:
             options = get_basic_auth()
             auth = (options['USER'], options['PASSWORD'])
 
-        plugin = XrayPublisher(  # type: ignore
+        publisher = XrayPublisher(  # type: ignore
             base_url=options['BASE_URL'],
             auth=auth,
             verify=options['VERIFY']
         )
 
-    config.pluginmanager.register(plugin, XRAY_PLUGIN)
+    plugin = XrayPlugin(config, publisher)
+    config.pluginmanager.register(plugin=plugin, name=XRAY_PLUGIN)
     config.addinivalue_line(
         'markers', 'xray(JIRA_ID): mark test with JIRA XRAY test case ID'
     )
 
 
-def pytest_collection_modifyitems(config: Config, items: List[Item]) -> None:
-    if not config.getoption(JIRA_XRAY_FLAG):
-        return
+class XrayPlugin:
 
-    for item in items:
-        associate_marker_metadata_for(item)
+    def __init__(self, config, publisher):
+        self.config = config
+        self.publisher = publisher
+        self.test_execution_id: str = self.config.getoption(XRAY_EXECUTION_ID)
+        self.test_plan_id: str = self.config.getoption(XRAY_TEST_PLAN_ID)
+        self.is_cloud_server: str = self.config.getoption(JIRA_CLOUD)
+        logfile = self.config.getoption(XRAYPATH)
+        self.logfile: str = self._get_normalize_logfile(logfile) if logfile else None
+        self.test_keys: Dict[str, str] = {}  # store nodeid and TestId
+        self.test_execution: TestExecution = TestExecution(
+            test_execution_key=self.test_execution_id,
+            test_plan_key=self.test_plan_id
+        )
+        if self.is_cloud_server:
+            self.status_builder: StatusBuilder = StatusBuilder(CloudStatus)
+        else:
+            self.status_builder: StatusBuilder = StatusBuilder(Status)
 
+    @staticmethod
+    def _get_normalize_logfile(logfile: str) -> str:
+        logfile = os.path.expanduser(os.path.expandvars(logfile))
+        logfile = os.path.normpath(os.path.abspath(logfile))
+        os.makedirs(os.path.dirname(logfile), exist_ok=True)
+        return logfile
 
-def pytest_terminal_summary(terminalreporter: TerminalReporter, exitstatus: ExitCode, config: Config) -> None:
-    if not config.getoption(JIRA_XRAY_FLAG):
-        return
+    def _associate_marker_metadata_for(self, items: List[Item]) -> None:
+        """Store XRAY test id for test item."""
+        test_ids = []
+        duplicated_ids = []
 
-    test_execution_id = terminalreporter.config.getoption(XRAY_EXECUTION_ID)
-    test_plan_id = terminalreporter.config.getoption(XRAY_TEST_PLAN_ID)
-    is_cloud_server = terminalreporter.config.getoption(JIRA_CLOUD)
+        for item in items:
+            marker = self._get_xray_marker(item)
+            if not marker:
+                continue
 
-    if is_cloud_server:
-        status_builder = StatusBuilder(CloudStatus)
-    else:
-        status_builder = StatusBuilder(Status)
+            test_key = marker.args[0]
+            if test_key in test_ids:
+                duplicated_ids.append(test_key)
+            else:
+                test_ids.append(test_key)
+            self.test_keys[item.nodeid] = test_key
+            if duplicated_ids:
+                raise XrayError(f'Duplicated test case ids: {duplicated_ids}')
 
-    test_execution = TestExecution(
-        test_execution_key=test_execution_id,
-        test_plan_key=test_plan_id
-    )
+    def _get_test_key_for(self, item: Item) -> Optional[str]:
+        """Return XRAY test id for item."""
+        test_id = self.test_keys.get(item.nodeid)
+        if test_id:
+            return test_id
+        return None
 
-    stats = terminalreporter.stats
-    if 'passed' in stats:
-        for item in stats['passed']:
-            test_key = get_test_key_for(item)
-            if test_key:
-                tc = TestCase(test_key, status_builder('PASS'))
-                test_execution.append(tc)
-    if 'failed' in stats:
-        for item in stats['failed']:
-            test_key = get_test_key_for(item)
-            if test_key:
-                tc = TestCase(test_key, status_builder('FAIL'), item.longreprtext)
-                test_execution.append(tc)
-    if 'skipped' in stats:
-        for item in stats['skipped']:
-            test_key = get_test_key_for(item)
-            if test_key:
-                tc = TestCase(test_key, status_builder('ABORTED'), item.longreprtext)
-                test_execution.append(tc)
+    @staticmethod
+    def _get_xray_marker(item: Item) -> Optional[Mark]:
+        return item.get_closest_marker(XRAY_MARKER_NAME)
 
-    publisher = terminalreporter.config.pluginmanager.get_plugin(XRAY_PLUGIN)
-    try:
-        issue_id = publisher.publish(test_execution.as_dict())
-    except XrayError as exc:
-        terminalreporter.ensure_newline()
-        terminalreporter.section('Jira XRAY', sep='-', red=True, bold=True)
-        terminalreporter.write_line('Could not publish results to Jira XRAY!')
-        if exc.message:
-            terminalreporter.write_line(exc.message)
-    else:
-        if issue_id and terminalreporter.config.getoption(XRAYPATH):
-            terminalreporter.write_sep(
-                '-', f'Generated XRAY execution report file: {Path(issue_id).absolute()}'
-            )
-        elif issue_id:
-            terminalreporter.write_sep(
-                '-', f'Uploaded results to JIRA XRAY. Test Execution Id: {issue_id}'
-            )
+    def _append_test(self, item: Item, status: str) -> None:
+        test_key = self._get_test_key_for(item)
+        if test_key:
+            tc = TestCase(test_key, self.status_builder(status), item.longreprtext)
+            self.test_execution.append(tc)
+
+    def pytest_collection_modifyitems(self, config: Config, items: List[Item]) -> None:
+        self._associate_marker_metadata_for(items)
+
+    def pytest_terminal_summary(self, terminalreporter: TerminalReporter, exitstatus: ExitCode, config: Config) -> None:
+        stats = terminalreporter.stats
+        if 'passed' in stats:
+            for item in stats['passed']:
+                self._append_test(item, 'PASS')
+        if 'xpassed' in stats:
+            for item in stats['xpassed']:
+                self._append_test(item, 'PASS')
+        if 'failed' in stats:
+            for item in stats['failed']:
+                self._append_test(item, 'FAIL')
+        if 'xfailed' in stats:
+            for item in stats['xfailed']:
+                self._append_test(item, 'FAIL')
+        if 'error' in stats:
+            for item in stats['error']:
+                self._append_test(item, 'FAIL')
+        if 'skipped' in stats:
+            for item in stats['skipped']:
+                self._append_test(item, 'ABORTED')
+
+        try:
+            issue_id = self.publisher.publish(self.test_execution.as_dict())
+        except XrayError as exc:
+            terminalreporter.ensure_newline()
+            terminalreporter.section('Jira XRAY', sep='-', red=True, bold=True)
+            terminalreporter.write_line('Could not publish results to Jira XRAY!')
+            if exc.message:
+                terminalreporter.write_line(exc.message)
+        else:
+            if issue_id and self.logfile:
+                terminalreporter.write_sep(
+                    '-', f'Generated XRAY execution report file: {Path(issue_id).absolute()}'
+                )
+            elif issue_id:
+                terminalreporter.write_sep(
+                    '-', f'Uploaded results to JIRA XRAY. Test Execution Id: {issue_id}'
+                )
