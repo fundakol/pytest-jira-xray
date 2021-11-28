@@ -2,15 +2,10 @@ import datetime as dt
 import enum
 import os
 from os import environ
-from typing import List, Dict, Union, Any, Type, Optional
+from typing import List, Dict, Union, Any, Type
 
-from _pytest.mark import Mark
-from _pytest.nodes import Item
-
-from pytest_xray.constant import XRAY_MARKER_NAME, DATETIME_FORMAT
+from pytest_xray.constant import DATETIME_FORMAT
 from pytest_xray.exceptions import XrayError
-
-_test_keys = {}
 
 
 class Status(str, enum.Enum):
@@ -98,28 +93,6 @@ class TestExecution:
         if self.test_execution_key:
             data['testExecutionKey'] = self.test_execution_key
         return data
-
-
-def _get_xray_marker(item: Item) -> Optional[Mark]:
-    return item.get_closest_marker(XRAY_MARKER_NAME)
-
-
-def associate_marker_metadata_for(item: Item) -> None:
-    """Store XRAY test id for test item."""
-    marker = _get_xray_marker(item)
-    if not marker:
-        return
-
-    test_key = marker.args[0]
-    _test_keys[item.nodeid] = test_key
-
-
-def get_test_key_for(item: Item) -> Optional[str]:
-    """Return XRAY test id for item."""
-    test_id = _test_keys.get(item.nodeid)
-    if test_id:
-        return test_id
-    return None
 
 
 def get_base_options() -> dict:
