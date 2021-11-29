@@ -2,7 +2,7 @@ import datetime as dt
 import enum
 import os
 from os import environ
-from typing import List, Dict, Union, Any, Type
+from typing import List, Dict, Union, Any, Type, Optional
 
 from pytest_xray.constant import DATETIME_FORMAT
 from pytest_xray.exceptions import XrayError
@@ -46,18 +46,18 @@ class TestCase:
             self,
             test_key: str,
             status: Union[enum.Enum, str],
-            comment: str = None,
-            duration: float = 0.0
+            comment: Optional[str] = None,
     ):
         self.test_key = test_key
         self.status = status
         self.comment = comment or ''
-        self.duration = duration
 
     def as_dict(self) -> Dict[str, str]:
-        return dict(testKey=self.test_key,
-                    status=str(self.status),
-                    comment=self.comment)
+        return dict(
+            testKey=self.test_key,
+            status=str(self.status),
+            comment=self.comment,
+        )
 
 
 class TestExecution:
@@ -75,6 +75,7 @@ class TestExecution:
         self.user = user or ''
         self.revision = revision or ''
         self.start_date = dt.datetime.now(tz=dt.timezone.utc)
+        self.finish_date = None
         self.tests = tests or []
 
     def append(self, test: Union[dict, TestCase]) -> None:
@@ -83,11 +84,18 @@ class TestExecution:
         self.tests.append(test)
 
     def as_dict(self) -> Dict[str, Any]:
+        if self.finish_date is None:
+            self.finish_date = dt.datetime.now(tz=dt.timezone.utc)
+
         tests = [test.as_dict() for test in self.tests]
-        info = dict(startDate=self.start_date.strftime(DATETIME_FORMAT),
-                    finishDate=dt.datetime.now(tz=dt.timezone.utc).strftime(DATETIME_FORMAT))
-        data = dict(info=info,
-                    tests=tests)
+        info = dict(
+            startDate=self.start_date.strftime(DATETIME_FORMAT),
+            finishDate=self.finish_date.strftime(DATETIME_FORMAT)
+        )
+        data = dict(
+            info=info,
+            tests=tests
+        )
         if self.test_plan_key:
             info['testPlanKey'] = self.test_plan_key
         if self.test_execution_key:
