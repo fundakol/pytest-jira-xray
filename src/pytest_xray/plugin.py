@@ -1,3 +1,4 @@
+import datetime as dt
 import os
 from pathlib import Path
 from typing import List, Tuple, Union, Optional, Dict
@@ -6,6 +7,7 @@ from _pytest.config import Config, ExitCode
 from _pytest.config.argparsing import Parser
 from _pytest.mark import Mark
 from _pytest.nodes import Item
+from _pytest.reports import TestReport
 from _pytest.terminal import TerminalReporter
 from requests.auth import AuthBase
 
@@ -113,6 +115,8 @@ class XrayPlugin:
         logfile = self.config.getoption(XRAYPATH)
         self.logfile: str = self._get_normalize_logfile(logfile) if logfile else None
         self.test_keys: Dict[str, str] = {}  # store nodeid and TestId
+        self.issue_id = None
+        self.exception = None
         self.test_execution: TestExecution = TestExecution(
             test_execution_key=self.test_execution_id,
             test_plan_key=self.test_plan_id
@@ -126,83 +130,91 @@ class XrayPlugin:
     def _get_normalize_logfile(logfile: str) -> str:
         logfile = os.path.expanduser(os.path.expandvars(logfile))
         logfile = os.path.normpath(os.path.abspath(logfile))
-        os.makedirs(os.path.dirname(logfile), exist_ok=True)
         return logfile
 
     def _associate_marker_metadata_for(self, items: List[Item]) -> None:
         """Store XRAY test id for test item."""
-        test_ids = []
-        duplicated_ids = []
+        jira_ids: List[str] = []
+        duplicated_jira_ids: List[str] = []
 
         for item in items:
             marker = self._get_xray_marker(item)
             if not marker:
                 continue
 
-            test_key = marker.args[0]
-            if test_key in test_ids:
-                duplicated_ids.append(test_key)
+            test_key: str = marker.args[0]
+            if test_key in jira_ids:
+                duplicated_jira_ids.append(test_key)
             else:
-                test_ids.append(test_key)
+                jira_ids.append(test_key)
             self.test_keys[item.nodeid] = test_key
-            if duplicated_ids:
-                raise XrayError(f'Duplicated test case ids: {duplicated_ids}')
+            if duplicated_jira_ids:
+                raise XrayError(f'Duplicated test case ids: {duplicated_jira_ids}')
 
-    def _get_test_key_for(self, item: Item) -> Optional[str]:
-        """Return XRAY test id for item."""
-        test_id = self.test_keys.get(item.nodeid)
+    def _get_test_key_for(self, nodeid: str) -> Optional[str]:
+        """Return XRAY test id for nodeid."""
+        test_id = self.test_keys.get(nodeid)
         if test_id:
             return test_id
-        return None
 
     @staticmethod
     def _get_xray_marker(item: Item) -> Optional[Mark]:
         return item.get_closest_marker(XRAY_MARKER_NAME)
 
-    def _append_test(self, item: Item, status: str) -> None:
-        test_key = self._get_test_key_for(item)
-        if test_key:
-            tc = TestCase(test_key, self.status_builder(status), item.longreprtext)
-            self.test_execution.append(tc)
+    def pytest_sessionstart(self, session):
+        self.test_execution.start_date = dt.datetime.now(tz=dt.timezone.utc)
+
+    def pytest_runtest_logreport(self, report: TestReport):
+        outcome = self._get_outcome(report)
+        if outcome:
+            test_key = self._get_test_key_for(report.nodeid)
+            self.test_execution.append(
+                TestCase(
+                    test_key=test_key,
+                    status=self.status_builder(outcome),
+                    comment=report.longreprtext,
+                )
+            )
+
+    def _get_outcome(self, report) -> Optional[str]:
+        if report.failed:
+            if report.when != 'call':
+                return 'FAIL'
+            elif hasattr(report, 'wasxfail'):
+                return 'PASS'
+            else:
+                return 'FAIL'
+        elif report.skipped:
+            if hasattr(report, 'wasxfail'):
+                return 'FAIL'
+            else:
+                return 'ABORTED'
+        elif report.passed and report.when == 'call':
+            return 'PASS'
 
     def pytest_collection_modifyitems(self, config: Config, items: List[Item]) -> None:
         self._associate_marker_metadata_for(items)
 
-    def pytest_terminal_summary(self, terminalreporter: TerminalReporter, exitstatus: ExitCode, config: Config) -> None:
-        stats = terminalreporter.stats
-        if 'passed' in stats:
-            for item in stats['passed']:
-                self._append_test(item, 'PASS')
-        if 'xpassed' in stats:
-            for item in stats['xpassed']:
-                self._append_test(item, 'PASS')
-        if 'failed' in stats:
-            for item in stats['failed']:
-                self._append_test(item, 'FAIL')
-        if 'xfailed' in stats:
-            for item in stats['xfailed']:
-                self._append_test(item, 'FAIL')
-        if 'error' in stats:
-            for item in stats['error']:
-                self._append_test(item, 'FAIL')
-        if 'skipped' in stats:
-            for item in stats['skipped']:
-                self._append_test(item, 'ABORTED')
-
+    def pytest_sessionfinish(self, session):
+        self.test_execution.finish_date = dt.datetime.now(tz=dt.timezone.utc)
         try:
-            issue_id = self.publisher.publish(self.test_execution.as_dict())
+            self.issue_id = self.publisher.publish(self.test_execution.as_dict())
         except XrayError as exc:
+            self.exception = exc
+
+    def pytest_terminal_summary(self, terminalreporter: TerminalReporter, exitstatus: ExitCode, config: Config) -> None:
+        if self.exception:
             terminalreporter.ensure_newline()
             terminalreporter.section('Jira XRAY', sep='-', red=True, bold=True)
             terminalreporter.write_line('Could not publish results to Jira XRAY!')
-            if exc.message:
-                terminalreporter.write_line(exc.message)
+            if self.exception.message:
+                terminalreporter.write_line(self.exception.message)
         else:
-            if issue_id and self.logfile:
+            if self.issue_id and self.logfile:
                 terminalreporter.write_sep(
-                    '-', f'Generated XRAY execution report file: {Path(issue_id).absolute()}'
+                    '-', f'Generated XRAY execution report file: {Path(self.logfile).absolute()}'
                 )
-            elif issue_id:
+            elif self.issue_id:
                 terminalreporter.write_sep(
-                    '-', f'Uploaded results to JIRA XRAY. Test Execution Id: {issue_id}'
+                    '-', f'Uploaded results to JIRA XRAY. Test Execution Id: {self.issue_id}'
                 )
