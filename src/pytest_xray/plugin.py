@@ -180,11 +180,10 @@ class XrayPlugin:
         if report.failed:
             if report.when != 'call':
                 return 'FAIL'
+            elif hasattr(report, 'wasxfail'):
+                return 'PASS'
             else:
-                if hasattr(report, 'wasxfail'):
-                    return 'PASS'
-                else:
-                    return 'FAIL'
+                return 'FAIL'
         elif report.skipped:
             if hasattr(report, 'wasxfail'):
                 return 'FAIL'
