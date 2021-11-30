@@ -212,7 +212,7 @@ class XrayPlugin:
         else:
             if self.issue_id and self.logfile:
                 terminalreporter.write_sep(
-                    '-', f'Generated XRAY execution report file: {Path(self.issue_id).absolute()}'
+                    '-', f'Generated XRAY execution report file: {Path(self.logfile).absolute()}'
                 )
             elif self.issue_id:
                 terminalreporter.write_sep(
