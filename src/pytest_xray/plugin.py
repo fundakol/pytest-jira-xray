@@ -168,12 +168,13 @@ class XrayPlugin:
         outcome = self._get_outcome(report)
         if outcome:
             test_key = self._get_test_key_for(report.nodeid)
-            self.test_execution.append(
-                TestCase(
-                    test_key=test_key,
-                    status=self.status_builder(outcome),
-                    comment=report.longreprtext,
-                )
+            if test_key:
+                self.test_execution.append(
+                    TestCase(
+                        test_key=test_key,
+                        status=self.status_builder(outcome),
+                        comment=report.longreprtext,
+                    )
             )
 
     def _get_outcome(self, report) -> Optional[str]:
