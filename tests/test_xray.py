@@ -118,3 +118,37 @@ def test_xray_with_all_test_types(testdir):
         ('JIRA-5', 'FAIL'),
         ('JIRA-6', 'PASS')
     }
+
+
+def test_if_tests_without_xray_id_are_not_included(testdir):
+    test_example = textwrap.dedent(
+        """\
+        import pytest 
+        
+        @pytest.mark.xray('JIRA-1')
+        def test_pass():
+            assert True
+            
+        def test_pass_without_id():
+            assert True
+        """)
+    testdir.makepyfile(test_example)
+
+    report_file = testdir.tmpdir / 'xray.json'
+
+    result = testdir.runpytest(
+        '--jira-xray',
+        f'--xraypath={report_file}',
+        '-v',
+    )
+
+    assert result.ret == 0
+    result.assert_outcomes(passed=2)
+    assert report_file.exists()
+    with open(report_file) as file:
+        data = json.load(file)
+
+    xray_statuses = set((t['testKey'], t['status']) for t in data['tests'])
+    assert xray_statuses == {
+        ('JIRA-1', 'PASS'),
+    }
