@@ -89,6 +89,8 @@ class XrayPublisher:
                 err_message = (f'HTTPError: Could not post to JIRA service at {url}. '
                                f'Response status code: {response.status_code}')
                 _logger.exception(err_message)
+                if 'error' in response.json():
+                    _logger.error('Error message from server: %s', response.json()['error'])
                 raise XrayError(err_message) from exc
             return response.json()
 
