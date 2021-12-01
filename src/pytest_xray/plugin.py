@@ -175,7 +175,7 @@ class XrayPlugin:
                         status=self.status_builder(outcome),
                         comment=report.longreprtext,
                     )
-            )
+                )
 
     def _get_outcome(self, report) -> Optional[str]:
         if report.failed:

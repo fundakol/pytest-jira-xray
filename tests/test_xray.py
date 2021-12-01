@@ -63,38 +63,39 @@ def test_jira_xray_plugin_exports_to_file(xray_tests):
 
 
 def test_xray_with_all_test_types(testdir):
-    testdir.makepyfile(textwrap.dedent("""\
-    import pytest
+    testdir.makepyfile(textwrap.dedent(
+        """\
+        import pytest
 
-    @pytest.fixture
-    def error_fixture():
-        assert 0
+        @pytest.fixture
+        def error_fixture():
+            assert 0
 
-    @pytest.mark.xray('JIRA-1')
-    def test_ok():
-        print("ok")
+        @pytest.mark.xray('JIRA-1')
+        def test_ok():
+            print("ok")
 
-    @pytest.mark.xray('JIRA-2')
-    def test_fail():
-        assert 0
+        @pytest.mark.xray('JIRA-2')
+        def test_fail():
+            assert 0
 
-    @pytest.mark.xray('JIRA-3')
-    def test_error(error_fixture):
-        pass
+        @pytest.mark.xray('JIRA-3')
+        def test_error(error_fixture):
+            pass
 
-    @pytest.mark.xray('JIRA-4')
-    def test_skip():
-        pytest.skip("skipping this test")
+        @pytest.mark.xray('JIRA-4')
+        def test_skip():
+            pytest.skip("skipping this test")
 
-    @pytest.mark.xray('JIRA-5')
-    def test_xfail():
-        pytest.xfail("xfailing this test")
+        @pytest.mark.xray('JIRA-5')
+        def test_xfail():
+            pytest.xfail("xfailing this test")
 
-    @pytest.mark.xfail(reason="always xfail")
-    @pytest.mark.xray('JIRA-6')
-    def test_xpass():
-        pass
-    """))
+        @pytest.mark.xfail(reason="always xfail")
+        @pytest.mark.xray('JIRA-6')
+        def test_xpass():
+            pass
+        """))
     report_file = testdir.tmpdir / 'xray.json'
 
     result = testdir.runpytest(
@@ -121,18 +122,18 @@ def test_xray_with_all_test_types(testdir):
 
 
 def test_if_tests_without_xray_id_are_not_included(testdir):
-    test_example = textwrap.dedent(
+    testdir.makepyfile(textwrap.dedent(
         """\
-        import pytest 
-        
+        import pytest
+
         @pytest.mark.xray('JIRA-1')
         def test_pass():
             assert True
-            
+
         def test_pass_without_id():
             assert True
         """)
-    testdir.makepyfile(test_example)
+    )
 
     report_file = testdir.tmpdir / 'xray.json'
 
