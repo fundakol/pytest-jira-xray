@@ -87,3 +87,11 @@ $ pytest --jira-xray --cloud
 ```commandline
 $ pytest --jira-xray --xraypath=xray.json
 ```
+
+### Troubleshooting
+
+This section holds information about common issues.
+
+#### `The Test XXX is in a non-executable status`
+  * Problem: The test is not executable by the user.
+  * Solution: Make sure, that your user has at least the permission to resolve an issue: https://community.atlassian.com/t5/Jira-questions/Test-Executions-are-Read-Only-Why/qaq-p/1155044 
