@@ -65,6 +65,9 @@ $ export XRAY_CLIENT_SECRET=<client secret>
 ```commandline
 $ export XRAY_EXECUTION_TEST_ENVIRONMENTS="Env1 Env2 Env3"
 $ export XRAY_EXECUTION_FIX_VERSION="1.0"
+
+$ export XRAY_EXECUTION_SUMMARY="Smoke tests" # New execution only
+$ export XRAY_EXECUTION_DESC="This is an automated test execution of the smoke tests" # New execution only
 ```
 
 ### Upload results 
@@ -110,6 +113,10 @@ This section holds information about common issues.
 #### `The Test XXX is in a non-executable status`
   * Problem: The test is not executable by the user.
   * Solution: Make sure, that your test is not deactivated, approved and ready to use in Jira.
+
+#### `Error message from server: fixVersions: fixVersions`
+  * Problem: The version is malformed or doesn't exist.
+  * Solution: Make sure the version exists and the name matches the existing version and that only one version is used.
 
 
 ## References

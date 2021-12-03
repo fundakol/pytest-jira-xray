@@ -73,6 +73,8 @@ class TestExecution:
             tests: List = None,
             test_environments: List = None,
             fix_version: str = None,
+            summary:str = None,
+            description:str = None
     ):
         self.test_execution_key = test_execution_key
         self.test_plan_key = test_plan_key or ''
@@ -86,6 +88,8 @@ class TestExecution:
             constant.ENV_MULTI_VALUE_SPLIT_PATTERN
         )
         self.fix_version = fix_version or _first_from_environ(constant.ENV_TEST_EXECUTION_FIX_VERSION)
+        self.summary = summary or _from_environ_or_none(constant.ENV_TEST_EXECUTION_SUMMARY)
+        self.description = description or _from_environ_or_none(constant.ENV_TEST_EXECUTION_DESC)
 
     def append(self, test: Union[dict, TestCase]) -> None:
         if not isinstance(test, TestCase):
@@ -107,6 +111,12 @@ class TestExecution:
 
         if self.test_environments and len(self.test_environments) > 0:
             info["testEnvironments"] = self.test_environments
+
+        if self.summary:
+            info["summary"] = self.summary
+
+        if self.description:
+            info["description"] = self.description
 
         data = dict(
             info=info,
@@ -173,6 +183,17 @@ def get_bearer_auth() -> dict:
     options['CLIENT_ID'] = client_id
     options['CLIENT_SECRET'] = client_secret
     return options
+
+
+def _from_environ_or_none(name: str):
+    if name in environ:
+        val = environ[name].strip()
+        if len(val) == 0:
+            val = None
+    else:
+        val = None
+
+    return val
 
 
 def _first_from_environ(name: str, separator: str = None):

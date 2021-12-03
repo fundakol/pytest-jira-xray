@@ -100,7 +100,9 @@ def test_test_execution_full_model(testcase, date_time_now):
             test_plan_key='Jira-10',
             test_execution_key='JIRA-20',
             test_environments=["My local laptop"],
-            fix_version="1.0"
+            fix_version="1.0",
+            summary="My Test Suite",
+            description="Im doing stuff"
         )
         te.tests = [testcase]
         assert te.as_dict() == {
@@ -112,7 +114,9 @@ def test_test_execution_full_model(testcase, date_time_now):
                 'version': '1.0',
                 'testEnvironments': [
                     'My local laptop'
-                ]
+                ],
+                'summary': 'My Test Suite',
+                'description': 'Im doing stuff'
             },
             'tests': [
                 {
