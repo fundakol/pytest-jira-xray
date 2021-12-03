@@ -65,6 +65,7 @@ $ export XRAY_CLIENT_SECRET=<client secret>
 ```commandline
 $ export XRAY_EXECUTION_TEST_ENVIRONMENTS="Env1 Env2 Env3"
 $ export XRAY_EXECUTION_FIX_VERSION="1.0"
+$ export XRAY_EXECUTION_REVISION=`git rev-parse HEAD`
 
 $ export XRAY_EXECUTION_SUMMARY="Smoke tests" # New execution only
 $ export XRAY_EXECUTION_DESC="This is an automated test execution of the smoke tests" # New execution only

@@ -74,12 +74,12 @@ class TestExecution:
             test_environments: List = None,
             fix_version: str = None,
             summary: str = None,
-            description: str = None
+            description: str = None,
     ):
         self.test_execution_key = test_execution_key
         self.test_plan_key = test_plan_key or ''
         self.user = user or ''
-        self.revision = revision or ''
+        self.revision = revision or _from_environ_or_none(constant.ENV_TEST_EXECUTION_REVISION)
         self.start_date = dt.datetime.now(tz=dt.timezone.utc)
         self.finish_date = None
         self.tests = tests or []
@@ -117,6 +117,9 @@ class TestExecution:
 
         if self.description:
             info["description"] = self.description
+
+        if self.revision:
+            info["revision"] = self.revision
 
         data = dict(
             info=info,
