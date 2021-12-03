@@ -61,6 +61,12 @@ $ export XRAY_CLIENT_ID=<client id>
 $ export XRAY_CLIENT_SECRET=<client secret>
 ```
 
+* Test Execution parameters:
+```commandline
+$ export XRAY_EXECUTION_TEST_ENVIRONMENTS="Env1 Env2 Env3"
+$ export XRAY_EXECUTION_FIX_VERSION="1.0"
+```
+
 ### Upload results 
 
 * Upload results to new test execution:
@@ -104,3 +110,8 @@ This section holds information about common issues.
 #### `The Test XXX is in a non-executable status`
   * Problem: The test is not executable by the user.
   * Solution: Make sure, that your test is not deactivated, approved and ready to use in Jira.
+
+
+## References
+
+- XRay import execution endpoint: https://docs.getxray.app/display/XRAY/Import+Execution+Results
