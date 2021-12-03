@@ -98,9 +98,9 @@ $ pytest --jira-xray --xraypath=xray.json
 
 When you want to synchronize your test results via. Pytest integration in IntelliJ, you need to configure the following:
 
-1. Use the *pytest* test configuration template and add `--jira-xray` to *Additional Arguments*
+1. Use the *pytest* test configuration template and add `--jira-xray -o log_cli=true` to *Additional Arguments* \
   ![](doc/intellij-pytest-template.png)
-2. Disable `--no-summary` in *Settings*
+2. Disable `--no-summary` in *Settings*\
   ![](doc/intellij-pytest-advanced-settings.png)
 
 ### Troubleshooting
