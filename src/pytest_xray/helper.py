@@ -73,8 +73,8 @@ class TestExecution:
             tests: List = None,
             test_environments: List = None,
             fix_version: str = None,
-            summary:str = None,
-            description:str = None
+            summary: str = None,
+            description: str = None
     ):
         self.test_execution_key = test_execution_key
         self.test_plan_key = test_plan_key or ''
