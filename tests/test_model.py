@@ -1,5 +1,6 @@
 import datetime as dt
 import os
+from unittest import mock
 from unittest.mock import patch
 
 import pytest
@@ -128,11 +129,11 @@ def test_test_execution_full_model(testcase, date_time_now):
         }
 
 
+@mock.patch.dict(os.environ, {
+    constant.ENV_TEST_EXECUTION_FIX_VERSION: "1.1",
+    constant.ENV_TEST_EXECUTION_TEST_ENVIRONMENTS: "MyLocalLaptop And TheLiveSystem",
+})
 def test_test_execution_environ_model(testcase, date_time_now):
-
-    os.environ[constant.ENV_TEST_EXECUTION_FIX_VERSION] = "1.1"
-    os.environ[constant.ENV_TEST_EXECUTION_TEST_ENVIRONMENTS] = "MyLocalLaptop And TheLiveSystem"
-
     with patch('datetime.datetime') as dt_mock:
         dt_mock.now.return_value = date_time_now
         te = _TestExecution(
