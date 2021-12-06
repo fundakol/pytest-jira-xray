@@ -3,7 +3,9 @@ import enum
 import os
 from os import environ
 from typing import List, Dict, Union, Any, Type, Optional
+import re
 
+from pytest_xray import constant
 from pytest_xray.constant import DATETIME_FORMAT
 from pytest_xray.exceptions import XrayError
 
@@ -68,15 +70,26 @@ class TestExecution:
             test_plan_key: str = None,
             user: str = None,
             revision: str = None,
-            tests: List = None
+            tests: List = None,
+            test_environments: List = None,
+            fix_version: str = None,
+            summary: str = None,
+            description: str = None,
     ):
         self.test_execution_key = test_execution_key
         self.test_plan_key = test_plan_key or ''
         self.user = user or ''
-        self.revision = revision or ''
+        self.revision = revision or _from_environ_or_none(constant.ENV_TEST_EXECUTION_REVISION)
         self.start_date = dt.datetime.now(tz=dt.timezone.utc)
         self.finish_date = None
         self.tests = tests or []
+        self.test_environments = test_environments or _from_environ(
+            constant.ENV_TEST_EXECUTION_TEST_ENVIRONMENTS,
+            constant.ENV_MULTI_VALUE_SPLIT_PATTERN
+        )
+        self.fix_version = fix_version or _first_from_environ(constant.ENV_TEST_EXECUTION_FIX_VERSION)
+        self.summary = summary or _from_environ_or_none(constant.ENV_TEST_EXECUTION_SUMMARY)
+        self.description = description or _from_environ_or_none(constant.ENV_TEST_EXECUTION_DESC)
 
     def append(self, test: Union[dict, TestCase]) -> None:
         if not isinstance(test, TestCase):
@@ -90,8 +103,24 @@ class TestExecution:
         tests = [test.as_dict() for test in self.tests]
         info = dict(
             startDate=self.start_date.strftime(DATETIME_FORMAT),
-            finishDate=self.finish_date.strftime(DATETIME_FORMAT)
+            finishDate=self.finish_date.strftime(DATETIME_FORMAT),
         )
+
+        if self.fix_version:
+            info["version"] = self.fix_version
+
+        if self.test_environments and len(self.test_environments) > 0:
+            info["testEnvironments"] = self.test_environments
+
+        if self.summary:
+            info["summary"] = self.summary
+
+        if self.description:
+            info["description"] = self.description
+
+        if self.revision:
+            info["revision"] = self.revision
+
         data = dict(
             info=info,
             tests=tests
@@ -157,3 +186,33 @@ def get_bearer_auth() -> dict:
     options['CLIENT_ID'] = client_id
     options['CLIENT_SECRET'] = client_secret
     return options
+
+
+def _from_environ_or_none(name: str):
+    if name in environ:
+        val = environ[name].strip()
+        if len(val) == 0:
+            val = None
+    else:
+        val = None
+
+    return val
+
+
+def _first_from_environ(name: str, separator: str = None):
+    return next(iter(_from_environ(name, separator)), None)
+
+
+def _from_environ(name: str, separator: str = None) -> List:
+    if name not in environ:
+        return []
+
+    param = environ[name]
+
+    if separator:
+        source = re.split(separator, param)
+    else:
+        source = [param]
+
+    # Return stripped non empty values
+    return list(filter(lambda x: len(x) > 0, map(lambda x: x.strip(), source)))

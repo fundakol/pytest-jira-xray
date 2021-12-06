@@ -61,6 +61,16 @@ $ export XRAY_CLIENT_ID=<client id>
 $ export XRAY_CLIENT_SECRET=<client secret>
 ```
 
+* Test Execution parameters:
+```commandline
+$ export XRAY_EXECUTION_TEST_ENVIRONMENTS="Env1 Env2 Env3"
+$ export XRAY_EXECUTION_FIX_VERSION="1.0"
+$ export XRAY_EXECUTION_REVISION=`git rev-parse HEAD`
+
+$ export XRAY_EXECUTION_SUMMARY="Smoke tests" # New execution only
+$ export XRAY_EXECUTION_DESC="This is an automated test execution of the smoke tests" # New execution only
+```
+
 ### Upload results 
 
 * Upload results to new test execution:
@@ -92,9 +102,9 @@ $ pytest --jira-xray --xraypath=xray.json
 
 When you want to synchronize your test results via. Pytest integration in IntelliJ, you need to configure the following:
 
-1. Use the *pytest* test configuration template and add `--jira-xray` to *Additional Arguments*
+1. Use the *pytest* test configuration template and add `--jira-xray -o log_cli=true` to *Additional Arguments* \
   ![](doc/intellij-pytest-template.png)
-2. Disable `--no-summary` in *Settings*
+2. Disable `--no-summary` in *Settings*\
   ![](doc/intellij-pytest-advanced-settings.png)
 
 ### Troubleshooting
@@ -104,3 +114,12 @@ This section holds information about common issues.
 #### `The Test XXX is in a non-executable status`
   * Problem: The test is not executable by the user.
   * Solution: Make sure, that your test is not deactivated, approved and ready to use in Jira.
+
+#### `Error message from server: fixVersions: fixVersions`
+  * Problem: The version is malformed or doesn't exist.
+  * Solution: Make sure the version exists and the name matches the existing version and that only one version is used.
+
+
+## References
+
+- XRay import execution endpoint: https://docs.getxray.app/display/XRAY/Import+Execution+Results
