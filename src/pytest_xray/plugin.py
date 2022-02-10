@@ -17,8 +17,9 @@ from pytest_xray.constant import (
     XRAY_TEST_PLAN_ID,
     XRAY_EXECUTION_ID,
     JIRA_CLOUD,
+    JIRA_API_KEY,
     XRAYPATH,
-    XRAY_MARKER_NAME
+    XRAY_MARKER_NAME,
 )
 from pytest_xray.exceptions import XrayError
 from pytest_xray.file_publisher import FilePublisher
@@ -29,45 +30,52 @@ from pytest_xray.helper import (
     StatusBuilder,
     CloudStatus,
     get_bearer_auth,
+    get_api_key_auth,
     get_basic_auth,
 )
-from pytest_xray.xray_publisher import BearerAuth, XrayPublisher
+from pytest_xray.xray_publisher import BearerAuth, ApiKeyAuth, XrayPublisher
 
 
 def pytest_addoption(parser: Parser):
-    xray = parser.getgroup('Jira Xray report')
+    xray = parser.getgroup("Jira Xray report")
     xray.addoption(
         JIRA_XRAY_FLAG,
-        action='store_true',
+        action="store_true",
         default=False,
-        help='Upload test results to JIRA XRAY'
+        help="Upload test results to JIRA XRAY",
     )
     xray.addoption(
         JIRA_CLOUD,
-        action='store_true',
+        action="store_true",
         default=False,
-        help='Use with JIRA XRAY could server'
+        help="Use with JIRA XRAY could server",
+    )
+    xray.addoption(
+        JIRA_API_KEY,
+        action="store_true",
+        default=False,
+        help="Upload test results to JIRA XRAY with API Key",
     )
     xray.addoption(
         XRAY_EXECUTION_ID,
-        action='store',
-        metavar='ExecutionId',
+        action="store",
+        metavar="ExecutionId",
         default=None,
-        help='XRAY Test Execution ID'
+        help="XRAY Test Execution ID",
     )
     xray.addoption(
         XRAY_TEST_PLAN_ID,
-        action='store',
-        metavar='TestplanId',
+        action="store",
+        metavar="TestplanId",
         default=None,
-        help='XRAY Test Plan ID'
+        help="XRAY Test Plan ID",
     )
     xray.addoption(
         XRAYPATH,
-        action='store',
-        metavar='path',
+        action="store",
+        metavar="path",
         default=None,
-        help='Do not upload to a server but create JSON report file at given path'
+        help="Do not upload to a server but create JSON report file at given path",
     )
 
 
@@ -83,29 +91,27 @@ def pytest_configure(config: Config) -> None:
         if config.getoption(JIRA_CLOUD):
             options = get_bearer_auth()
             auth: Union[AuthBase, Tuple[str, str]] = BearerAuth(
-                options['BASE_URL'],
-                options['CLIENT_ID'],
-                options['CLIENT_SECRET']
+                options["BASE_URL"], options["CLIENT_ID"], options["CLIENT_SECRET"]
             )
+        elif config.getoption(JIRA_API_KEY):
+            options = get_api_key_auth()
+            auth = ApiKeyAuth(options["API_KEY"])
         else:
             options = get_basic_auth()
-            auth = (options['USER'], options['PASSWORD'])
+            auth = (options["USER"], options["PASSWORD"])
 
         publisher = XrayPublisher(  # type: ignore
-            base_url=options['BASE_URL'],
-            auth=auth,
-            verify=options['VERIFY']
+            base_url=options["BASE_URL"], auth=auth, verify=options["VERIFY"]
         )
 
     plugin = XrayPlugin(config, publisher)
     config.pluginmanager.register(plugin=plugin, name=XRAY_PLUGIN)
     config.addinivalue_line(
-        'markers', 'xray(JIRA_ID): mark test with JIRA XRAY test case ID'
+        "markers", "xray(JIRA_ID): mark test with JIRA XRAY test case ID"
     )
 
 
 class XrayPlugin:
-
     def __init__(self, config, publisher):
         self.config = config
         self.publisher = publisher
@@ -118,8 +124,7 @@ class XrayPlugin:
         self.issue_id = None
         self.exception = None
         self.test_execution: TestExecution = TestExecution(
-            test_execution_key=self.test_execution_id,
-            test_plan_key=self.test_plan_id
+            test_execution_key=self.test_execution_id, test_plan_key=self.test_plan_id
         )
         if self.is_cloud_server:
             self.status_builder: StatusBuilder = StatusBuilder(CloudStatus)
@@ -149,7 +154,7 @@ class XrayPlugin:
                 jira_ids.append(test_key)
             self.test_keys[item.nodeid] = test_key
             if duplicated_jira_ids:
-                raise XrayError(f'Duplicated test case ids: {duplicated_jira_ids}')
+                raise XrayError(f"Duplicated test case ids: {duplicated_jira_ids}")
 
     def _get_test_key_for(self, nodeid: str) -> Optional[str]:
         """Return XRAY test id for nodeid."""
@@ -179,19 +184,19 @@ class XrayPlugin:
 
     def _get_outcome(self, report) -> Optional[str]:
         if report.failed:
-            if report.when != 'call':
-                return 'FAIL'
-            elif hasattr(report, 'wasxfail'):
-                return 'PASS'
+            if report.when != "call":
+                return "FAIL"
+            elif hasattr(report, "wasxfail"):
+                return "PASS"
             else:
-                return 'FAIL'
+                return "FAIL"
         elif report.skipped:
-            if hasattr(report, 'wasxfail'):
-                return 'FAIL'
+            if hasattr(report, "wasxfail"):
+                return "FAIL"
             else:
-                return 'ABORTED'
-        elif report.passed and report.when == 'call':
-            return 'PASS'
+                return "ABORTED"
+        elif report.passed and report.when == "call":
+            return "PASS"
 
     def pytest_collection_modifyitems(self, config: Config, items: List[Item]) -> None:
         self._associate_marker_metadata_for(items)
@@ -203,19 +208,23 @@ class XrayPlugin:
         except XrayError as exc:
             self.exception = exc
 
-    def pytest_terminal_summary(self, terminalreporter: TerminalReporter, exitstatus: ExitCode, config: Config) -> None:
+    def pytest_terminal_summary(
+        self, terminalreporter: TerminalReporter, exitstatus: ExitCode, config: Config
+    ) -> None:
         if self.exception:
             terminalreporter.ensure_newline()
-            terminalreporter.section('Jira XRAY', sep='-', red=True, bold=True)
-            terminalreporter.write_line('Could not publish results to Jira XRAY!')
+            terminalreporter.section("Jira XRAY", sep="-", red=True, bold=True)
+            terminalreporter.write_line("Could not publish results to Jira XRAY!")
             if self.exception.message:
                 terminalreporter.write_line(self.exception.message)
         else:
             if self.issue_id and self.logfile:
                 terminalreporter.write_sep(
-                    '-', f'Generated XRAY execution report file: {Path(self.logfile).absolute()}'
+                    "-",
+                    f"Generated XRAY execution report file: {Path(self.logfile).absolute()}",
                 )
             elif self.issue_id:
                 terminalreporter.write_sep(
-                    '-', f'Uploaded results to JIRA XRAY. Test Execution Id: {self.issue_id}'
+                    "-",
+                    f"Uploaded results to JIRA XRAY. Test Execution Id: {self.issue_id}",
                 )

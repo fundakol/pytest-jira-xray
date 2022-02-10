@@ -12,24 +12,26 @@ from pytest_xray.exceptions import XrayError
 
 class Status(str, enum.Enum):
     """Mapping status to string accepted by Jira DC server."""
-    TODO = 'TODO'
-    EXECUTING = 'EXECUTING'
-    PENDING = 'PENDING'
-    PASS = 'PASS'
-    FAIL = 'FAIL'
-    ABORTED = 'ABORTED'
-    BLOCKED = 'BLOCKED'
+
+    TODO = "TODO"
+    EXECUTING = "EXECUTING"
+    PENDING = "PENDING"
+    PASS = "PASS"
+    FAIL = "FAIL"
+    ABORTED = "ABORTED"
+    BLOCKED = "BLOCKED"
 
 
 class CloudStatus(str, enum.Enum):
     """Mapping status to string accepted by Jira cloud."""
-    TODO = 'TODO'
-    EXECUTING = 'EXECUTING'
-    PENDING = 'PENDING'
-    PASS = 'PASSED'
-    FAIL = 'FAILED'
-    ABORTED = 'ABORTED'
-    BLOCKED = 'BLOCKED'
+
+    TODO = "TODO"
+    EXECUTING = "EXECUTING"
+    PENDING = "PENDING"
+    PASS = "PASSED"
+    FAIL = "FAILED"
+    ABORTED = "ABORTED"
+    BLOCKED = "BLOCKED"
 
 
 class StatusBuilder:
@@ -43,16 +45,15 @@ class StatusBuilder:
 
 
 class TestCase:
-
     def __init__(
-            self,
-            test_key: str,
-            status: Union[enum.Enum, str],
-            comment: Optional[str] = None,
+        self,
+        test_key: str,
+        status: Union[enum.Enum, str],
+        comment: Optional[str] = None,
     ):
         self.test_key = test_key
         self.status = status
-        self.comment = comment or ''
+        self.comment = comment or ""
 
     def as_dict(self) -> Dict[str, str]:
         return dict(
@@ -63,33 +64,40 @@ class TestCase:
 
 
 class TestExecution:
-
     def __init__(
-            self,
-            test_execution_key: str = None,
-            test_plan_key: str = None,
-            user: str = None,
-            revision: str = None,
-            tests: List = None,
-            test_environments: List = None,
-            fix_version: str = None,
-            summary: str = None,
-            description: str = None,
+        self,
+        test_execution_key: str = None,
+        test_plan_key: str = None,
+        user: str = None,
+        revision: str = None,
+        tests: List = None,
+        test_environments: List = None,
+        fix_version: str = None,
+        summary: str = None,
+        description: str = None,
     ):
         self.test_execution_key = test_execution_key
-        self.test_plan_key = test_plan_key or ''
-        self.user = user or ''
-        self.revision = revision or _from_environ_or_none(constant.ENV_TEST_EXECUTION_REVISION)
+        self.test_plan_key = test_plan_key or ""
+        self.user = user or ""
+        self.revision = revision or _from_environ_or_none(
+            constant.ENV_TEST_EXECUTION_REVISION
+        )
         self.start_date = dt.datetime.now(tz=dt.timezone.utc)
         self.finish_date = None
         self.tests = tests or []
         self.test_environments = test_environments or _from_environ(
             constant.ENV_TEST_EXECUTION_TEST_ENVIRONMENTS,
-            constant.ENV_MULTI_VALUE_SPLIT_PATTERN
+            constant.ENV_MULTI_VALUE_SPLIT_PATTERN,
         )
-        self.fix_version = fix_version or _first_from_environ(constant.ENV_TEST_EXECUTION_FIX_VERSION)
-        self.summary = summary or _from_environ_or_none(constant.ENV_TEST_EXECUTION_SUMMARY)
-        self.description = description or _from_environ_or_none(constant.ENV_TEST_EXECUTION_DESC)
+        self.fix_version = fix_version or _first_from_environ(
+            constant.ENV_TEST_EXECUTION_FIX_VERSION
+        )
+        self.summary = summary or _from_environ_or_none(
+            constant.ENV_TEST_EXECUTION_SUMMARY
+        )
+        self.description = description or _from_environ_or_none(
+            constant.ENV_TEST_EXECUTION_DESC
+        )
 
     def append(self, test: Union[dict, TestCase]) -> None:
         if not isinstance(test, TestCase):
@@ -121,70 +129,80 @@ class TestExecution:
         if self.revision:
             info["revision"] = self.revision
 
-        data = dict(
-            info=info,
-            tests=tests
-        )
+        data = dict(info=info, tests=tests)
         if self.test_plan_key:
-            info['testPlanKey'] = self.test_plan_key
+            info["testPlanKey"] = self.test_plan_key
         if self.test_execution_key:
-            data['testExecutionKey'] = self.test_execution_key
+            data["testExecutionKey"] = self.test_execution_key
         return data
 
 
 def get_base_options() -> dict:
     options = {}
     try:
-        base_url = environ['XRAY_API_BASE_URL']
+        base_url = environ["XRAY_API_BASE_URL"]
     except KeyError as e:
         raise XrayError(
-            'pytest-jira-xray plugin requires environment variable: XRAY_API_BASE_URL'
+            "pytest-jira-xray plugin requires environment variable: XRAY_API_BASE_URL"
         ) from e
 
-    verify = os.environ.get('XRAY_API_VERIFY_SSL', 'True')
+    verify = os.environ.get("XRAY_API_VERIFY_SSL", "True")
 
-    if verify.upper() == 'TRUE':
+    if verify.upper() == "TRUE":
         verify = True  # type: ignore
-    elif verify.upper() == 'FALSE':
+    elif verify.upper() == "FALSE":
         verify = False  # type: ignore
     else:
         if not os.path.exists(verify):
             raise XrayError(f'Cannot find certificate file "{verify}"')
 
-    options['VERIFY'] = verify
-    options['BASE_URL'] = base_url
+    options["VERIFY"] = verify
+    options["BASE_URL"] = base_url
     return options
 
 
 def get_basic_auth() -> dict:
     options = get_base_options()
     try:
-        user = environ['XRAY_API_USER']
-        password = environ['XRAY_API_PASSWORD']
+        user = environ["XRAY_API_USER"]
+        password = environ["XRAY_API_PASSWORD"]
     except KeyError as e:
         raise XrayError(
-            'Basic authentication requires environment variables: '
-            'XRAY_API_USER, XRAY_API_PASSWORD'
+            "Basic authentication requires environment variables: "
+            "XRAY_API_USER, XRAY_API_PASSWORD"
         ) from e
 
-    options['USER'] = user
-    options['PASSWORD'] = password
+    options["USER"] = user
+    options["PASSWORD"] = password
     return options
 
 
 def get_bearer_auth() -> dict:
     options = get_base_options()
     try:
-        client_id = environ['XRAY_CLIENT_ID']
-        client_secret = environ['XRAY_CLIENT_SECRET']
+        client_id = environ["XRAY_CLIENT_ID"]
+        client_secret = environ["XRAY_CLIENT_SECRET"]
     except KeyError as e:
         raise XrayError(
-            'Bearer authentication requires environment variables: '
-            'XRAY_CLIENT_ID, XRAY_CLIENT_SECRET'
+            "Bearer authentication requires environment variables: "
+            "XRAY_CLIENT_ID, XRAY_CLIENT_SECRET"
         ) from e
 
-    options['CLIENT_ID'] = client_id
-    options['CLIENT_SECRET'] = client_secret
+    options["CLIENT_ID"] = client_id
+    options["CLIENT_SECRET"] = client_secret
+    return options
+
+
+def get_api_key_auth() -> dict:
+    options = get_base_options()
+    try:
+        api_key = environ["XRAY_API_KEY"]
+    except KeyError as e:
+        raise XrayError(
+            "API Key authentication requires environment variable: " "XRAY_API_KEY"
+        ) from e
+
+    options["API_KEY"] = api_key
     return options
 
 
