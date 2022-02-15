@@ -62,11 +62,6 @@ Jira Xray configuration can be provided via Environment Variables:
     $ export XRAY_API_USER=<jria username>
     $ export XRAY_API_PASSWORD=<user password>
 
-- API KEY
-
-.. code-block:: bash
-
-    $ export XRAY_API_KEY=<api key>
 
 - SSL Client Certificate
 
@@ -127,11 +122,6 @@ Upload results
 
     $ pytest --jira-xray --testplan TestPlanId
 
-* Use with Jira API KEY:
-
-.. code-block:: bash
-
-    $ pytest --jira-xray --api-key
 
 * Use with Jira cloud:
 
