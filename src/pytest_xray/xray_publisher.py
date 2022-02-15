@@ -12,8 +12,9 @@ _logger = logging.getLogger(__name__)
 
 
 class BearerAuth(AuthBase):
+
     def __init__(self, base_url: str, client_id: str, client_secret: str) -> None:
-        if base_url.endswith("/"):
+        if base_url.endswith('/'):
             base_url = base_url[:-1]
         self.base_url = base_url
         self.client_id = client_id
@@ -21,45 +22,43 @@ class BearerAuth(AuthBase):
 
     @property
     def endpoint_url(self) -> str:
-        return f"{self.base_url}{AUTHENTICATE_ENDPOINT}"
+        return f'{self.base_url}{AUTHENTICATE_ENDPOINT}'
 
     def __call__(self, r: requests.PreparedRequest) -> requests.PreparedRequest:
-        headers = {"Content-type": "application/json", "Accept": "text/plain"}
-        auth_data = {"client_id": self.client_id, "client_secret": self.client_secret}
+        headers = {
+            'Content-type': 'application/json',
+            'Accept': 'text/plain'
+        }
+        auth_data = {
+            'client_id': self.client_id,
+            'client_secret': self.client_secret
+        }
 
         try:
             response = requests.post(
-                self.endpoint_url, data=json.dumps(auth_data), headers=headers
+                self.endpoint_url,
+                data=json.dumps(auth_data),
+                headers=headers
             )
         except requests.exceptions.ConnectionError as exc:
-            err_message = (
-                f"ConnectionError: cannot authenticate with {self.endpoint_url}"
-            )
+            err_message = f'ConnectionError: cannot authenticate with {self.endpoint_url}'
             _logger.exception(err_message)
             raise XrayError(err_message) from exc
         else:
             auth_token = response.text
-            r.headers["Authorization"] = f"Bearer {auth_token}"
-        return r
-
-
-class ApiKeyAuth(AuthBase):
-    def __init__(self, api_key: str) -> None:
-        self.api_key = api_key
-
-    def __call__(self, r: requests.PreparedRequest) -> requests.PreparedRequest:
-        r.headers["Authorization"] = f"Bearer {self.api_key}"
+            r.headers['Authorization'] = f'Bearer {auth_token}'
         return r
 
 
 class XrayPublisher:
+
     def __init__(
-        self,
-        base_url: str,
-        auth: Union[AuthBase, tuple],
-        verify: Union[bool, str] = True,
+            self,
+            base_url: str,
+            auth: Union[AuthBase, tuple],
+            verify: Union[bool, str] = True
     ) -> None:
-        if base_url.endswith("/"):
+        if base_url.endswith('/'):
             base_url = base_url[:-1]
         self.base_url = base_url
         self.auth = auth
@@ -70,33 +69,28 @@ class XrayPublisher:
         return self.base_url + TEST_EXECUTION_ENDPOINT
 
     def _send_data(self, url: str, auth: Union[AuthBase, tuple], data: dict) -> dict:
-        headers = {"Accept": "application/json", "Content-Type": "application/json"}
+        headers = {
+            'Accept': 'application/json',
+            'Content-Type': 'application/json'
+        }
         try:
             response = requests.request(
-                method="POST",
-                url=url,
-                headers=headers,
-                json=data,
-                auth=auth,
-                verify=self.verify,
+                method='POST', url=url, headers=headers, json=data,
+                auth=auth, verify=self.verify
             )
         except requests.exceptions.ConnectionError as exc:
-            err_message = f"ConnectionError: cannot connect to JIRA service at {url}"
+            err_message = f'ConnectionError: cannot connect to JIRA service at {url}'
             _logger.exception(err_message)
             raise XrayError(err_message) from exc
         else:
             try:
                 response.raise_for_status()
             except requests.exceptions.HTTPError as exc:
-                err_message = (
-                    f"HTTPError: Could not post to JIRA service at {url}. "
-                    f"Response status code: {response.status_code}"
-                )
+                err_message = (f'HTTPError: Could not post to JIRA service at {url}. '
+                               f'Response status code: {response.status_code}')
                 _logger.exception(err_message)
-                if "error" in response.json():
-                    _logger.error(
-                        "Error message from server: %s", response.json()["error"]
-                    )
+                if 'error' in response.json():
+                    _logger.error('Error message from server: %s', response.json()['error'])
                 raise XrayError(err_message) from exc
             return response.json()
 
@@ -108,5 +102,5 @@ class XrayPublisher:
         :return: test execution issue id
         """
         response_data = self._send_data(self.endpoint_url, self.auth, data)
-        key = response_data["testExecIssue"]["key"]
+        key = response_data['testExecIssue']['key']
         return key
