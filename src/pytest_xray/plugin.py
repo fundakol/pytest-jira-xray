@@ -72,6 +72,10 @@ def pytest_addoption(parser: Parser):
 
 
 def pytest_configure(config: Config) -> None:
+    config.addinivalue_line(
+        'markers', 'xray(JIRA_ID): mark test with JIRA XRAY test case ID'
+    )
+
     if not config.getoption(JIRA_XRAY_FLAG):
         return
 
@@ -99,9 +103,6 @@ def pytest_configure(config: Config) -> None:
 
     plugin = XrayPlugin(config, publisher)
     config.pluginmanager.register(plugin=plugin, name=XRAY_PLUGIN)
-    config.addinivalue_line(
-        'markers', 'xray(JIRA_ID): mark test with JIRA XRAY test case ID'
-    )
 
 
 class XrayPlugin:
