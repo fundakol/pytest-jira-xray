@@ -16,7 +16,7 @@ def environment_variables():
     os.environ['XRAY_CLIENT_SECRET'] = 'client_secret'
 
 
-@pytest.fixture(scope="session", autouse=True)
+@pytest.fixture(scope='session', autouse=True)
 def http_server(environment_variables):
     server = MockServer(5002)
     server.add_json_response(

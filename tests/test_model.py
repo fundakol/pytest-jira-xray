@@ -100,10 +100,10 @@ def test_test_execution_full_model(testcase, date_time_now):
         te = _TestExecution(
             test_plan_key='Jira-10',
             test_execution_key='JIRA-20',
-            test_environments=["My local laptop"],
-            fix_version="1.0",
-            summary="My Test Suite",
-            description="Im doing stuff"
+            test_environments=['My local laptop'],
+            fix_version='1.0',
+            summary='My Test Suite',
+            description='Im doing stuff'
         )
         te.tests = [testcase]
         assert te.as_dict() == {
@@ -130,8 +130,8 @@ def test_test_execution_full_model(testcase, date_time_now):
 
 
 @mock.patch.dict(os.environ, {
-    constant.ENV_TEST_EXECUTION_FIX_VERSION: "1.1",
-    constant.ENV_TEST_EXECUTION_TEST_ENVIRONMENTS: "MyLocalLaptop And TheLiveSystem",
+    constant.ENV_TEST_EXECUTION_FIX_VERSION: '1.1',
+    constant.ENV_TEST_EXECUTION_TEST_ENVIRONMENTS: 'MyLocalLaptop And TheLiveSystem',
 })
 def test_test_execution_environ_model(testcase, date_time_now):
     with patch('datetime.datetime') as dt_mock:

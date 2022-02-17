@@ -11,9 +11,9 @@ class MockServer(Thread):
         super().__init__()
         self.port = port
         self.app = Flask(__name__)
-        self.url = f"http://localhost:{self.port}"
+        self.url = f'http://localhost:{self.port}'
 
-        self.app.add_url_rule("/shutdown", view_func=self._shutdown_server)
+        self.app.add_url_rule('/shutdown', view_func=self._shutdown_server)
 
     def _shutdown_server(self):
         from flask import request
@@ -23,7 +23,7 @@ class MockServer(Thread):
         return 'Server shutting down...'
 
     def shutdown_server(self):
-        requests.get(f"{self.url}/shutdown")
+        requests.get(f'{self.url}/shutdown')
         self.join()
 
     def add_callback_response(self, url, callback, methods=('GET',)):

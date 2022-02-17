@@ -107,19 +107,19 @@ class TestExecution:
         )
 
         if self.fix_version:
-            info["version"] = self.fix_version
+            info['version'] = self.fix_version
 
         if self.test_environments and len(self.test_environments) > 0:
-            info["testEnvironments"] = self.test_environments
+            info['testEnvironments'] = self.test_environments
 
         if self.summary:
-            info["summary"] = self.summary
+            info['summary'] = self.summary
 
         if self.description:
-            info["description"] = self.description
+            info['description'] = self.description
 
         if self.revision:
-            info["revision"] = self.revision
+            info['revision'] = self.revision
 
         data = dict(
             info=info,
