@@ -18,7 +18,9 @@ from pytest_xray.constant import (
     XRAY_EXECUTION_ID,
     JIRA_CLOUD,
     XRAYPATH,
-    XRAY_MARKER_NAME
+    XRAY_MARKER_NAME,
+    TEST_EXECUTION_ENDPOINT,
+    TEST_EXECUTION_ENDPOINT_CLOUD
 )
 from pytest_xray.exceptions import XrayError
 from pytest_xray.file_publisher import FilePublisher
@@ -86,6 +88,7 @@ def pytest_configure(config: Config) -> None:
     else:
         if config.getoption(JIRA_CLOUD):
             options = get_bearer_auth()
+            endpoint = TEST_EXECUTION_ENDPOINT_CLOUD
             auth: Union[AuthBase, Tuple[str, str]] = BearerAuth(
                 options['BASE_URL'],
                 options['CLIENT_ID'],
@@ -93,10 +96,12 @@ def pytest_configure(config: Config) -> None:
             )
         else:
             options = get_basic_auth()
+            endpoint = TEST_EXECUTION_ENDPOINT
             auth = (options['USER'], options['PASSWORD'])
 
         publisher = XrayPublisher(  # type: ignore
             base_url=options['BASE_URL'],
+            endpoint=endpoint,
             auth=auth,
             verify=options['VERIFY']
         )

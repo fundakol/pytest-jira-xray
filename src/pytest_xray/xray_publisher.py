@@ -5,7 +5,7 @@ from typing import Union
 import requests
 from requests.auth import AuthBase
 
-from pytest_xray.constant import TEST_EXECUTION_ENDPOINT, AUTHENTICATE_ENDPOINT
+from pytest_xray.constant import AUTHENTICATE_ENDPOINT
 from pytest_xray.exceptions import XrayError
 
 _logger = logging.getLogger(__name__)
@@ -53,20 +53,22 @@ class BearerAuth(AuthBase):
 class XrayPublisher:
 
     def __init__(
-            self,
-            base_url: str,
-            auth: Union[AuthBase, tuple],
-            verify: Union[bool, str] = True
+        self,
+        base_url: str,
+        endpoint: str,
+        auth: Union[AuthBase, tuple],
+        verify: Union[bool, str] = True
     ) -> None:
         if base_url.endswith('/'):
             base_url = base_url[:-1]
         self.base_url = base_url
+        self.endpoint = endpoint
         self.auth = auth
         self.verify = verify
 
     @property
     def endpoint_url(self) -> str:
-        return self.base_url + TEST_EXECUTION_ENDPOINT
+        return self.base_url + self.endpoint
 
     def _send_data(self, url: str, auth: Union[AuthBase, tuple], data: dict) -> dict:
         headers = {
