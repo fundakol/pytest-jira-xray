@@ -17,6 +17,7 @@ from pytest_xray.constant import (
     XRAY_TEST_PLAN_ID,
     XRAY_EXECUTION_ID,
     JIRA_CLOUD,
+    JIRA_API_KEY,
     XRAYPATH,
     XRAY_MARKER_NAME,
     TEST_EXECUTION_ENDPOINT,
@@ -31,9 +32,10 @@ from pytest_xray.helper import (
     StatusBuilder,
     CloudStatus,
     get_bearer_auth,
+    get_api_key_auth,
     get_basic_auth,
 )
-from pytest_xray.xray_publisher import BearerAuth, XrayPublisher
+from pytest_xray.xray_publisher import BearerAuth, ApiKeyAuth, XrayPublisher
 
 
 def pytest_addoption(parser: Parser):
@@ -49,6 +51,12 @@ def pytest_addoption(parser: Parser):
         action='store_true',
         default=False,
         help='Use with JIRA XRAY could server'
+    )
+    xray.addoption(
+        JIRA_API_KEY,
+        action='store_true',
+        default=False,
+        help='Upload test results to JIRA XRAY with API Key',
     )
     xray.addoption(
         XRAY_EXECUTION_ID,
@@ -94,6 +102,10 @@ def pytest_configure(config: Config) -> None:
                 options['CLIENT_ID'],
                 options['CLIENT_SECRET']
             )
+        elif config.getoption(JIRA_API_KEY):
+            options = get_api_key_auth()
+            endpoint = TEST_EXECUTION_ENDPOINT
+            auth = ApiKeyAuth(options['API_KEY'])
         else:
             options = get_basic_auth()
             endpoint = TEST_EXECUTION_ENDPOINT
@@ -209,7 +221,9 @@ class XrayPlugin:
         except XrayError as exc:
             self.exception = exc
 
-    def pytest_terminal_summary(self, terminalreporter: TerminalReporter, exitstatus: ExitCode, config: Config) -> None:
+    def pytest_terminal_summary(
+        self, terminalreporter: TerminalReporter, exitstatus: ExitCode, config: Config
+    ) -> None:
         if self.exception:
             terminalreporter.ensure_newline()
             terminalreporter.section('Jira XRAY', sep='-', red=True, bold=True)

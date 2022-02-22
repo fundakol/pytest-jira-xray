@@ -45,10 +45,10 @@ class StatusBuilder:
 class TestCase:
 
     def __init__(
-            self,
-            test_key: str,
-            status: Union[enum.Enum, str],
-            comment: Optional[str] = None,
+        self,
+        test_key: str,
+        status: Union[enum.Enum, str],
+        comment: Optional[str] = None,
     ):
         self.test_key = test_key
         self.status = status
@@ -65,16 +65,16 @@ class TestCase:
 class TestExecution:
 
     def __init__(
-            self,
-            test_execution_key: str = None,
-            test_plan_key: str = None,
-            user: str = None,
-            revision: str = None,
-            tests: List = None,
-            test_environments: List = None,
-            fix_version: str = None,
-            summary: str = None,
-            description: str = None,
+        self,
+        test_execution_key: str = None,
+        test_plan_key: str = None,
+        user: str = None,
+        revision: str = None,
+        tests: List = None,
+        test_environments: List = None,
+        fix_version: str = None,
+        summary: str = None,
+        description: str = None,
     ):
         self.test_execution_key = test_execution_key
         self.test_plan_key = test_plan_key or ''
@@ -185,6 +185,19 @@ def get_bearer_auth() -> dict:
 
     options['CLIENT_ID'] = client_id
     options['CLIENT_SECRET'] = client_secret
+    return options
+
+
+def get_api_key_auth() -> dict:
+    options = get_base_options()
+    try:
+        api_key = environ['XRAY_API_KEY']
+    except KeyError as e:
+        raise XrayError(
+            'API Key authentication requires environment variable: ' 'XRAY_API_KEY'
+        ) from e
+
+    options['API_KEY'] = api_key
     return options
 
 

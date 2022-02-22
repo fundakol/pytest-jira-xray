@@ -50,6 +50,16 @@ class BearerAuth(AuthBase):
         return r
 
 
+class ApiKeyAuth(AuthBase):
+
+    def __init__(self, api_key: str) -> None:
+        self.api_key = api_key
+
+    def __call__(self, r: requests.PreparedRequest) -> requests.PreparedRequest:
+        r.headers['Authorization'] = f'Bearer {self.api_key}'
+        return r
+
+
 class XrayPublisher:
 
     def __init__(

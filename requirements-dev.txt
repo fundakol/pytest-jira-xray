@@ -1,5 +1,5 @@
 flake8==4.0.0
-Flask==1.1.1
+Flask==2.0.2
 mypy==0.910
 pytest==6.2.2
 pytest-cov==3.0.0
