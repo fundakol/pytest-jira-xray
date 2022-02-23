@@ -66,15 +66,15 @@ class TestExecution:
 
     def __init__(
         self,
-        test_execution_key: str = None,
-        test_plan_key: str = None,
-        user: str = None,
-        revision: str = None,
-        tests: List = None,
-        test_environments: List = None,
-        fix_version: str = None,
-        summary: str = None,
-        description: str = None,
+        test_execution_key: Optional[str] = None,
+        test_plan_key: Optional[str] = None,
+        user: Optional[str] = None,
+        revision: Optional[str] = None,
+        tests: Optional[List[TestCase]] = None,
+        test_environments: Optional[List[str]] = None,
+        fix_version: Optional[str] = None,
+        summary: Optional[str] = None,
+        description: Optional[str] = None,
     ):
         self.test_execution_key = test_execution_key
         self.test_plan_key = test_plan_key or ''
@@ -98,12 +98,12 @@ class TestExecution:
 
     def as_dict(self) -> Dict[str, Any]:
         if self.finish_date is None:
-            self.finish_date = dt.datetime.now(tz=dt.timezone.utc)
+            self.finish_date = dt.datetime.now(tz=dt.timezone.utc)  # type: ignore
 
         tests = [test.as_dict() for test in self.tests]
         info = dict(
             startDate=self.start_date.strftime(DATETIME_FORMAT),
-            finishDate=self.finish_date.strftime(DATETIME_FORMAT),
+            finishDate=self.finish_date.strftime(DATETIME_FORMAT),  # type: ignore
         )
 
         if self.fix_version:
@@ -194,29 +194,28 @@ def get_api_key_auth() -> dict:
         api_key = environ['XRAY_API_KEY']
     except KeyError as e:
         raise XrayError(
-            'API Key authentication requires environment variable: ' 'XRAY_API_KEY'
+            'API Key authentication requires environment variable: XRAY_API_KEY'
         ) from e
 
     options['API_KEY'] = api_key
     return options
 
 
-def _from_environ_or_none(name: str):
+def _from_environ_or_none(name: str) -> Optional[str]:
     if name in environ:
         val = environ[name].strip()
         if len(val) == 0:
-            val = None
+            return None
     else:
-        val = None
-
+        return None
     return val
 
 
-def _first_from_environ(name: str, separator: str = None):
+def _first_from_environ(name: str, separator: str = None) -> Optional[str]:
     return next(iter(_from_environ(name, separator)), None)
 
 
-def _from_environ(name: str, separator: str = None) -> List:
+def _from_environ(name: str, separator: str = None) -> List[str]:
     if name not in environ:
         return []
 

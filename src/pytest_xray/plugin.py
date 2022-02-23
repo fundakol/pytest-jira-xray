@@ -171,9 +171,7 @@ class XrayPlugin:
 
     def _get_test_key_for(self, nodeid: str) -> Optional[str]:
         """Return XRAY test id for nodeid."""
-        test_id = self.test_keys.get(nodeid)
-        if test_id:
-            return test_id
+        return self.test_keys.get(nodeid)
 
     @staticmethod
     def _get_xray_marker(item: Item) -> Optional[Mark]:
@@ -210,6 +208,7 @@ class XrayPlugin:
                 return 'ABORTED'
         elif report.passed and report.when == 'call':
             return 'PASS'
+        return None
 
     def pytest_collection_modifyitems(self, config: Config, items: List[Item]) -> None:
         self._associate_marker_metadata_for(items)
