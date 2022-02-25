@@ -21,7 +21,8 @@ from pytest_xray.constant import (
     XRAYPATH,
     XRAY_MARKER_NAME,
     TEST_EXECUTION_ENDPOINT,
-    TEST_EXECUTION_ENDPOINT_CLOUD
+    TEST_EXECUTION_ENDPOINT_CLOUD,
+    XRAY_ALLOW_DUPLICATE_IDS
 )
 from pytest_xray.exceptions import XrayError
 from pytest_xray.file_publisher import FilePublisher
@@ -79,6 +80,12 @@ def pytest_addoption(parser: Parser):
         default=None,
         help='Do not upload to a server but create JSON report file at given path'
     )
+    xray.addoption(
+        XRAY_ALLOW_DUPLICATE_IDS,
+        action="store_true",
+        default=False,
+        help="Allow test ids to be present on multiple pytest tests"
+    )
 
 
 def pytest_configure(config: Config) -> None:
@@ -130,6 +137,9 @@ class XrayPlugin:
         self.test_execution_id: str = self.config.getoption(XRAY_EXECUTION_ID)
         self.test_plan_id: str = self.config.getoption(XRAY_TEST_PLAN_ID)
         self.is_cloud_server: str = self.config.getoption(JIRA_CLOUD)
+        self.allow_duplicate_ids: bool = self.config.getoption(
+            XRAY_ALLOW_DUPLICATE_IDS
+        )
         logfile = self.config.getoption(XRAYPATH)
         self.logfile: str = self._get_normalize_logfile(logfile) if logfile else None
         self.test_keys: Dict[str, List[str]] = {}  # store nodeid and TestId
@@ -176,7 +186,7 @@ class XrayPlugin:
 
             self.test_keys[item.nodeid] = test_keys
 
-            if duplicated_jira_ids:
+            if duplicated_jira_ids and not self.allow_duplicate_ids:
                 raise XrayError(f'Duplicated test case ids: {duplicated_jira_ids}')
 
     def _get_test_keys_for(self, nodeid: str) -> Optional[List[str]]:
@@ -200,13 +210,17 @@ class XrayPlugin:
             return
 
         for test_key in test_keys:
-            self.test_execution.append(
-                TestCase(
-                    test_key=test_key,
-                    status=self.status_builder(outcome),
-                    comment=report.longreprtext,
-                )
+            new_test_case = TestCase(
+                test_key=test_key,
+                status=self.status_builder(outcome),
+                comment=report.longreprtext
             )
+            try:
+                test_case = self.test_execution.find_test_case(test_key)
+            except KeyError:
+                self.test_execution.append(new_test_case)
+            else:
+                test_case.merge(new_test_case)
 
     def _get_outcome(self, report) -> Optional[str]:
         if report.failed:

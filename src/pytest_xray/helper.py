@@ -1,3 +1,4 @@
+from __future__ import annotations
 import datetime as dt
 import enum
 import os
@@ -20,6 +21,20 @@ class Status(str, enum.Enum):
     ABORTED = 'ABORTED'
     BLOCKED = 'BLOCKED'
 
+
+# This is the hierarchy of the Status, from bottom to top.
+# When merging two statuses, the highest will be picked.
+# For example, a PASS and a FAIL will result in a FAIL,
+# A TODO and an ABORTED in an ABORTED, A TODO and a PASS in a TODO.
+STATUS_HIERARCHY = [
+    Status.PASS,
+    Status.TODO,
+    Status.EXECUTING,
+    Status.PENDING,
+    Status.FAIL,
+    Status.ABORTED,
+    Status.BLOCKED,
+]
 
 class CloudStatus(str, enum.Enum):
     """Mapping status to string accepted by Jira cloud."""
@@ -53,6 +68,30 @@ class TestCase:
         self.test_key = test_key
         self.status = status
         self.comment = comment or ''
+
+    def merge(self, other: TestCase):
+        """
+        Merges this test case with other, in order to obtain
+        a combined result. Comments will be just appended one after the other.
+        status will be merged according to a priority list.
+        Merge is only possible if the two tests have the same test_key
+        """
+
+        if self.test_key != other.test_key:
+            raise ValueError(
+                f"Cannot merge test with different test keys: "
+                f"{self.test_key} {other.test_key}"
+            )
+
+        if self.comment == '':
+            if other.comment != '':
+                self.comment = other.comment
+        else:
+            if other.comment != '':
+                self.comment += ("\n" + "-"*80 + "\n")
+                self.comment += other.comment
+
+        self.status = _merge_status(self.status, other.status)
 
     def as_dict(self) -> Dict[str, str]:
         return dict(
@@ -95,6 +134,19 @@ class TestExecution:
         if not isinstance(test, TestCase):
             test = TestCase(**test)
         self.tests.append(test)
+
+    def find_test_case(self, test_key: str) -> TestCase:
+        """
+        Searches a stored test case by identifier.
+        If not found, raises KeyError
+        """
+        # Linear search, but who cares really of performance here?
+
+        for test in self.tests:
+            if test.test_key == test_key:
+                return test
+
+        raise KeyError(test_key)
 
     def as_dict(self) -> Dict[str, Any]:
         if self.finish_date is None:
@@ -228,3 +280,12 @@ def _from_environ(name: str, separator: str = None) -> List[str]:
 
     # Return stripped non empty values
     return list(filter(lambda x: len(x) > 0, map(lambda x: x.strip(), source)))
+
+
+def _merge_status(status_1, status_2):
+    """Merges the status of two tests. """
+
+    return STATUS_HIERARCHY[max(
+        STATUS_HIERARCHY.index(status_1),
+        STATUS_HIERARCHY.index(status_2)
+    )]

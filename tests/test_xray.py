@@ -220,3 +220,50 @@ def test_if_tests_without_xray_id_are_not_included(testdir):
     assert xray_statuses == {
         ('JIRA-1', 'PASS'),
     }
+
+
+def test_duplicated_ids(testdir):
+    testdir.makepyfile(textwrap.dedent(
+        """\
+        import pytest
+
+        @pytest.mark.xray('JIRA-1')
+        def test_pass():
+            assert True
+
+        @pytest.mark.xray('JIRA-1')
+        def test_pass_2():
+            assert False
+        """)
+    )
+
+    report_file = testdir.tmpdir / 'xray.json'
+
+    result = testdir.runpytest(
+        '--jira-xray',
+        f'--xraypath={report_file}',
+        '-v',
+    )
+
+    assert result.ret == 3
+    assert "Duplicated test case ids" in str(result.stdout)
+
+    result = testdir.runpytest(
+        '--jira-xray',
+        '--allow-duplicate-ids',
+        f'--xraypath={report_file}',
+        '-v',
+    )
+
+    assert result.ret == 1
+    assert "Duplicated test case ids" not in str(result.stdout)
+
+    result.assert_outcomes(passed=1, failed=1)
+    assert report_file.exists()
+    with open(report_file) as file:
+        data = json.load(file)
+
+    xray_statuses = set((t['testKey'], t['status']) for t in data['tests'])
+    assert xray_statuses == {
+        ('JIRA-1', 'FAIL'),
+    }
