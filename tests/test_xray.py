@@ -111,8 +111,8 @@ def test_jira_xray_plugin_multiple_ids(xray_tests_multi):
 
 def test_jira_xray_plugin_multiple_ids_fail(xray_tests_multi_fail):
     xray_file = xray_tests_multi_fail.tmpdir.join('xray.json')
-    result = xray_tests_multi_fail.runpytest('--jira-xray', '--xraypath',
-                                        str(xray_file))
+    result = xray_tests_multi_fail.runpytest(
+        '--jira-xray', '--xraypath', str(xray_file))
     result.assert_outcomes(failed=1)
     result.stdout.fnmatch_lines([
         '*Generated XRAY execution report file:*xray.json*',
