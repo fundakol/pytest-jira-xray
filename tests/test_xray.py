@@ -18,6 +18,34 @@ def xray_tests(testdir):
     return testdir
 
 
+@pytest.fixture()
+def xray_tests_multi(testdir):
+    test_example = textwrap.dedent(
+        """\
+        import pytest 
+        
+        @pytest.mark.xray(['JIRA-1', 'JIRA-2'])
+        def test_pass():
+            assert True
+        """)  # noqa: W293,W291
+    testdir.makepyfile(test_example)
+    return testdir
+
+
+@pytest.fixture()
+def xray_tests_multi_fail(testdir):
+    test_example = textwrap.dedent(
+        """\
+        import pytest 
+        
+        @pytest.mark.xray(['JIRA-1', 'JIRA-2'])
+        def test_fail():
+            assert 0 == 1 
+        """)  # noqa: W293,W291
+    testdir.makepyfile(test_example)
+    return testdir
+
+
 def test_help_message(xray_tests):
     result = xray_tests.runpytest(
         '--help',
@@ -60,6 +88,42 @@ def test_jira_xray_plugin_exports_to_file(xray_tests):
     assert result.ret == 0
     assert not result.errlines
     assert xray_file.exists()
+
+
+def test_jira_xray_plugin_multiple_ids(xray_tests_multi):
+    xray_file = xray_tests_multi.tmpdir.join('xray.json')
+    result = xray_tests_multi.runpytest('--jira-xray', '--xraypath',
+                                        str(xray_file))
+    result.assert_outcomes(passed=1)
+    result.stdout.fnmatch_lines([
+        '*Generated XRAY execution report file:*xray.json*',
+    ])
+    assert result.ret == 0
+    assert not result.errlines
+    assert xray_file.exists()
+    with open(xray_file) as f:
+        data = json.load(f)
+
+    assert len(data["tests"]) == 2
+    assert data["tests"][0]["testKey"] == "JIRA-1"
+    assert data["tests"][1]["testKey"] == "JIRA-2"
+
+
+def test_jira_xray_plugin_multiple_ids_fail(xray_tests_multi_fail):
+    xray_file = xray_tests_multi_fail.tmpdir.join('xray.json')
+    result = xray_tests_multi_fail.runpytest('--jira-xray', '--xraypath',
+                                        str(xray_file))
+    result.assert_outcomes(failed=1)
+    result.stdout.fnmatch_lines([
+        '*Generated XRAY execution report file:*xray.json*',
+    ])
+    assert result.ret == 1
+    assert xray_file.exists()
+    with open(xray_file) as f:
+        data = json.load(f)
+
+    assert len(data["tests"]) == 2
+    print(data["tests"])
 
 
 def test_xray_with_all_test_types(testdir):

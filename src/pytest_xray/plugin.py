@@ -132,7 +132,7 @@ class XrayPlugin:
         self.is_cloud_server: str = self.config.getoption(JIRA_CLOUD)
         logfile = self.config.getoption(XRAYPATH)
         self.logfile: str = self._get_normalize_logfile(logfile) if logfile else None
-        self.test_keys: Dict[str, str] = {}  # store nodeid and TestId
+        self.test_keys: Dict[str, List[str]] = {}  # store nodeid and TestId
         self.issue_id = None
         self.exception = None
         self.test_execution: TestExecution = TestExecution(
@@ -160,16 +160,26 @@ class XrayPlugin:
             if not marker:
                 continue
 
-            test_key: str = marker.args[0]
-            if test_key in jira_ids:
-                duplicated_jira_ids.append(test_key)
+            test_keys: List[str]
+            if isinstance(marker.args[0], str):
+                test_keys = [marker.args[0]]
+            elif isinstance(marker.args[0], list):
+                test_keys = list(marker.args[0])
             else:
-                jira_ids.append(test_key)
-            self.test_keys[item.nodeid] = test_key
+                raise XrayError("xray marker can only accept strings or lists")
+
+            for test_key in test_keys:
+                if test_key in jira_ids:
+                    duplicated_jira_ids.append(test_key)
+                else:
+                    jira_ids.append(test_key)
+
+            self.test_keys[item.nodeid] = test_keys
+
             if duplicated_jira_ids:
                 raise XrayError(f'Duplicated test case ids: {duplicated_jira_ids}')
 
-    def _get_test_key_for(self, nodeid: str) -> Optional[str]:
+    def _get_test_keys_for(self, nodeid: str) -> Optional[List[str]]:
         """Return XRAY test id for nodeid."""
         return self.test_keys.get(nodeid)
 
@@ -182,16 +192,21 @@ class XrayPlugin:
 
     def pytest_runtest_logreport(self, report: TestReport):
         outcome = self._get_outcome(report)
-        if outcome:
-            test_key = self._get_test_key_for(report.nodeid)
-            if test_key:
-                self.test_execution.append(
-                    TestCase(
-                        test_key=test_key,
-                        status=self.status_builder(outcome),
-                        comment=report.longreprtext,
-                    )
+        if outcome is None:
+            return
+
+        test_keys = self._get_test_keys_for(report.nodeid)
+        if test_keys is None:
+            return
+
+        for test_key in test_keys:
+            self.test_execution.append(
+                TestCase(
+                    test_key=test_key,
+                    status=self.status_builder(outcome),
+                    comment=report.longreprtext,
                 )
+            )
 
     def _get_outcome(self, report) -> Optional[str]:
         if report.failed:
