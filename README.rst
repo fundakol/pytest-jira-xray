@@ -33,7 +33,7 @@ or
 Usage
 -----
 
-Mark a test with JIRA XRAY test ID
+Mark a test with JIRA XRAY test ID or list of IDs
 
 .. code-block:: python
 
@@ -41,8 +41,12 @@ Mark a test with JIRA XRAY test ID
     import pytest
 
     @pytest.mark.xray('JIRA-1')
-    def test_one():
+    def test_foo():
         assert True
+
+    @pytest.mark.xray(['JIRA-2', 'JIRA-3'])
+        def test_bar():
+            assert True
 
 
 Jira Xray configuration can be provided via Environment Variables:
