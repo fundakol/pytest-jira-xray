@@ -36,6 +36,7 @@ STATUS_HIERARCHY = [
     Status.BLOCKED,
 ]
 
+
 class CloudStatus(str, enum.Enum):
     """Mapping status to string accepted by Jira cloud."""
     TODO = 'TODO'
@@ -94,9 +95,14 @@ class TestCase:
         self.status = _merge_status(self.status, other.status)
 
     def as_dict(self) -> Dict[str, str]:
+        if isinstance(self.status, Status):
+            status = str(self.status.value)
+        else:
+            status = self.status
+
         return dict(
             testKey=self.test_key,
-            status=str(self.status),
+            status=status,
             comment=self.comment,
         )
 
@@ -282,7 +288,7 @@ def _from_environ(name: str, separator: str = None) -> List[str]:
     return list(filter(lambda x: len(x) > 0, map(lambda x: x.strip(), source)))
 
 
-def _merge_status(status_1, status_2):
+def _merge_status(status_1: Status, status_2: Status):
     """Merges the status of two tests. """
 
     return STATUS_HIERARCHY[max(
