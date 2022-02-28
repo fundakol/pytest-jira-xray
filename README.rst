@@ -172,7 +172,7 @@ functionalities in a single run, to reduce execution time.
 Duplicated ids support
 ++++++++++++++++++++++
 
-By default, jira-xray-plugin does not allow to have multiple tests marked with
+By default, the jira-xray plugin does not allow to have multiple tests marked with
 the same identifier, like in this case:
 
 .. code-block:: python
