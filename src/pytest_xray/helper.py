@@ -3,7 +3,7 @@ import datetime as dt
 import enum
 import os
 from os import environ
-from typing import List, Dict, Union, Any, Type, Optional
+from typing import List, Dict, Union, Any, Optional
 import re
 
 from pytest_xray import constant
@@ -35,7 +35,8 @@ STATUS_HIERARCHY = [
     Status.BLOCKED,
 ]
 
-# Maps the Statys
+# Maps the Status from the internal Status enum to the string representations
+# requested by either the Cloud Jira, or the on-site Jira
 STATUS_STR_MAPPER_CLOUD = {
     Status.TODO: 'TODO',
     Status.EXECUTING: 'EXECUTING',
@@ -46,16 +47,16 @@ STATUS_STR_MAPPER_CLOUD = {
     Status.BLOCKED: 'BLOCKED',
 }
 
+# On-site jira uses the enum strings directly
 STATUS_STR_MAPPER_JIRA = {x: x.value for x in Status}
 
 
 class TestCase:
-
     def __init__(
-            self,
-            test_key: str,
-            status: Status,
-            comment: Optional[str] = None,
+        self,
+        test_key: str,
+        status: Status,
+        comment: Optional[str] = None,
         status_str_mapper: Dict[Status, str] = None
     ):
         self.test_key = test_key
