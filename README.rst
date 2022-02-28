@@ -146,6 +146,57 @@ Upload results
 
     $ pytest --jira-xray --xraypath=xray.json
 
+Multiple ids support
+++++++++++++++++++++
+
+Tests can be marked to handle multiple Jira tests by adding a list, rather than a string. Example:
+
+.. code-block:: python
+
+    # -- FILE: test_example.py
+    import pytest
+
+    @pytest.mark.xray([
+        'JIRA-1',
+        'JIRA-2'
+    ])
+    def test_my_process():
+        assert True
+
+If the test fails, both JIRA-1 and JIRA-2 tests will be marked as fail. The
+failure comment will contain the same message for both tests.
+
+This situation can be useful for validation tests or tests that probe multiple
+functionalities in a single run, to reduce execution time.
+
+Duplicated ids support
+++++++++++++++++++++++
+
+By default, jira-xray-plugin does not allow to have multiple tests marked with
+the same identifier, like in this case:
+
+.. code-block:: python
+
+    # -- FILE: test_example.py
+    import pytest
+
+    @pytest.mark.xray('JIRA-1')
+    def test_my_process_1():
+        assert True
+
+    @pytest.mark.xray('JIRA-1')
+    def test_my_process_2():
+        assert True
+
+However, depending how the user story and the associated test are formulated,
+this scenario may be useful. The option --allow-duplicate-ids will perform the tests
+even when duplicate ids are present. The JIRA-1 test result will be created according to
+the following rules:
+
+- The comment will be the comment from each of the test, separated by a horizontal divider.
+- The status will be the intuitive combination of the individual results: if ``test_my_process_1`` 
+  is a ``PASS`` but ``test_my_process_2`` is a ``FAIL``, ``JIRA-1`` will be marked as ``FAIL``.
+
 
 IntelliJ integration
 ++++++++++++++++++++
