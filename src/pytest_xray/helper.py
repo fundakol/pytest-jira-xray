@@ -12,7 +12,6 @@ from pytest_xray.exceptions import XrayError
 
 
 class Status(str, enum.Enum):
-    """Mapping status to string accepted by Jira DC server."""
     TODO = 'TODO'
     EXECUTING = 'EXECUTING'
     PENDING = 'PENDING'
@@ -36,39 +35,35 @@ STATUS_HIERARCHY = [
     Status.BLOCKED,
 ]
 
+# Maps the Statys
+STATUS_STR_MAPPER_CLOUD = {
+    Status.TODO: 'TODO',
+    Status.EXECUTING: 'EXECUTING',
+    Status.PENDING: 'PENDING',
+    Status.PASS: 'PASSED',
+    Status.FAIL: 'FAILED',
+    Status.ABORTED: 'ABORTED',
+    Status.BLOCKED: 'BLOCKED',
+}
 
-class CloudStatus(str, enum.Enum):
-    """Mapping status to string accepted by Jira cloud."""
-    TODO = 'TODO'
-    EXECUTING = 'EXECUTING'
-    PENDING = 'PENDING'
-    PASS = 'PASSED'
-    FAIL = 'FAILED'
-    ABORTED = 'ABORTED'
-    BLOCKED = 'BLOCKED'
-
-
-class StatusBuilder:
-    """Class helps to get proper status for Jira Server/DC."""
-
-    def __init__(self, status_enum: Type[enum.Enum]):
-        self.status = status_enum
-
-    def __call__(self, status: str) -> enum.Enum:
-        return self.status(getattr(self.status, status)).value
+STATUS_STR_MAPPER_JIRA = {x: x.value for x in Status}
 
 
 class TestCase:
 
     def __init__(
-        self,
-        test_key: str,
-        status: Union[enum.Enum, str],
-        comment: Optional[str] = None,
+            self,
+            test_key: str,
+            status: Status,
+            comment: Optional[str] = None,
+        status_str_mapper: Dict[Status, str] = None
     ):
         self.test_key = test_key
         self.status = status
         self.comment = comment or ''
+        if status_str_mapper is None:
+            status_str_mapper = STATUS_STR_MAPPER_JIRA
+        self.status_str_mapper = status_str_mapper
 
     def merge(self, other: TestCase):
         """
@@ -95,14 +90,9 @@ class TestCase:
         self.status = _merge_status(self.status, other.status)
 
     def as_dict(self) -> Dict[str, str]:
-        if isinstance(self.status, Status):
-            status = str(self.status.value)
-        else:
-            status = self.status
-
         return dict(
             testKey=self.test_key,
-            status=status,
+            status=self.status_str_mapper[self.status],
             comment=self.comment,
         )
 

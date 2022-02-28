@@ -30,8 +30,8 @@ from pytest_xray.helper import (
     Status,
     TestCase,
     TestExecution,
-    StatusBuilder,
-    CloudStatus,
+    STATUS_STR_MAPPER_JIRA,
+    STATUS_STR_MAPPER_CLOUD,
     get_bearer_auth,
     get_api_key_auth,
     get_basic_auth,
@@ -149,10 +149,9 @@ class XrayPlugin:
             test_execution_key=self.test_execution_id,
             test_plan_key=self.test_plan_id
         )
+        self.status_str_mapper = STATUS_STR_MAPPER_JIRA
         if self.is_cloud_server:
-            self.status_builder: StatusBuilder = StatusBuilder(CloudStatus)
-        else:
-            self.status_builder: StatusBuilder = StatusBuilder(Status)
+            self.status_str_mapper = STATUS_STR_MAPPER_CLOUD
 
     @staticmethod
     def _get_normalize_logfile(logfile: str) -> str:
@@ -201,8 +200,8 @@ class XrayPlugin:
         self.test_execution.start_date = dt.datetime.now(tz=dt.timezone.utc)
 
     def pytest_runtest_logreport(self, report: TestReport):
-        outcome = self._get_outcome(report)
-        if outcome is None:
+        status = self._get_status_from_report(report)
+        if status is None:
             return
 
         test_keys = self._get_test_keys_for(report.nodeid)
@@ -212,8 +211,9 @@ class XrayPlugin:
         for test_key in test_keys:
             new_test_case = TestCase(
                 test_key=test_key,
-                status=self.status_builder(outcome),
-                comment=report.longreprtext
+                status=status,
+                comment=report.longreprtext,
+                status_str_mapper=self.status_str_mapper
             )
             try:
                 test_case = self.test_execution.find_test_case(test_key)
@@ -222,21 +222,22 @@ class XrayPlugin:
             else:
                 test_case.merge(new_test_case)
 
-    def _get_outcome(self, report) -> Optional[str]:
+    def _get_status_from_report(self, report) -> Optional[Status]:
         if report.failed:
             if report.when != 'call':
-                return 'FAIL'
+                return Status.FAIL
             elif hasattr(report, 'wasxfail'):
-                return 'PASS'
+                return Status.PASS
             else:
-                return 'FAIL'
+                return Status.FAIL
         elif report.skipped:
             if hasattr(report, 'wasxfail'):
-                return 'FAIL'
+                return Status.FAIL
             else:
-                return 'ABORTED'
+                return Status.ABORTED
         elif report.passed and report.when == 'call':
-            return 'PASS'
+            return Status.PASS
+
         return None
 
     def pytest_collection_modifyitems(self, config: Config, items: List[Item]) -> None:
