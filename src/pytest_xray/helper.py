@@ -1,4 +1,3 @@
-from __future__ import annotations
 import datetime as dt
 import enum
 import os
@@ -66,7 +65,7 @@ class TestCase:
             status_str_mapper = STATUS_STR_MAPPER_JIRA
         self.status_str_mapper = status_str_mapper
 
-    def merge(self, other: TestCase):
+    def merge(self, other: 'TestCase'):
         """
         Merges this test case with other, in order to obtain
         a combined result. Comments will be just appended one after the other.
