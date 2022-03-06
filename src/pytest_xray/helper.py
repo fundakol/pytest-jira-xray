@@ -2,7 +2,7 @@ import datetime as dt
 import enum
 import os
 from os import environ
-from typing import List, Dict, Union, Any, Type, Optional
+from typing import List, Dict, Union, Any, Optional
 import re
 
 from pytest_xray import constant
@@ -11,7 +11,6 @@ from pytest_xray.exceptions import XrayError
 
 
 class Status(str, enum.Enum):
-    """Mapping status to string accepted by Jira DC server."""
     TODO = 'TODO'
     EXECUTING = 'EXECUTING'
     PENDING = 'PENDING'
@@ -21,43 +20,79 @@ class Status(str, enum.Enum):
     BLOCKED = 'BLOCKED'
 
 
-class CloudStatus(str, enum.Enum):
-    """Mapping status to string accepted by Jira cloud."""
-    TODO = 'TODO'
-    EXECUTING = 'EXECUTING'
-    PENDING = 'PENDING'
-    PASS = 'PASSED'
-    FAIL = 'FAILED'
-    ABORTED = 'ABORTED'
-    BLOCKED = 'BLOCKED'
+# This is the hierarchy of the Status, from bottom to top.
+# When merging two statuses, the highest will be picked.
+# For example, a PASS and a FAIL will result in a FAIL,
+# A TODO and an ABORTED in an ABORTED, A TODO and a PASS in a TODO.
+STATUS_HIERARCHY = [
+    Status.PASS,
+    Status.TODO,
+    Status.EXECUTING,
+    Status.PENDING,
+    Status.FAIL,
+    Status.ABORTED,
+    Status.BLOCKED,
+]
 
+# Maps the Status from the internal Status enum to the string representations
+# requested by either the Cloud Jira, or the on-site Jira
+STATUS_STR_MAPPER_CLOUD = {
+    Status.TODO: 'TODO',
+    Status.EXECUTING: 'EXECUTING',
+    Status.PENDING: 'PENDING',
+    Status.PASS: 'PASSED',
+    Status.FAIL: 'FAILED',
+    Status.ABORTED: 'ABORTED',
+    Status.BLOCKED: 'BLOCKED',
+}
 
-class StatusBuilder:
-    """Class helps to get proper status for Jira Server/DC."""
-
-    def __init__(self, status_enum: Type[enum.Enum]):
-        self.status = status_enum
-
-    def __call__(self, status: str) -> enum.Enum:
-        return self.status(getattr(self.status, status)).value
+# On-site jira uses the enum strings directly
+STATUS_STR_MAPPER_JIRA = {x: x.value for x in Status}
 
 
 class TestCase:
-
     def __init__(
         self,
         test_key: str,
-        status: Union[enum.Enum, str],
+        status: Status,
         comment: Optional[str] = None,
+        status_str_mapper: Dict[Status, str] = None
     ):
         self.test_key = test_key
         self.status = status
         self.comment = comment or ''
+        if status_str_mapper is None:
+            status_str_mapper = STATUS_STR_MAPPER_JIRA
+        self.status_str_mapper = status_str_mapper
+
+    def merge(self, other: 'TestCase'):
+        """
+        Merges this test case with other, in order to obtain
+        a combined result. Comments will be just appended one after the other.
+        status will be merged according to a priority list.
+        Merge is only possible if the two tests have the same test_key
+        """
+
+        if self.test_key != other.test_key:
+            raise ValueError(
+                f"Cannot merge test with different test keys: "
+                f"{self.test_key} {other.test_key}"
+            )
+
+        if self.comment == '':
+            if other.comment != '':
+                self.comment = other.comment
+        else:
+            if other.comment != '':
+                self.comment += ("\n" + "-"*80 + "\n")
+                self.comment += other.comment
+
+        self.status = _merge_status(self.status, other.status)
 
     def as_dict(self) -> Dict[str, str]:
         return dict(
             testKey=self.test_key,
-            status=str(self.status),
+            status=self.status_str_mapper[self.status],
             comment=self.comment,
         )
 
@@ -95,6 +130,19 @@ class TestExecution:
         if not isinstance(test, TestCase):
             test = TestCase(**test)
         self.tests.append(test)
+
+    def find_test_case(self, test_key: str) -> TestCase:
+        """
+        Searches a stored test case by identifier.
+        If not found, raises KeyError
+        """
+        # Linear search, but who cares really of performance here?
+
+        for test in self.tests:
+            if test.test_key == test_key:
+                return test
+
+        raise KeyError(test_key)
 
     def as_dict(self) -> Dict[str, Any]:
         if self.finish_date is None:
@@ -228,3 +276,12 @@ def _from_environ(name: str, separator: str = None) -> List[str]:
 
     # Return stripped non empty values
     return list(filter(lambda x: len(x) > 0, map(lambda x: x.strip(), source)))
+
+
+def _merge_status(status_1: Status, status_2: Status):
+    """Merges the status of two tests. """
+
+    return STATUS_HIERARCHY[max(
+        STATUS_HIERARCHY.index(status_1),
+        STATUS_HIERARCHY.index(status_2)
+    )]
