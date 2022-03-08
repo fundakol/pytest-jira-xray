@@ -114,5 +114,5 @@ class XrayPublisher:
         :return: test execution issue id
         """
         response_data = self._send_data(self.endpoint_url, self.auth, data)
-        key = response_data['testExecIssue']['key']
+        key = response_data['key']
         return key
