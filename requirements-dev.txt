@@ -1,7 +1,7 @@
 flake8==4.0.0
 Flask==2.0.2
 mypy==0.910
-pytest==6.2.2
+pytest==7.0.1
 pytest-cov==3.0.0
 requests==2.25.1
 types-flask==1.1.6
