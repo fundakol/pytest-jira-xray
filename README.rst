@@ -5,8 +5,8 @@ pytest-jira-xray
 .. image:: https://img.shields.io/pypi/v/pytest-jira-xray.png
    :target: https://pypi.python.org/pypi/pytest-jira-xray
    :alt: PyPi
-.. image:: https://travis-ci.com/fundakol/pytest-jira-xray.svg?branch=master
-   :target: https://travis-ci.com/github/fundakol/pytest-jira-xray
+.. image:: https://github.com/fundakol/pytest-jira-xray/actions/workflows/main.yml/badge.svg?branch=master
+   :target: https://github.com/fundakol/pytest-jira-xray/actions?query=workflow?master
    :alt: Build status
 .. image:: https://codecov.io/gh/fundakol/pytest-jira-xray/branch/master/graph/badge.svg
    :target: https://codecov.io/gh/fundakol/pytest-jira-xray
