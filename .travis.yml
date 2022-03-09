@@ -1,18 +1,17 @@
-sudo: required
+dist: bionic
 language: python
 python:
     - "3.6"
     - "3.7"
     - "3.8"
     - "3.9"
-#    - "3.10"  # TODO: uncomment when supported by travis
+    - "3.10"
 matrix:
     include:
         - { python: 3.9, env: TOXENV=flake8 }
         - { python: 3.9, env: TOXENV=coverage }
 install:
     - pip install tox-travis codecov
-services: docker
 script:
     - tox
 after_success:
