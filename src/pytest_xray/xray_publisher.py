@@ -45,7 +45,7 @@ class BearerAuth(AuthBase):
             _logger.exception(err_message)
             raise XrayError(err_message) from exc
         else:
-            auth_token = response.text
+            auth_token = response.text.replace('"', '')
             r.headers['Authorization'] = f'Bearer {auth_token}'
         return r
 
@@ -114,5 +114,6 @@ class XrayPublisher:
         :return: test execution issue id
         """
         response_data = self._send_data(self.endpoint_url, self.auth, data)
-        key = response_data['testExecIssue']['key']
+        # The Xray cloud response does not include the 'testExecIssue' attribute
+        key = response_data['testExecIssue']['key'] if 'testExecIssue' in response_data else response_data['key']
         return key

@@ -27,7 +27,7 @@ def http_server(environment_variables):
     # cloud
     server.add_json_response(
         '/api/v2/import/execution',
-        {'testExecIssue': {'key': '1000'}},
+        {'key': '1000'},
         methods=('POST',)
     )
     server.add_callback_response(
