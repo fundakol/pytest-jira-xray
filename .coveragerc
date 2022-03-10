@@ -1,0 +1,7 @@
+[report]
+exclude_lines =
+    def __repr__
+    def __str__
+[run]
+omit =
+    src\pytest_xray\constant.py
