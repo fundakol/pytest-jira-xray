@@ -12,6 +12,7 @@ from pytest_xray import constant
 def formatted_comment(comment: str):
     return f"{{noformat}}\n{comment}\n{{noformat}}"
 
+
 @pytest.fixture
 def date_time_now():
     return dt.datetime(2021, 4, 23, 16, 30, 2, 0, tzinfo=dt.timezone.utc)
@@ -25,6 +26,7 @@ def testcase():
         status='PASS'
     )
 
+
 @pytest.fixture
 def testcase_with_steps_0():
     return _TestCase(
@@ -33,6 +35,7 @@ def testcase_with_steps_0():
         status='PASS',
         test_step=0
     )
+
 
 @pytest.fixture
 def testcase_with_steps_1():
@@ -43,6 +46,7 @@ def testcase_with_steps_1():
         test_step=1
     )
 
+
 @pytest.fixture
 def testcase_with_steps_2():
     return _TestCase(
@@ -51,6 +55,7 @@ def testcase_with_steps_2():
         status='PASS',
         test_step=2
     )
+
 
 def test_testcase_output_dictionary(testcase):
     assert testcase.as_dict() == {
@@ -162,6 +167,7 @@ def test_test_execution_full_model(testcase, date_time_now):
             ]
         }
 
+
 @mock.patch.dict(os.environ, {
     constant.ENV_TEST_EXECUTION_FIX_VERSION: '1.1',
     constant.ENV_TEST_EXECUTION_TEST_ENVIRONMENTS: 'MyLocalLaptop And TheLiveSystem',
@@ -196,6 +202,7 @@ def test_test_execution_environ_model(testcase, date_time_now):
                 }
             ]
         }
+
 
 def test_test_execution_with_step(testcase_with_steps_0, date_time_now):
     with patch('datetime.datetime') as dt_mock:
@@ -232,11 +239,12 @@ def test_test_execution_with_step(testcase_with_steps_0, date_time_now):
             ]
         }
 
+
 def test_test_execution_with_multiple_steps(
-    testcase_with_steps_0, 
-    testcase_with_steps_1,
-    testcase_with_steps_2, 
-    date_time_now):
+        testcase_with_steps_0,
+        testcase_with_steps_1,
+        testcase_with_steps_2,
+        date_time_now):
     with patch('datetime.datetime') as dt_mock:
         dt_mock.now.return_value = date_time_now
         te = _TestExecution(
@@ -275,4 +283,4 @@ def test_test_execution_with_multiple_steps(
                         ]
                 },
             ]
-        }    
+        }

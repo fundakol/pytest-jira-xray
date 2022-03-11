@@ -66,9 +66,9 @@ class TestCase:
         if status_str_mapper is None:
             status_str_mapper = STATUS_STR_MAPPER_JIRA
         self.status_str_mapper = status_str_mapper
-        
+
         if test_step is not None:
-            self.steps.append({"index": test_step, "data":{"status": status, "comment": self.comment}})
+            self.steps.append({"index": test_step, "data": {"status": status, "comment": self.comment}})
             self.comment = ''
 
     def merge(self, other: 'TestCase'):
@@ -109,7 +109,7 @@ class TestCase:
         if self.steps:
             # Format our steps into the correct format for the Xray API
             last_step = max(self.steps, key=lambda s: s["index"])
-            steps_len =  last_step["index"] + 1
+            steps_len = last_step["index"] + 1
 
             # Build a list up to max_index size, and set every status to "TODO"
             fmt_steps = [{"status": self.status_str_mapper[Status.TODO]} for _ in range(steps_len)]
@@ -119,6 +119,8 @@ class TestCase:
                 step["data"]["status"] = self.status_str_mapper[step["data"]["status"]]
                 fmt_steps[step["index"]] = step["data"]
         return fmt_steps
+
+
 class TestExecution:
 
     def __init__(
