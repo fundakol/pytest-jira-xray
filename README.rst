@@ -45,8 +45,8 @@ Mark a test with JIRA XRAY test ID or list of IDs
         assert True
 
     @pytest.mark.xray(['JIRA-2', 'JIRA-3'])
-        def test_bar():
-            assert True
+    def test_bar():
+        assert True
 
 
 Jira Xray configuration can be provided via Environment Variables:
@@ -200,6 +200,26 @@ the following rules:
 - The comment will be the comment from each of the test, separated by a horizontal divider.
 - The status will be the intuitive combination of the individual results: if ``test_my_process_1`` 
   is a ``PASS`` but ``test_my_process_2`` is a ``FAIL``, ``JIRA-1`` will be marked as ``FAIL``.
+
+You can also mark multiple steps for a single Xray testcase using duplicate test ids and the ``step=``
+option:
+    .. code-block:: python
+
+        # -- FILE: test_example.py
+        import pytest
+
+        @pytest.mark.xray('JIRA-1', step=1)
+        def test_foo():
+            assert True
+
+        @pytest.mark.xray('JIRA-1', step=2)
+        def test_bar():
+            assert True
+            
+In this case, the Pass/Fail result of the marked test method will become a PASS/FAIL 
+for the associated Xray test step. Additionally, the comment for each test method will become a
+comment in the Xray test step. The overall Xray testcase status will be marked as FAIL if any test
+steps fail.
 
 
 IntelliJ integration

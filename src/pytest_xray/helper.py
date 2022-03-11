@@ -56,14 +56,20 @@ class TestCase:
         test_key: str,
         status: Status,
         comment: Optional[str] = None,
-        status_str_mapper: Dict[Status, str] = None
+        status_str_mapper: Dict[Status, str] = None,
+        test_step: int = None
     ):
         self.test_key = test_key
         self.status = status
-        self.comment = comment or ''
+        self.comment = f"{{noformat}}\n{comment}\n{{noformat}}" if comment else ''
+        self.steps: List[Dict[str: int, str: Dict[str, str]]] = []
         if status_str_mapper is None:
             status_str_mapper = STATUS_STR_MAPPER_JIRA
         self.status_str_mapper = status_str_mapper
+        
+        if test_step is not None:
+            self.steps.append({"index": test_step, "data":{"status": status, "comment": self.comment}})
+            self.comment = ''
 
     def merge(self, other: 'TestCase'):
         """
@@ -88,15 +94,31 @@ class TestCase:
                 self.comment += other.comment
 
         self.status = _merge_status(self.status, other.status)
+        self.steps += other.steps
 
     def as_dict(self) -> Dict[str, str]:
         return dict(
             testKey=self.test_key,
             status=self.status_str_mapper[self.status],
             comment=self.comment,
+            steps=self._format_steps(),
         )
 
+    def _format_steps(self) -> List[Dict[str, str]]:
+        fmt_steps = []
+        if self.steps:
+            # Format our steps into the correct format for the Xray API
+            last_step = max(self.steps, key=lambda s: s["index"])
+            steps_len =  last_step["index"] + 1
 
+            # Build a list up to max_index size, and set every status to "TODO"
+            fmt_steps = [{"status": self.status_str_mapper[Status.TODO]} for _ in range(steps_len)]
+
+            # Add in the proper status for each test step
+            for step in self.steps:
+                step["data"]["status"] = self.status_str_mapper[step["data"]["status"]]
+                fmt_steps[step["index"]] = step["data"]
+        return fmt_steps
 class TestExecution:
 
     def __init__(

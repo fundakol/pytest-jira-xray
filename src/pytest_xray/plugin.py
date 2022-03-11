@@ -143,6 +143,7 @@ class XrayPlugin:
         logfile = self.config.getoption(XRAYPATH)
         self.logfile: str = self._get_normalize_logfile(logfile) if logfile else None
         self.test_keys: Dict[str, List[str]] = {}  # store nodeid and TestId
+        self.test_steps: Dict[str, int] = {} # store nodeid and test step
         self.issue_id = None
         self.exception = None
         self.test_execution: TestExecution = TestExecution(
@@ -170,12 +171,23 @@ class XrayPlugin:
                 continue
 
             test_keys: List[str]
+            test_step: int = None
             if isinstance(marker.args[0], str):
                 test_keys = [marker.args[0]]
             elif isinstance(marker.args[0], list):
                 test_keys = list(marker.args[0])
             else:
-                raise XrayError("xray marker can only accept strings or lists")
+                raise XrayError("xray test key can only be a string or lists")
+
+            # Collect test steps, but they're only used for duplicated test ids
+            if "step" in marker.kwargs:
+                if isinstance(marker.kwargs["step"], int):
+                    # Steps in jira are 1-based, but the report that is sent to
+                    # Xray is 0 based. One is subtracted here to make that 
+                    # conversion
+                    test_step = marker.kwargs["step"] - 1
+                else:
+                    raise XrayError("xray test step can only be an integer")
 
             for test_key in test_keys:
                 if test_key in jira_ids:
@@ -184,6 +196,8 @@ class XrayPlugin:
                     jira_ids.append(test_key)
 
             self.test_keys[item.nodeid] = test_keys
+            self.test_steps[item.nodeid] = test_step
+        
 
             if duplicated_jira_ids and not self.allow_duplicate_ids:
                 raise XrayError(f'Duplicated test case ids: {duplicated_jira_ids}')
@@ -191,6 +205,9 @@ class XrayPlugin:
     def _get_test_keys_for(self, nodeid: str) -> Optional[List[str]]:
         """Return XRAY test id for nodeid."""
         return self.test_keys.get(nodeid)
+
+    def _get_test_step_for(self, nodeid: str) -> Optional[int]:
+        return self.test_steps.get(nodeid)
 
     @staticmethod
     def _get_xray_marker(item: Item) -> Optional[Mark]:
@@ -205,6 +222,8 @@ class XrayPlugin:
             return
 
         test_keys = self._get_test_keys_for(report.nodeid)
+        test_step = self._get_test_step_for(report.nodeid)
+
         if test_keys is None:
             return
 
@@ -213,7 +232,8 @@ class XrayPlugin:
                 test_key=test_key,
                 status=status,
                 comment=report.longreprtext,
-                status_str_mapper=self.status_str_mapper
+                status_str_mapper=self.status_str_mapper,
+                test_step=test_step
             )
             try:
                 test_case = self.test_execution.find_test_case(test_key)

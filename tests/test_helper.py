@@ -61,7 +61,7 @@ def test_merge_test_cases():
 
     assert t1.test_key == "JIRA-1"
     assert t1.status == Status.FAIL
-    assert t1.comment == "hello\n" + "-" * 80 + "\nhi"
+    assert t1.comment == "{noformat}\nhello\n{noformat}\n" + "-" * 80 + "\n{noformat}\nhi\n{noformat}"
 
     with pytest.raises(ValueError):
         t1.merge(t3)
