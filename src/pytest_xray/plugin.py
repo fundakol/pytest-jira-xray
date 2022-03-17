@@ -82,9 +82,9 @@ def pytest_addoption(parser: Parser):
     )
     xray.addoption(
         XRAY_ALLOW_DUPLICATE_IDS,
-        action="store_true",
+        action='store_true',
         default=False,
-        help="Allow test ids to be present on multiple pytest tests"
+        help='Allow test ids to be present on multiple pytest tests'
     )
 
 
@@ -175,7 +175,7 @@ class XrayPlugin:
             elif isinstance(marker.args[0], list):
                 test_keys = list(marker.args[0])
             else:
-                raise XrayError("xray marker can only accept strings or lists")
+                raise XrayError('xray marker can only accept strings or lists')
 
             for test_key in test_keys:
                 if test_key in jira_ids:

@@ -104,9 +104,9 @@ def test_jira_xray_plugin_multiple_ids(xray_tests_multi):
     with open(xray_file) as f:
         data = json.load(f)
 
-    assert len(data["tests"]) == 2
-    assert data["tests"][0]["testKey"] == "JIRA-1"
-    assert data["tests"][1]["testKey"] == "JIRA-2"
+    assert len(data['tests']) == 2
+    assert data['tests'][0]['testKey'] == 'JIRA-1'
+    assert data['tests'][1]['testKey'] == 'JIRA-2'
 
 
 def test_jira_xray_plugin_multiple_ids_fail(xray_tests_multi_fail):
@@ -125,8 +125,8 @@ def test_jira_xray_plugin_multiple_ids_fail(xray_tests_multi_fail):
     with open(xray_file) as f:
         data = json.load(f)
 
-    assert len(data["tests"]) == 2
-    print(data["tests"])
+    assert len(data['tests']) == 2
+    print(data['tests'])
 
 
 def test_xray_with_all_test_types(testdir):
@@ -246,7 +246,7 @@ def test_duplicated_ids(testdir):
     )
 
     assert result.ret == 3
-    assert "Duplicated test case ids" in str(result.stdout)
+    assert 'Duplicated test case ids' in str(result.stdout)
 
     result = testdir.runpytest(
         '--jira-xray',
@@ -256,7 +256,7 @@ def test_duplicated_ids(testdir):
     )
 
     assert result.ret == 1
-    assert "Duplicated test case ids" not in str(result.stdout)
+    assert 'Duplicated test case ids' not in str(result.stdout)
 
     result.assert_outcomes(passed=1, failed=1)
     assert report_file.exists()

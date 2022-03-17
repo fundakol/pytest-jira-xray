@@ -75,8 +75,8 @@ class TestCase:
 
         if self.test_key != other.test_key:
             raise ValueError(
-                f"Cannot merge test with different test keys: "
-                f"{self.test_key} {other.test_key}"
+                f'Cannot merge test with different test keys: '
+                f'{self.test_key} {other.test_key}'
             )
 
         if self.comment == '':
@@ -84,7 +84,7 @@ class TestCase:
                 self.comment = other.comment
         else:
             if other.comment != '':
-                self.comment += ("\n" + "-"*80 + "\n")
+                self.comment += ('\n' + '-'*80 + '\n')
                 self.comment += other.comment
 
         self.status = _merge_status(self.status, other.status)
