@@ -102,7 +102,9 @@ class XrayPublisher:
                                f'Response status code: {response.status_code}')
                 _logger.exception(err_message)
                 if 'error' in response.json():
-                    _logger.error('Error message from server: %s', response.json()['error'])
+                    server_return_error = f"Error message from server: {response.json()['error']}"
+                    err_message += '\n' + server_return_error
+                    _logger.error(server_return_error)
                 raise XrayError(err_message) from exc
             return response.json()
 
