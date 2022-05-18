@@ -12,27 +12,47 @@ jobs:
   tests:
     runs-on: ubuntu-latest
     name: Tests
-    steps:
-      - uses: actions/checkout@v2
-      - name: Run tests
-        id: test
-        uses: fedora-python/tox-github-action@master
-        with:
-          tox_env: ${{ matrix.tox_env }}
     strategy:
       matrix:
-        tox_env: [ py36, py37, py38, py39, py310, flake8 ]
+        python: [ "3.6", "3.7", "3.8", "3.9", "3.10"]
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with: 
+          python-version: ${{ matrix.python }}
+      - name: Install packages
+        run: pip install tox
+      - name: Run tests
+        run: tox -e py
+
+  flake8:
+    runs-on: ubuntu-latest
+    name: flake8
+    steps:
+      - uses: actions/checkout@v2
+      - name: Setup Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: "3.9"
+      - name: Install packages
+        run: pip install tox
+      - name: Run tests
+        run: tox -e flake8
 
   coverage:
     runs-on: ubuntu-latest
     name: Coverage
     steps:
       - uses: actions/checkout@v2
-      - name: Run tests with coverage
-        id: coverage
-        uses: fedora-python/tox-github-action@master
+      - name: Setup Python
+        uses: actions/setup-python@v2
         with:
-          tox_env: coverage
+          python-version: "3.9"
+      - name: Install packages
+        run: pip install tox
+      - name: Run tests with coverage
+        run: tox -e coverage
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
         with:
