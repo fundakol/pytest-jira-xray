@@ -22,8 +22,6 @@ from pytest_xray.constant import (
     JIRA_CLIENT_SECRET_AUTH,
     XRAYPATH,
     XRAY_MARKER_NAME,
-    TEST_EXECUTION_ENDPOINT,
-    TEST_EXECUTION_ENDPOINT_CLOUD,
     XRAY_ALLOW_DUPLICATE_IDS
 )
 from pytest_xray.exceptions import XrayError
@@ -36,7 +34,9 @@ from pytest_xray.helper import (
     STATUS_STR_MAPPER_CLOUD,
     get_bearer_auth,
     get_api_key_auth,
-    get_basic_auth, get_api_token_auth,
+    get_basic_auth,
+    get_api_token_auth,
+    get_endpoints,
 )
 from pytest_xray.xray_publisher import (
     ClientSecretAuth,
@@ -121,9 +121,9 @@ def pytest_configure(config: Config) -> None:
         publisher = FilePublisher(xray_path)  # type: ignore
     else:
         if config.getoption(JIRA_CLOUD):
-            endpoint = TEST_EXECUTION_ENDPOINT_CLOUD
+            endpoint = get_endpoints()['executionCloudEndPoint']
         else:
-            endpoint = TEST_EXECUTION_ENDPOINT
+            endpoint = get_endpoints()['executionEndPoint']
 
         if config.getoption(JIRA_CLIENT_SECRET_AUTH):
             options = get_bearer_auth()
@@ -194,12 +194,20 @@ class XrayPlugin:
                 continue
 
             test_keys: List[str]
-            if isinstance(marker.args[0], str):
-                test_keys = [marker.args[0]]
-            elif isinstance(marker.args[0], list):
-                test_keys = list(marker.args[0])
-            else:
-                raise XrayError('xray marker can only accept strings or lists')
+            if "test_key" in marker.kwargs:
+                if isinstance(marker.kwargs["test_key"], str):
+                    test_keys = [marker.kwargs["test_key"]]
+                elif isinstance(marker.kwargs["test_key"], list):
+                    test_keys = list(marker.kwargs["test_key"])
+                else:
+                    raise XrayError('xray test key can only accept strings or lists')
+            elif len(marker.args) > 0:
+                if isinstance(marker.args[0], str):
+                    test_keys = [marker.args[0]]
+                elif isinstance(marker.args[0], list):
+                    test_keys = list(marker.args[0])
+                else:
+                    raise XrayError('xray marker can only accept strings or lists')
 
             for test_key in test_keys:
                 if test_key in jira_ids:
@@ -211,6 +219,14 @@ class XrayPlugin:
 
             if duplicated_jira_ids and not self.allow_duplicate_ids:
                 raise XrayError(f'Duplicated test case ids: {duplicated_jira_ids}')
+
+            if "test_exec_key" in marker.kwargs:
+                if isinstance(marker.kwargs["test_exec_key"], str):
+                    self.test_execution.test_execution_key = marker.kwargs["test_exec_key"]
+                else:
+                    raise XrayError('xray test execution can only accept strings')
+            else:
+                self.test_execution.test_execution_key = self.test_execution_id
 
     def _get_test_keys_for(self, nodeid: str) -> Optional[List[str]]:
         """Return XRAY test id for nodeid."""
