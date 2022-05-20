@@ -14,6 +14,8 @@ def environment_variables():
     os.environ['XRAY_API_PASSWORD'] = 'jirapassword'
     os.environ['XRAY_CLIENT_ID'] = 'client_id'
     os.environ['XRAY_CLIENT_SECRET'] = 'client_secret'
+    os.environ['XRAY_API_TOKEN'] = 'token'
+    os.environ['XRAY_API_KEY'] = 'api_key'
 
 
 @pytest.fixture(scope='session', autouse=True)
