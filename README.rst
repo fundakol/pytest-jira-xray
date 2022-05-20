@@ -59,14 +59,14 @@ Jira Xray configuration can be provided via Environment Variables:
     $ export XRAY_API_BASE_URL=<Jira base URL>
 
 
-- Basic authentication:
+- Basic authentication (default):
 
 .. code-block:: bash
 
     $ export XRAY_API_USER=<jria username>
     $ export XRAY_API_PASSWORD=<user password>
 
-- API KEY
+- API KEY (`--api-key-auth` option)
 
 .. code-block:: bash
 
@@ -88,13 +88,19 @@ Or you can provide path to certificate file
     $ export XRAY_API_VERIFY_SSL=</path/to/PEM file>
 
 
-* Cloud authentication:
+* Authentication with client ID and client secret (`--client-secret-auth` option):
 
 .. code-block:: bash
 
     $ export XRAY_CLIENT_ID=<client id>
     $ export XRAY_CLIENT_SECRET=<client secret>
 
+
+* Token authentication (`--token-auth` option)
+
+.. code-block:: bash
+
+    $ export XRAY_API_TOKEN=<user token>
 
 * Test Execution parameters:
 
@@ -131,11 +137,13 @@ Upload results
 
     $ pytest --jira-xray --testplan TestPlanId
 
-* Use with Jira API KEY:
+
+* Store results in a file instead of exporting directly to a XRAY server
 
 .. code-block:: bash
 
-    $ pytest --jira-xray --api-key
+    $ pytest --jira-xray --xraypath=xray.json
+
 
 * Use with Jira cloud:
 
@@ -144,11 +152,31 @@ Upload results
     $ pytest --jira-xray --cloud
 
 
-* Store results in a file instead of exporting directly to a XRAY server
+Jira authentication
++++++++++++++++++++
+
+Default Jira authentication is basic authentication, but you can select different authentication.
+
+* Jira client secret authentication:
 
 .. code-block:: bash
 
-    $ pytest --jira-xray --xraypath=xray.json
+    $ pytest --jira-xray --client-secret-auth
+
+
+* Jira API KEY authentication:
+
+.. code-block:: bash
+
+    $ pytest --jira-xray --api-key-auth
+
+
+* Jira token authentication:
+
+.. code-block:: bash
+
+    $ pytest --jira-xray --token-auth
+
 
 Multiple ids support
 ++++++++++++++++++++
