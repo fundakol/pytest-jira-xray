@@ -4,4 +4,4 @@ exclude_lines =
     def __str__
 [run]
 omit =
-    src\pytest_xray\constant.py
+    src/pytest_xray/constant.py
