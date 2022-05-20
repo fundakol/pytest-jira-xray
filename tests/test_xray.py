@@ -54,6 +54,9 @@ def test_help_message(xray_tests):
         'Jira Xray report:',
         '*--jira-xray*Upload test results to JIRA XRAY*',
         '*--cloud*Use with JIRA XRAY could server*',
+        '*--api-key-auth*Use API Key authentication*',
+        '*--token-auth*Use token authentication*',
+        '*--client-secret-auth*Use client secret authentication*',
         '*--execution=ExecutionId*', '*XRAY Test Execution ID*',
         '*--testplan=TestplanId*', '*XRAY Test Plan ID*',
         '*--xraypath=path*Do not upload to a server but create JSON report file at*', '*given path*',
@@ -64,9 +67,11 @@ def test_help_message(xray_tests):
     'cli_options',
     [
         ('--jira-xray',),
-        ('--jira-xray', '--cloud')
+        ('--jira-xray', '--cloud', '--client-secret-auth'),
+        ('--jira-xray', '--cloud', '--token-auth'),
+        ('--jira-xray', '--cloud', '--api-key-auth')
     ],
-    ids=['DC Server', 'Cloud']
+    ids=['DC Server', 'Cloud client secret', 'Could token', 'Could api key']
 )
 def test_jira_xray_plugin(xray_tests, cli_options):
     result = xray_tests.runpytest(*cli_options)
@@ -92,8 +97,7 @@ def test_jira_xray_plugin_exports_to_file(xray_tests):
 
 def test_jira_xray_plugin_multiple_ids(xray_tests_multi):
     xray_file = xray_tests_multi.tmpdir.join('xray.json')
-    result = xray_tests_multi.runpytest('--jira-xray', '--xraypath',
-                                        str(xray_file))
+    result = xray_tests_multi.runpytest('--jira-xray', '--xraypath', str(xray_file))
     result.assert_outcomes(passed=1)
     result.stdout.fnmatch_lines([
         '*Generated XRAY execution report file:*xray.json*',

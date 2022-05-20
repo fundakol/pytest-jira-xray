@@ -11,7 +11,18 @@ from pytest_xray.exceptions import XrayError
 _logger = logging.getLogger(__name__)
 
 
-class BearerAuth(AuthBase):
+class TokenAuth(AuthBase):
+    """Bearer Token Authentication"""
+
+    def __init__(self, token: str) -> None:
+        self._token = token
+
+    def __call__(self, r: requests.PreparedRequest) -> requests.PreparedRequest:
+        r.headers['authorization'] = f'Bearer {self._token}'
+        return r
+
+
+class ClientSecretAuth(AuthBase):
 
     def __init__(self, base_url: str, client_id: str, client_secret: str) -> None:
         if base_url.endswith('/'):
