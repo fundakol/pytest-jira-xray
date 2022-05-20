@@ -18,6 +18,8 @@ from pytest_xray.constant import (
     XRAY_EXECUTION_ID,
     JIRA_CLOUD,
     JIRA_API_KEY,
+    JIRA_TOKEN,
+    JIRA_CLIENT_SECRET_AUTH,
     XRAYPATH,
     XRAY_MARKER_NAME,
     TEST_EXECUTION_ENDPOINT,
@@ -34,9 +36,14 @@ from pytest_xray.helper import (
     STATUS_STR_MAPPER_CLOUD,
     get_bearer_auth,
     get_api_key_auth,
-    get_basic_auth,
+    get_basic_auth, get_api_token_auth,
 )
-from pytest_xray.xray_publisher import BearerAuth, ApiKeyAuth, XrayPublisher
+from pytest_xray.xray_publisher import (
+    ClientSecretAuth,
+    ApiKeyAuth,
+    XrayPublisher,
+    TokenAuth
+)
 
 
 def pytest_addoption(parser: Parser):
@@ -57,7 +64,19 @@ def pytest_addoption(parser: Parser):
         JIRA_API_KEY,
         action='store_true',
         default=False,
-        help='Upload test results to JIRA XRAY with API Key',
+        help='Use API Key authentication',
+    )
+    xray.addoption(
+        JIRA_TOKEN,
+        action='store_true',
+        default=False,
+        help='Use token authentication',
+    )
+    xray.addoption(
+        JIRA_CLIENT_SECRET_AUTH,
+        action='store_true',
+        default=False,
+        help='Use client secret authentication',
     )
     xray.addoption(
         XRAY_EXECUTION_ID,
@@ -102,20 +121,25 @@ def pytest_configure(config: Config) -> None:
         publisher = FilePublisher(xray_path)  # type: ignore
     else:
         if config.getoption(JIRA_CLOUD):
-            options = get_bearer_auth()
             endpoint = TEST_EXECUTION_ENDPOINT_CLOUD
-            auth: Union[AuthBase, Tuple[str, str]] = BearerAuth(
+        else:
+            endpoint = TEST_EXECUTION_ENDPOINT
+
+        if config.getoption(JIRA_CLIENT_SECRET_AUTH):
+            options = get_bearer_auth()
+            auth: Union[AuthBase, Tuple[str, str]] = ClientSecretAuth(
                 options['BASE_URL'],
                 options['CLIENT_ID'],
                 options['CLIENT_SECRET']
             )
         elif config.getoption(JIRA_API_KEY):
             options = get_api_key_auth()
-            endpoint = TEST_EXECUTION_ENDPOINT
             auth = ApiKeyAuth(options['API_KEY'])
+        elif config.getoption(JIRA_TOKEN):
+            options = get_api_token_auth()
+            auth = TokenAuth(options['TOKEN'])
         else:
             options = get_basic_auth()
-            endpoint = TEST_EXECUTION_ENDPOINT
             auth = (options['USER'], options['PASSWORD'])
 
         publisher = XrayPublisher(  # type: ignore

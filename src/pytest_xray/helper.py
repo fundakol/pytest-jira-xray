@@ -180,7 +180,7 @@ class TestExecution:
         return data
 
 
-def get_base_options() -> dict:
+def get_base_options() -> Dict[str, Any]:
     options = {}
     try:
         base_url = environ['XRAY_API_BASE_URL']
@@ -204,7 +204,7 @@ def get_base_options() -> dict:
     return options
 
 
-def get_basic_auth() -> dict:
+def get_basic_auth() -> Dict[str, Any]:
     options = get_base_options()
     try:
         user = environ['XRAY_API_USER']
@@ -220,7 +220,7 @@ def get_basic_auth() -> dict:
     return options
 
 
-def get_bearer_auth() -> dict:
+def get_bearer_auth() -> Dict[str, Any]:
     options = get_base_options()
     try:
         client_id = environ['XRAY_CLIENT_ID']
@@ -236,7 +236,7 @@ def get_bearer_auth() -> dict:
     return options
 
 
-def get_api_key_auth() -> dict:
+def get_api_key_auth() -> Dict[str, Any]:
     options = get_base_options()
     try:
         api_key = environ['XRAY_API_KEY']
@@ -246,6 +246,19 @@ def get_api_key_auth() -> dict:
         ) from e
 
     options['API_KEY'] = api_key
+    return options
+
+
+def get_api_token_auth() -> Dict[str, Any]:
+    options = get_base_options()
+    try:
+        api_token = environ['XRAY_API_TOKEN']
+    except KeyError as e:
+        raise XrayError(
+            'Token authentication requires environment variable: XRAY_API_TOKEN'
+        ) from e
+
+    options['TOKEN'] = api_token
     return options
 
 
