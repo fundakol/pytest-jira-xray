@@ -24,7 +24,8 @@ from pytest_xray.constant import (
     XRAY_MARKER_NAME,
     TEST_EXECUTION_ENDPOINT,
     TEST_EXECUTION_ENDPOINT_CLOUD,
-    XRAY_ALLOW_DUPLICATE_IDS
+    XRAY_ALLOW_DUPLICATE_IDS,
+    ENV_JIRA_TEST_IDS
 )
 from pytest_xray.exceptions import XrayError
 from pytest_xray.file_publisher import FilePublisher
@@ -222,6 +223,13 @@ class XrayPlugin:
 
     def pytest_sessionstart(self, session):
         self.test_execution.start_date = dt.datetime.now(tz=dt.timezone.utc)
+
+    def pytest_runtest_setup(self, item):
+        test_keys = self._get_test_keys_for(item.nodeid)
+        if test_keys is None:
+            return
+
+        os.environ[ENV_JIRA_TEST_IDS] = " ".join(test_keys)
 
     def pytest_runtest_logreport(self, report: TestReport):
         status = self._get_status_from_report(report)
