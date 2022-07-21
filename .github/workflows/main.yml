@@ -10,6 +10,7 @@ on:
 
 jobs:
   tests:
+    needs: flake8
     runs-on: ubuntu-latest
     name: Tests
     strategy:
@@ -41,6 +42,7 @@ jobs:
         run: tox -e flake8
 
   coverage:
+    needs: tests
     runs-on: ubuntu-latest
     name: Coverage
     steps:
@@ -53,8 +55,12 @@ jobs:
         run: pip install tox
       - name: Run tests with coverage
         run: tox -e coverage
+      - name: Read DISABLE_UPLOAD_COVERAGE_REPORT variable
+        id: disable_upload_coverage_report
+        run: echo '::set-output name=value::${{secrets.DISABLE_UPLOAD_COVERAGE_REPORT}}'
       - name: Upload coverage to Codecov
         uses: codecov/codecov-action@v2
+        if: steps.disable_upload_coverage_report.outputs.value != 'true'
         with:
           directory: ./coverage/reports/
           fail_ci_if_error: true

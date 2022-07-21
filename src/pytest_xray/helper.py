@@ -180,6 +180,14 @@ class TestExecution:
         return data
 
 
+def get_endpoints() -> dict:
+    options = {}
+    options['executionEndPoint'] = environ.get('XRAY_TEST_EXECUTION_ENDPOINT') or constant.TEST_EXECUTION_ENDPOINT
+    options['executionCloudEndPoint'] = environ.get('XRAY_TEST_EXECUTION_ENDPOINT_CLOUD') \
+        or constant.TEST_EXECUTION_ENDPOINT_CLOUD
+    return options
+
+
 def get_base_options() -> Dict[str, Any]:
     options = {}
     try:

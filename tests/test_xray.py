@@ -271,3 +271,40 @@ def test_duplicated_ids(testdir):
     assert xray_statuses == {
         ('JIRA-1', 'FAIL'),
     }
+
+
+def test_xray_with_specific_execution_id(testdir):
+    testdir.makepyfile(textwrap.dedent(
+        """\
+        import pytest
+
+        @pytest.mark.xray(test_key='JIRA-1', test_exec_key='JIRA_10')
+        def test_ok():
+            print("ok")
+
+        @pytest.mark.xray(test_key=['JIRA-2', 'JIRA-3'], test_exec_key='JIRA_10')
+        def test_fail():
+            assert 0
+        """))
+    report_file = testdir.tmpdir / 'xray.json'
+
+    result = testdir.runpytest(
+        '--jira-xray',
+        f'--xraypath={report_file}',
+        '-v',
+    )
+
+    assert result.ret == 1
+    result.assert_outcomes(errors=0, failed=1, passed=1, skipped=0, xfailed=0, xpassed=0)
+    assert report_file.exists()
+    with open(report_file) as file:
+        data = json.load(file)
+
+    assert data['testExecutionKey'] == 'JIRA_10'
+
+    xray_statuses = set((t['testKey'], t['status']) for t in data['tests'])
+    assert xray_statuses == {
+        ('JIRA-1', 'PASS'),
+        ('JIRA-2', 'FAIL'),
+        ('JIRA-3', 'FAIL'),
+    }
