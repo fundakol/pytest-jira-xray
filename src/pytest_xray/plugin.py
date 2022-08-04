@@ -1,8 +1,9 @@
 import datetime as dt
 import os
 from pathlib import Path
-from typing import List, Tuple, Union, Optional, Dict
+from typing import List, Tuple, Union, Optional, Dict, Any
 
+import pytest
 from _pytest.config import Config, ExitCode
 from _pytest.config.argparsing import Parser
 from _pytest.mark import Mark
@@ -105,6 +106,11 @@ def pytest_addoption(parser: Parser):
         default=False,
         help='Allow test ids to be present on multiple pytest tests'
     )
+
+
+def pytest_addhooks(pluginmanager):
+    from pytest_xray import hooks
+    pluginmanager.add_hookspecs(hooks)
 
 
 def pytest_configure(config: Config) -> None:
@@ -267,10 +273,14 @@ class XrayPlugin:
     def pytest_collection_modifyitems(self, config: Config, items: List[Item]) -> None:
         self._associate_marker_metadata_for(items)
 
-    def pytest_sessionfinish(self, session):
+    def pytest_sessionfinish(self, session: pytest.Session) -> None:
+        results = self.test_execution.as_dict()
+        session.config.pluginmanager.hook.pytest_xray_results(
+            results=results, session=session
+        )
         self.test_execution.finish_date = dt.datetime.now(tz=dt.timezone.utc)
         try:
-            self.issue_id = self.publisher.publish(self.test_execution.as_dict())
+            self.issue_id = self.publisher.publish(results)
         except XrayError as exc:
             self.exception = exc
 
