@@ -1,3 +1,7 @@
+0.8.1 [2022-08-05]
+==================
+- Added hook to modify XRAY results before publishing
+
 0.8.0 [2022-05-23]
 ==================
 - Added token authentication
