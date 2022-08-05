@@ -1,7 +1,7 @@
 import datetime as dt
 import os
 from pathlib import Path
-from typing import List, Tuple, Union, Optional, Dict, Any
+from typing import List, Tuple, Union, Optional, Dict
 
 import pytest
 from _pytest.config import Config, ExitCode
