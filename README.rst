@@ -230,6 +230,17 @@ the following rules:
   is a ``PASS`` but ``test_my_process_2`` is a ``FAIL``, ``JIRA-1`` will be marked as ``FAIL``.
 
 
+Hooks
++++++
+
+There is possibility to modify a XRAY report before it is send to a server by ``pytest_xray_results`` hook.
+
+.. code-block:: python
+
+    def pytest_xray_results(results, session):
+        results['info']['user'] = 'pytest'
+
+
 IntelliJ integration
 ++++++++++++++++++++
 
