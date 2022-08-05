@@ -39,6 +39,7 @@ from pytest_xray.helper import (
     get_api_key_auth,
     get_basic_auth, get_api_token_auth,
 )
+from pytest_xray import hooks
 from pytest_xray.xray_publisher import (
     ClientSecretAuth,
     ApiKeyAuth,
@@ -109,7 +110,6 @@ def pytest_addoption(parser: Parser):
 
 
 def pytest_addhooks(pluginmanager):
-    from pytest_xray import hooks
     pluginmanager.add_hookspecs(hooks)
 
 
