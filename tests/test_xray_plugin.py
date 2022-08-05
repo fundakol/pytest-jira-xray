@@ -95,6 +95,19 @@ def test_jira_xray_plugin_exports_to_file(xray_tests):
     assert xray_file.exists()
 
 
+def test_if_user_can_modify_results_with_hooks(xray_tests):
+    xray_file = xray_tests.tmpdir.join('xray.json')
+    xray_tests.makeconftest("""
+        def pytest_xray_results(results):
+            results['info']['user'] = 'Test User'
+    """)
+    result = xray_tests.runpytest('--jira-xray', '--xraypath', str(xray_file))
+    assert result.ret == 0
+    xray_result = json.load(xray_file.open())
+    assert 'user' in xray_result['info']
+    assert xray_result['info']['user'] == 'Test User'
+
+
 def test_jira_xray_plugin_multiple_ids(xray_tests_multi):
     xray_file = xray_tests_multi.tmpdir.join('xray.json')
     result = xray_tests_multi.runpytest('--jira-xray', '--xraypath', str(xray_file))
