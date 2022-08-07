@@ -1,12 +1,28 @@
 import datetime as dt
 import enum
 import os
-from os import environ
-from typing import List, Dict, Union, Any, Optional
 import re
+from os import environ
+from typing import (
+    Any,
+    Dict,
+    List,
+    Optional,
+    Union
+)
 
 from pytest_xray import constant
-from pytest_xray.constant import DATETIME_FORMAT
+from pytest_xray.constant import (
+    DATETIME_FORMAT,
+    ENV_XRAY_API_BASE_URL,
+    ENV_XRAY_API_KEY,
+    ENV_XRAY_API_PASSWORD,
+    ENV_XRAY_API_TOKEN,
+    ENV_XRAY_API_USER,
+    ENV_XRAY_API_VERIFY_SSL,
+    ENV_XRAY_CLIENT_ID,
+    ENV_XRAY_CLIENT_SECRET
+)
 from pytest_xray.exceptions import XrayError
 
 
@@ -183,13 +199,13 @@ class TestExecution:
 def get_base_options() -> Dict[str, Any]:
     options = {}
     try:
-        base_url = environ['XRAY_API_BASE_URL']
+        base_url = environ[ENV_XRAY_API_BASE_URL]
     except KeyError as e:
         raise XrayError(
-            'pytest-jira-xray plugin requires environment variable: XRAY_API_BASE_URL'
+            f'pytest-jira-xray plugin requires environment variable: {ENV_XRAY_API_BASE_URL}'
         ) from e
 
-    verify = os.environ.get('XRAY_API_VERIFY_SSL', 'True')
+    verify = os.environ.get(ENV_XRAY_API_VERIFY_SSL, 'True')
 
     if verify.upper() == 'TRUE':
         verify = True  # type: ignore
@@ -207,12 +223,12 @@ def get_base_options() -> Dict[str, Any]:
 def get_basic_auth() -> Dict[str, Any]:
     options = get_base_options()
     try:
-        user = environ['XRAY_API_USER']
-        password = environ['XRAY_API_PASSWORD']
+        user = environ[ENV_XRAY_API_USER]
+        password = environ[ENV_XRAY_API_PASSWORD]
     except KeyError as e:
         raise XrayError(
             'Basic authentication requires environment variables: '
-            'XRAY_API_USER, XRAY_API_PASSWORD'
+            f'{ENV_XRAY_API_USER}, {ENV_XRAY_API_PASSWORD}'
         ) from e
 
     options['USER'] = user
@@ -223,12 +239,12 @@ def get_basic_auth() -> Dict[str, Any]:
 def get_bearer_auth() -> Dict[str, Any]:
     options = get_base_options()
     try:
-        client_id = environ['XRAY_CLIENT_ID']
-        client_secret = environ['XRAY_CLIENT_SECRET']
+        client_id = environ[ENV_XRAY_CLIENT_ID]
+        client_secret = environ[ENV_XRAY_CLIENT_SECRET]
     except KeyError as e:
         raise XrayError(
             'Bearer authentication requires environment variables: '
-            'XRAY_CLIENT_ID, XRAY_CLIENT_SECRET'
+            f'{ENV_XRAY_CLIENT_ID}, {ENV_XRAY_CLIENT_SECRET}'
         ) from e
 
     options['CLIENT_ID'] = client_id
@@ -239,10 +255,10 @@ def get_bearer_auth() -> Dict[str, Any]:
 def get_api_key_auth() -> Dict[str, Any]:
     options = get_base_options()
     try:
-        api_key = environ['XRAY_API_KEY']
+        api_key = environ[ENV_XRAY_API_KEY]
     except KeyError as e:
         raise XrayError(
-            'API Key authentication requires environment variable: XRAY_API_KEY'
+            f'API Key authentication requires environment variable: {ENV_XRAY_API_KEY}'
         ) from e
 
     options['API_KEY'] = api_key
@@ -252,10 +268,10 @@ def get_api_key_auth() -> Dict[str, Any]:
 def get_api_token_auth() -> Dict[str, Any]:
     options = get_base_options()
     try:
-        api_token = environ['XRAY_API_TOKEN']
+        api_token = environ[ENV_XRAY_API_TOKEN]
     except KeyError as e:
         raise XrayError(
-            'Token authentication requires environment variable: XRAY_API_TOKEN'
+            f'Token authentication requires environment variable: {ENV_XRAY_API_TOKEN}'
         ) from e
 
     options['TOKEN'] = api_token
