@@ -189,7 +189,7 @@ class XrayPlugin:
         logfile = os.path.normpath(os.path.abspath(logfile))
         return logfile
 
-    def _associate_marker_metadata_for(self, items: List[Item]) -> None:
+    def _associate_marker_metadata_for_items(self, items: List[Item]) -> None:
         """Store XRAY test id for test item."""
         jira_ids: List[str] = []
         duplicated_jira_ids: List[str] = []
@@ -218,7 +218,7 @@ class XrayPlugin:
             if duplicated_jira_ids and not self.allow_duplicate_ids:
                 raise XrayError(f'Duplicated test case ids: {duplicated_jira_ids}')
 
-    def _get_test_keys_for(self, nodeid: str) -> Optional[List[str]]:
+    def _get_test_keys_for_nodeid(self, nodeid: str) -> Optional[List[str]]:
         """Return XRAY test id for nodeid."""
         return self.test_keys.get(nodeid)
 
@@ -234,7 +234,7 @@ class XrayPlugin:
         if status is None:
             return
 
-        test_keys = self._get_test_keys_for(report.nodeid)
+        test_keys = self._get_test_keys_for_nodeid(report.nodeid)
         if test_keys is None:
             return
 
@@ -271,7 +271,7 @@ class XrayPlugin:
         return None
 
     def pytest_collection_modifyitems(self, config: Config, items: List[Item]) -> None:
-        self._associate_marker_metadata_for(items)
+        self._associate_marker_metadata_for_items(items)
 
     def pytest_sessionfinish(self, session: pytest.Session) -> None:
         results = self.test_execution.as_dict()
