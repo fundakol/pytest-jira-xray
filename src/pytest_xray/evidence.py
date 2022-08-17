@@ -5,6 +5,7 @@ from pytest_xray.exceptions import XrayError
 
 # Content Types
 IMAGE_JPEG: str = 'image/jpeg'
+IMAGE_PNG: str = 'image/png'
 PLAIN_TEXT: str = 'plain/text'
 
 
@@ -25,6 +26,10 @@ def evidence(data: AnyStr, filename: str, content_type: str) -> Dict[str, str]:
 
 def jpeg(data: AnyStr, filename: str) -> Dict[str, str]:
     return evidence(data, filename, IMAGE_JPEG)
+
+
+def png(data: AnyStr, filename: str) -> Dict[str, str]:
+    return evidence(data, filename, IMAGE_PNG)
 
 
 def text(data: AnyStr, filename: str) -> Dict[str, str]:
