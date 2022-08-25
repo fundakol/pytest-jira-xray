@@ -1,7 +1,10 @@
 import json
 import textwrap
+from pathlib import Path
 
 import pytest
+
+RESOURCE_DIR: Path = Path(__file__).parent.joinpath('resources')
 
 
 @pytest.fixture()
@@ -99,13 +102,77 @@ def test_if_user_can_modify_results_with_hooks(xray_tests):
     xray_file = xray_tests.tmpdir.join('xray.json')
     xray_tests.makeconftest("""
         def pytest_xray_results(results):
-            results['info']['user'] = 'Test User'
+            results['info']['user'] = 'Test User'                    
     """)
     result = xray_tests.runpytest('--jira-xray', '--xraypath', str(xray_file))
     assert result.ret == 0
     xray_result = json.load(xray_file.open())
     assert 'user' in xray_result['info']
     assert xray_result['info']['user'] == 'Test User'
+
+
+def test_if_user_can_attache_evidences(xray_tests):
+    expected_tests = [
+        {'comment': '',
+         'evidences': [
+             {
+                 'ContentType': 'plain/text',
+                 'data': 'ZXZpZGVuY2U=',
+                 'filename': 'test.log'
+             },
+             {
+                 'ContentType': 'image/png',
+                 'data': 'iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAH'
+                         '0lEQVQIW2OcNm3afwY0wEi+ID8/PwOKdpCAjIwMAwBGOw558x9CSQAAAABJRU5ErkJggg==',
+                 'filename': 'screenshot.png'
+             },
+             {
+                 'ContentType': 'image/jpeg',
+                 'data': '/9j/4AAQSkZJRgABAQAAAQABAAD/4QBiRXhpZgAATU0AKgAAAAgABQESAAMAAAABAAEAAAEa'
+                         'AAUAAAABAAAASgEbAAUAAAABAAAAUgEoAAMAAAABAAEAAAITAAMAAAABAAEAAAAAAAAAAAABA'
+                         'AAAAQAAAAEAAAAB/9sAQwADAgICAgIDAgICAwMDAwQGBAQEBAQIBgYFBgkICgoJCAkJCgwPDAo'
+                         'LDgsJCQ0RDQ4PEBAREAoMEhMSEBMPEBAQ/8AACwgABQAFAQERAP/EABQAAQAAAAAAAAAAAAAAAA'
+                         'AAAAf/xAAcEAACAgIDAAAAAAAAAAAAAAABAgMGBBEAE2H/2gAIAQEAAD8AXKtVorDFkSSZjw9LKoCoDvYPvP/Z',
+                 'filename': 'screenshot.jpeg'
+             }
+         ],
+         'status': 'PASS',
+         'testKey': 'JIRA-1'}
+    ]
+
+    xray_file = xray_tests.tmpdir.join('xray.json')
+    xray_tests.makeconftest(f"""
+        import pytest
+        from pytest_xray import evidence
+        
+        @pytest.hookimpl(hookwrapper=True)
+        def pytest_runtest_makereport(item, call):
+            outcome = yield
+            report = outcome.get_result()
+            evidences = getattr(report, "evidences", [])
+            if report.when == "call":
+                evidences.append(
+                    evidence.text(data='evidence', filename="test.log")
+                )
+                evidences.append(
+                    evidence.png(
+                        data=open('{RESOURCE_DIR}/screenshot.png', 'rb').read(), 
+                        filename='screenshot.png'
+                    )
+                )
+                evidences.append(
+                    evidence.jpeg(
+                        data=open('{RESOURCE_DIR}/screenshot.jpeg', 'rb').read(), 
+                        filename='screenshot.jpeg'
+                    )
+                )
+                report.evidences = evidences                    
+    """)
+    result = xray_tests.runpytest('--jira-xray', '--xraypath', str(xray_file))
+    assert result.ret == 0
+    xray_result = json.load(xray_file.open())
+    assert 'tests' in xray_result
+    assert xray_result['tests'] == expected_tests
 
 
 def test_jira_xray_plugin_multiple_ids(xray_tests_multi):
