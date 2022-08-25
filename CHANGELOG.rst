@@ -1,3 +1,7 @@
+0.8.2 [2022-08-25]
+==================
+- Added possibility to attach test evidence
+
 0.8.1 [2022-08-05]
 ==================
 - Added hook to modify XRAY results before publishing
