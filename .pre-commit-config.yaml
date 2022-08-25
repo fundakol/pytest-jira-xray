@@ -19,3 +19,5 @@ repos:
     hooks:
       - id: requirements-txt-fixer
       - id: double-quote-string-fixer
+      - id: trailing-whitespace
+      - id: end-of-file-fixer

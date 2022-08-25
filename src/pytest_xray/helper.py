@@ -72,14 +72,14 @@ class TestCase:
         test_key: str,
         status: Status,
         comment: Optional[str] = None,
-        status_str_mapper: Dict[Status, str] = None
+        status_str_mapper: Optional[Dict[Status, str]] = None,
+        evidences: Optional[List[Dict[str, str]]] = None
     ):
         self.test_key = test_key
         self.status = status
         self.comment = comment or ''
-        if status_str_mapper is None:
-            status_str_mapper = STATUS_STR_MAPPER_JIRA
-        self.status_str_mapper = status_str_mapper
+        self.status_str_mapper = status_str_mapper or STATUS_STR_MAPPER_JIRA
+        self.evidences = evidences or []
 
     def merge(self, other: 'TestCase'):
         """
@@ -105,12 +105,15 @@ class TestCase:
 
         self.status = _merge_status(self.status, other.status)
 
-    def as_dict(self) -> Dict[str, str]:
-        return dict(
+    def as_dict(self) -> Dict[str, Any]:
+        data = dict(
             testKey=self.test_key,
             status=self.status_str_mapper[self.status],
             comment=self.comment,
         )
+        if self.evidences:
+            data['evidences'] = self.evidences
+        return data
 
 
 class TestExecution:
@@ -165,7 +168,7 @@ class TestExecution:
             self.finish_date = dt.datetime.now(tz=dt.timezone.utc)  # type: ignore
 
         tests = [test.as_dict() for test in self.tests]
-        info = dict(
+        info: Dict[str, Any] = dict(
             startDate=self.start_date.strftime(DATETIME_FORMAT),
             finishDate=self.finish_date.strftime(DATETIME_FORMAT),  # type: ignore
         )
@@ -185,7 +188,7 @@ class TestExecution:
         if self.revision:
             info['revision'] = self.revision
 
-        data = dict(
+        data: Dict[str, Any] = dict(
             info=info,
             tests=tests
         )
@@ -288,11 +291,11 @@ def _from_environ_or_none(name: str) -> Optional[str]:
     return val
 
 
-def _first_from_environ(name: str, separator: str = None) -> Optional[str]:
+def _first_from_environ(name: str, separator: Optional[str] = None) -> Optional[str]:
     return next(iter(_from_environ(name, separator)), None)
 
 
-def _from_environ(name: str, separator: str = None) -> List[str]:
+def _from_environ(name: str, separator: Optional[str] = None) -> List[str]:
     if name not in environ:
         return []
 
@@ -308,7 +311,7 @@ def _from_environ(name: str, separator: str = None) -> List[str]:
 
 
 def _merge_status(status_1: Status, status_2: Status):
-    """Merges the status of two tests. """
+    """Merges the status of two tests."""
 
     return STATUS_HIERARCHY[max(
         STATUS_HIERARCHY.index(status_1),
