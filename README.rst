@@ -74,7 +74,7 @@ Jira Xray configuration can be provided via Environment Variables:
 
 - SSL Client Certificate
 
-To disable SSL certificate verification, at the client side (no case-sensitive), default is True: 
+To disable SSL certificate verification, at the client side (no case-sensitive), default is True:
 
 .. code-block:: bash
 
@@ -226,7 +226,7 @@ even when duplicate ids are present. The JIRA-1 test result will be created acco
 the following rules:
 
 - The comment will be the comment from each of the test, separated by a horizontal divider.
-- The status will be the intuitive combination of the individual results: if ``test_my_process_1`` 
+- The status will be the intuitive combination of the individual results: if ``test_my_process_1``
   is a ``PASS`` but ``test_my_process_2`` is a ``FAIL``, ``JIRA-1`` will be marked as ``FAIL``.
 
 

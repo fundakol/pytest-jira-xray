@@ -11,8 +11,8 @@ RESOURCE_DIR: Path = Path(__file__).parent.joinpath('resources')
 def xray_tests(testdir):
     test_example = textwrap.dedent(
         """\
-        import pytest 
-        
+        import pytest
+
         @pytest.mark.xray('JIRA-1')
         def test_pass():
             assert True
@@ -25,8 +25,8 @@ def xray_tests(testdir):
 def xray_tests_multi(testdir):
     test_example = textwrap.dedent(
         """\
-        import pytest 
-        
+        import pytest
+
         @pytest.mark.xray(['JIRA-1', 'JIRA-2'])
         def test_pass():
             assert True
@@ -39,11 +39,11 @@ def xray_tests_multi(testdir):
 def xray_tests_multi_fail(testdir):
     test_example = textwrap.dedent(
         """\
-        import pytest 
-        
+        import pytest
+
         @pytest.mark.xray(['JIRA-1', 'JIRA-2'])
         def test_fail():
-            assert 0 == 1 
+            assert 0 == 1
         """)  # noqa: W293,W291
     testdir.makepyfile(test_example)
     return testdir
@@ -102,7 +102,7 @@ def test_if_user_can_modify_results_with_hooks(xray_tests):
     xray_file = xray_tests.tmpdir.join('xray.json')
     xray_tests.makeconftest("""
         def pytest_xray_results(results):
-            results['info']['user'] = 'Test User'                    
+            results['info']['user'] = 'Test User'
     """)
     result = xray_tests.runpytest('--jira-xray', '--xraypath', str(xray_file))
     assert result.ret == 0
@@ -144,7 +144,7 @@ def test_if_user_can_attache_evidences(xray_tests):
     xray_tests.makeconftest(f"""
         import pytest
         from pytest_xray import evidence
-        
+
         @pytest.hookimpl(hookwrapper=True)
         def pytest_runtest_makereport(item, call):
             outcome = yield
@@ -156,17 +156,17 @@ def test_if_user_can_attache_evidences(xray_tests):
                 )
                 evidences.append(
                     evidence.png(
-                        data=open('{RESOURCE_DIR}/screenshot.png', 'rb').read(), 
+                        data=open('{RESOURCE_DIR}/screenshot.png', 'rb').read(),
                         filename='screenshot.png'
                     )
                 )
                 evidences.append(
                     evidence.jpeg(
-                        data=open('{RESOURCE_DIR}/screenshot.jpeg', 'rb').read(), 
+                        data=open('{RESOURCE_DIR}/screenshot.jpeg', 'rb').read(),
                         filename='screenshot.jpeg'
                     )
                 )
-                report.evidences = evidences                    
+                report.evidences = evidences
     """)
     result = xray_tests.runpytest('--jira-xray', '--xraypath', str(xray_file))
     assert result.ret == 0
