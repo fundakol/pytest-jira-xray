@@ -230,6 +230,31 @@ the following rules:
   is a ``PASS`` but ``test_my_process_2`` is a ``FAIL``, ``JIRA-1`` will be marked as ``FAIL``.
 
 
+Attach test evidences
++++++++++++++++++++++
+
+The following example adds the test evidences to the Xray report
+using a ``pytest_runtest_makereport`` hook.
+
+.. code-block:: python
+
+    # FILE: conftest.py
+    import pytest
+    from pytest_xray import evidence
+
+    @pytest.hookimpl(hookwrapper=True)
+    def pytest_runtest_makereport(item, call):
+        outcome = yield
+        report = outcome.get_result()
+        evidences = getattr(report, "evidences", [])
+        if report.when == "call":
+            xfail = hasattr(report, "wasxfail")
+            if (report.skipped and xfail) or (report.failed and not xfail):
+                data = open('screenshot.jpeg', 'rb').read()
+                evidences.append(evidence.jpeg(data=data, filename="screenshot.jpeg"))
+            report.evidences = evidences
+
+
 Hooks
 +++++
 
