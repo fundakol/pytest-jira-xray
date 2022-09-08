@@ -88,7 +88,7 @@ Or you can provide path to certificate file
     $ export XRAY_API_VERIFY_SSL=</path/to/PEM file>
 
 
-* Authentication with client ID and client secret (`--client-secret-auth` option):
+* Authentication with client ID and client secret (``--client-secret-auth`` option):
 
 .. code-block:: bash
 
@@ -221,7 +221,7 @@ the same identifier, like in this case:
         assert True
 
 However, depending how the user story and the associated test are formulated,
-this scenario may be useful. The option --allow-duplicate-ids will perform the tests
+this scenario may be useful. The option ``--allow-duplicate-ids`` will perform the tests
 even when duplicate ids are present. The JIRA-1 test result will be created according to
 the following rules:
 
@@ -271,7 +271,7 @@ IntelliJ integration
 
 When you want to synchronize your test results via. Pytest integration in IntelliJ, you need to configure the following:
 
-1. Use the *pytest* test configuration template and add `--jira-xray -o log_cli=true` to *Additional Arguments*
+1. Use the *pytest* test configuration template and add ``--jira-xray -o log_cli=true`` to *Additional Arguments*
 
 .. image:: https://user-images.githubusercontent.com/22340156/145638520-c6bf56d2-089e-430c-94ae-ac8122a3adea.png
    :target: https://user-images.githubusercontent.com/22340156/145638520-c6bf56d2-089e-430c-94ae-ac8122a3adea.png
