@@ -47,6 +47,15 @@ Mark a test with JIRA XRAY test ID or list of IDs
     @pytest.mark.xray(['JIRA-2', 'JIRA-3'])
         def test_bar():
             assert True
+    
+In the test methods corresponding test IDs are accessable via environment
+variable `XRAY_TEST_IDS`. If multiple test IDs were provided they will be
+separated by a space:
+
+.. code-block::
+
+    JIRA_TEST_IDS=JIRA-1
+    JIRA_TEST_IDS=JIRA-1 JIRA-2 JIRA-3
 
 
 Jira Xray configuration can be provided via Environment Variables:
