@@ -12,21 +12,53 @@ jobs:
   tests:
     runs-on: ubuntu-latest
     name: Tests
+    needs: lint
     strategy:
       matrix:
-        python: [ "3.6", "3.7", "3.8", "3.9", "3.10"]
+        name: [ "3.6", "3.7", "3.8", "3.9", "3.10" ]
+        include:
+        - name: "3.6"
+          python: "3.6"
+          tox_env: "py36"
+        - name: "3.7"
+          python: "3.7"
+          tox_env: "py37"
+        - name: "3.8"
+          python: "3.8"
+          tox_env: "py38"
+        - name: "3.9"
+          python: "3.9"
+          tox_env: "py39"
+        - name: "3.10"
+          python: "3.10"
+          tox_env: "py310"
+          use_coverage: true
     steps:
       - uses: actions/checkout@v2
-      - name: Setup Python
+      - name: Setup Python ${{ matrix.python }}
         uses: actions/setup-python@v2
         with:
           python-version: ${{ matrix.python }}
       - name: Install packages
-        run: pip install tox
-      - name: Run tests
-        run: tox -e py
+        run: pip install tox coverage
+      - name: Run tests without coverage
+        if: "! matrix.use_coverage"
+        run: "python -m tox -e ${{ matrix.tox_env }}"
+      - name: Run tests with coverage
+        if: "matrix.use_coverage"
+        run: "python -m tox -e ${{ matrix.tox_env }}-coverage"
+      - name: Generate coverage report
+        if: "matrix.use_coverage"
+        run: python -m coverage xml
+      - name: Upload coverage to Codecov
+        if: "matrix.use_coverage"
+        uses: codecov/codecov-action@v2
+        with:
+          fail_ci_if_error: true
+          files: ./coverage.xml
+          verbose: true
 
-  flake8:
+  lint:
     runs-on: ubuntu-latest
     name: flake8
     steps:
@@ -39,27 +71,3 @@ jobs:
         run: pip install tox
       - name: Run tests
         run: tox -e flake8
-
-  coverage:
-    runs-on: ubuntu-latest
-    name: Coverage
-    steps:
-      - uses: actions/checkout@v2
-      - name: Setup Python
-        uses: actions/setup-python@v2
-        with:
-          python-version: "3.9"
-      - name: Install packages
-        run: pip install tox
-      - name: Run tests with coverage
-        run: tox -e coverage
-      - name: Upload coverage to Codecov
-        uses: codecov/codecov-action@v2
-        with:
-          directory: ./coverage/reports/
-          fail_ci_if_error: true
-          files: ./coverage.xml
-          flags: unittests
-          name: codecov-umbrella
-          path_to_write_report: ./coverage/codecov_report.txt
-          verbose: true
