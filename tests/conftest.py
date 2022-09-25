@@ -4,6 +4,7 @@ import pytest
 
 from .mock_server import MockServer
 
+
 pytest_plugins = ['pytester']
 
 

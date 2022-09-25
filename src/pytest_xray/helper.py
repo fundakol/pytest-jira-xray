@@ -3,26 +3,14 @@ import enum
 import os
 import re
 from os import environ
-from typing import (
-    Any,
-    Dict,
-    List,
-    Optional,
-    Union
-)
+from typing import Any, Dict, List, Optional, Union
 
 from pytest_xray import constant
-from pytest_xray.constant import (
-    DATETIME_FORMAT,
-    ENV_XRAY_API_BASE_URL,
-    ENV_XRAY_API_KEY,
-    ENV_XRAY_API_PASSWORD,
-    ENV_XRAY_API_TOKEN,
-    ENV_XRAY_API_USER,
-    ENV_XRAY_API_VERIFY_SSL,
-    ENV_XRAY_CLIENT_ID,
-    ENV_XRAY_CLIENT_SECRET
-)
+from pytest_xray.constant import (DATETIME_FORMAT, ENV_XRAY_API_BASE_URL,
+                                  ENV_XRAY_API_KEY, ENV_XRAY_API_PASSWORD,
+                                  ENV_XRAY_API_TOKEN, ENV_XRAY_API_USER,
+                                  ENV_XRAY_API_VERIFY_SSL, ENV_XRAY_CLIENT_ID,
+                                  ENV_XRAY_CLIENT_SECRET)
 from pytest_xray.exceptions import XrayError
 
 

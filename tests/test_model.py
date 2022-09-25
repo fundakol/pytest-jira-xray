@@ -6,7 +6,8 @@ from unittest.mock import patch
 import pytest
 
 from pytest_xray import constant
-from pytest_xray.helper import TestCase as _TestCase, TestExecution as _TestExecution
+from pytest_xray.helper import TestCase as _TestCase
+from pytest_xray.helper import TestExecution as _TestExecution
 
 
 @pytest.fixture

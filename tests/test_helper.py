@@ -2,10 +2,10 @@ import pytest
 
 from pytest_xray.helper import (
     Status,
-    TestCase as _TestCase,  # to avoid warnings from pytest
-    TestExecution as _TestExecution,
     STATUS_STR_MAPPER_CLOUD
 )
+from pytest_xray.helper import TestCase as _TestCase  # to avoid warnings from pytest
+from pytest_xray.helper import TestExecution as _TestExecution
 
 
 @pytest.mark.parametrize(

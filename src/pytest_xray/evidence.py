@@ -1,5 +1,5 @@
-from typing import AnyStr, Dict
 import base64
+from typing import AnyStr, Dict
 
 from pytest_xray.exceptions import XrayError
 

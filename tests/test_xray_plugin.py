@@ -4,6 +4,7 @@ from pathlib import Path
 
 import pytest
 
+
 RESOURCE_DIR: Path = Path(__file__).parent.joinpath('resources')
 
 
