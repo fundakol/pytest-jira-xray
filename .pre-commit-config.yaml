@@ -5,7 +5,7 @@ repos:
       - id: isort
         files: src tests
         stages: [ commit ]
-        args: ["--profile", "pycharm", "--filter-files"]
+        args: ["--profile", "pycharm", "--filter-files", "--line-length=99"]
 
   - repo: https://github.com/PYCQA/flake8
     rev: 4.0.1
@@ -21,3 +21,4 @@ repos:
       - id: double-quote-string-fixer
       - id: trailing-whitespace
       - id: end-of-file-fixer
+      - id: requirements-txt-fixer

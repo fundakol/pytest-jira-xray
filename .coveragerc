@@ -1,7 +1,27 @@
+[run]
+include =
+    src/*
+    */lib/python*/site-packages/pytest_xray/*
+    *\Lib\site-packages\pytest_xray\*
+parallel = 1
+
+[paths]
+source = src/
+    */lib/python*/site-packages/
+    */pypy*/site-packages/
+    *\Lib\site-packages\
+
 [report]
+skip_covered = True
+show_missing = True
 exclude_lines =
+    \#\s*pragma: no cover
+    ^\s*raise NotImplementedError\b
+    ^\s*return NotImplemented\b
+    ^\s*assert False(,|$)
+    ^\s*assert_never\(
+
+    ^\s*if TYPE_CHECKING:
+    ^\s*@overload( |$)
     def __repr__
     def __str__
-[run]
-omit =
-    src/pytest_xray/constant.py

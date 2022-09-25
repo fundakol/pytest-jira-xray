@@ -1,7 +1,7 @@
 import datetime as dt
 import os
 from pathlib import Path
-from typing import List, Tuple, Union, Optional, Dict
+from typing import Dict, List, Optional, Tuple, Union
 
 import pytest
 from _pytest.config import Config, ExitCode
@@ -12,40 +12,23 @@ from _pytest.reports import TestReport
 from _pytest.terminal import TerminalReporter
 from requests.auth import AuthBase
 
-from pytest_xray.constant import (
-    JIRA_XRAY_FLAG,
-    XRAY_PLUGIN,
-    XRAY_TEST_PLAN_ID,
-    XRAY_EXECUTION_ID,
-    JIRA_CLOUD,
-    JIRA_API_KEY,
-    JIRA_TOKEN,
-    JIRA_CLIENT_SECRET_AUTH,
-    XRAYPATH,
-    XRAY_MARKER_NAME,
-    TEST_EXECUTION_ENDPOINT,
-    TEST_EXECUTION_ENDPOINT_CLOUD,
-    XRAY_ALLOW_DUPLICATE_IDS
-)
+from pytest_xray import hooks
+from pytest_xray.constant import (JIRA_API_KEY, JIRA_CLIENT_SECRET_AUTH,
+                                  JIRA_CLOUD, JIRA_TOKEN, JIRA_XRAY_FLAG,
+                                  TEST_EXECUTION_ENDPOINT,
+                                  TEST_EXECUTION_ENDPOINT_CLOUD,
+                                  XRAY_ALLOW_DUPLICATE_IDS, XRAY_EXECUTION_ID,
+                                  XRAY_MARKER_NAME, XRAY_PLUGIN,
+                                  XRAY_TEST_PLAN_ID, XRAYPATH)
 from pytest_xray.exceptions import XrayError
 from pytest_xray.file_publisher import FilePublisher
-from pytest_xray.helper import (
-    Status,
-    TestCase,
-    TestExecution,
-    STATUS_STR_MAPPER_JIRA,
-    STATUS_STR_MAPPER_CLOUD,
-    get_bearer_auth,
-    get_api_key_auth,
-    get_basic_auth, get_api_token_auth,
-)
-from pytest_xray import hooks
-from pytest_xray.xray_publisher import (
-    ClientSecretAuth,
-    ApiKeyAuth,
-    XrayPublisher,
-    TokenAuth
-)
+from pytest_xray.helper import (STATUS_STR_MAPPER_CLOUD,
+                                STATUS_STR_MAPPER_JIRA, Status, TestCase,
+                                TestExecution, get_api_key_auth,
+                                get_api_token_auth, get_basic_auth,
+                                get_bearer_auth)
+from pytest_xray.xray_publisher import (ApiKeyAuth, ClientSecretAuth,
+                                        TokenAuth, XrayPublisher)
 
 
 def pytest_addoption(parser: Parser):
