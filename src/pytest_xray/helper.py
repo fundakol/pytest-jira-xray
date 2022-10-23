@@ -6,11 +6,16 @@ from os import environ
 from typing import Any, Dict, List, Optional, Union
 
 from pytest_xray import constant
-from pytest_xray.constant import (DATETIME_FORMAT, ENV_XRAY_API_BASE_URL,
-                                  ENV_XRAY_API_KEY, ENV_XRAY_API_PASSWORD,
-                                  ENV_XRAY_API_TOKEN, ENV_XRAY_API_USER,
-                                  ENV_XRAY_API_VERIFY_SSL, ENV_XRAY_CLIENT_ID,
-                                  ENV_XRAY_CLIENT_SECRET)
+from pytest_xray.constant import (
+    DATETIME_FORMAT,
+    ENV_XRAY_API_BASE_URL,
+    ENV_XRAY_API_KEY,
+    ENV_XRAY_API_PASSWORD,
+    ENV_XRAY_API_USER,
+    ENV_XRAY_API_VERIFY_SSL,
+    ENV_XRAY_CLIENT_ID,
+    ENV_XRAY_CLIENT_SECRET
+)
 from pytest_xray.exceptions import XrayError
 
 
@@ -212,6 +217,7 @@ def get_base_options() -> Dict[str, Any]:
 
 
 def get_basic_auth() -> Dict[str, Any]:
+    """Return basic authentication setup with username and password."""
     options = get_base_options()
     try:
         user = environ[ENV_XRAY_API_USER]
@@ -228,6 +234,7 @@ def get_basic_auth() -> Dict[str, Any]:
 
 
 def get_bearer_auth() -> Dict[str, Any]:
+    """Return bearer authentication setup with Client ID and a Client Secret."""
     options = get_base_options()
     try:
         client_id = environ[ENV_XRAY_CLIENT_ID]
@@ -244,6 +251,7 @@ def get_bearer_auth() -> Dict[str, Any]:
 
 
 def get_api_key_auth() -> Dict[str, Any]:
+    """Return personal access token authentication."""
     options = get_base_options()
     try:
         api_key = environ[ENV_XRAY_API_KEY]
@@ -253,19 +261,6 @@ def get_api_key_auth() -> Dict[str, Any]:
         ) from e
 
     options['API_KEY'] = api_key
-    return options
-
-
-def get_api_token_auth() -> Dict[str, Any]:
-    options = get_base_options()
-    try:
-        api_token = environ[ENV_XRAY_API_TOKEN]
-    except KeyError as e:
-        raise XrayError(
-            f'Token authentication requires environment variable: {ENV_XRAY_API_TOKEN}'
-        ) from e
-
-    options['TOKEN'] = api_token
     return options
 
 
