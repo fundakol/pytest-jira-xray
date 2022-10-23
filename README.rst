@@ -59,20 +59,20 @@ Jira Xray configuration can be provided via Environment Variables:
     $ export XRAY_API_BASE_URL=<Jira base URL>
 
 
-- Basic authentication (default):
+* Basic authentication with username and password (default)
 
 .. code-block:: bash
 
     $ export XRAY_API_USER=<jria username>
     $ export XRAY_API_PASSWORD=<user password>
 
-- API KEY (`--api-key-auth` option)
+* Personal Access Token authentication (`--api-key-auth` option)
 
 .. code-block:: bash
 
     $ export XRAY_API_KEY=<api key>
 
-- SSL Client Certificate
+* SSL Client Certificate
 
 To disable SSL certificate verification, at the client side (no case-sensitive), default is True:
 
@@ -95,12 +95,6 @@ Or you can provide path to certificate file
     $ export XRAY_CLIENT_ID=<client id>
     $ export XRAY_CLIENT_SECRET=<client secret>
 
-
-* Token authentication (`--token-auth` option)
-
-.. code-block:: bash
-
-    $ export XRAY_API_TOKEN=<user token>
 
 * Test Execution parameters:
 
@@ -155,27 +149,23 @@ Upload results
 Jira authentication
 +++++++++++++++++++
 
-Default Jira authentication is basic authentication, but you can select different authentication.
+* Jira `basic authentication<https://developer.atlassian.com/server/jira/platform/basic-authentication/>`_:
 
-* Jira client secret authentication:
+    It is default authentication.
+
+
+* Jira authentication with `Client ID and a Client Secret<https://docs.getxray.app/display/XRAYCLOUD/Authentication+-+REST+v2>`_:
 
 .. code-block:: bash
 
     $ pytest --jira-xray --client-secret-auth
 
 
-* Jira API KEY authentication:
+* Jira `Personal access tokens`<https://confluence.atlassian.com/enterprise/using-personal-access-tokens-1026032365.html>`_ (API KEY) authentication:
 
 .. code-block:: bash
 
     $ pytest --jira-xray --api-key-auth
-
-
-* Jira token authentication:
-
-.. code-block:: bash
-
-    $ pytest --jira-xray --token-auth
 
 
 Multiple ids support
