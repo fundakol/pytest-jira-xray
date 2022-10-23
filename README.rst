@@ -149,19 +149,19 @@ Upload results
 Jira authentication
 +++++++++++++++++++
 
-* Jira `basic authentication<https://developer.atlassian.com/server/jira/platform/basic-authentication/>`_:
+* Jira `basic authentication <https://developer.atlassian.com/server/jira/platform/basic-authentication/>`_:
 
-    It is default authentication.
+It is default authentication.
 
 
-* Jira authentication with `Client ID and a Client Secret<https://docs.getxray.app/display/XRAYCLOUD/Authentication+-+REST+v2>`_:
+* Jira authentication with `Client ID and a Client Secret <https://docs.getxray.app/display/XRAYCLOUD/Authentication+-+REST+v2>`_:
 
 .. code-block:: bash
 
     $ pytest --jira-xray --client-secret-auth
 
 
-* Jira `Personal access tokens`<https://confluence.atlassian.com/enterprise/using-personal-access-tokens-1026032365.html>`_ (API KEY) authentication:
+* Jira `Personal access tokens <https://confluence.atlassian.com/enterprise/using-personal-access-tokens-1026032365.html>`_ (API KEY) authentication:
 
 .. code-block:: bash
 
