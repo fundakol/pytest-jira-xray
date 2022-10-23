@@ -73,7 +73,7 @@ def test_help_message(xray_tests):
         ('--jira-xray', '--cloud', '--client-secret-auth'),
         ('--jira-xray', '--cloud', '--api-key-auth')
     ],
-    ids=['DC Server', 'Cloud client secret','Could api key']
+    ids=['DC Server', 'Cloud client secret', 'Cloud api key']
 )
 def test_jira_xray_plugin(xray_tests, cli_options):
     result = xray_tests.runpytest(*cli_options)
