@@ -11,18 +11,8 @@ from pytest_xray.exceptions import XrayError
 _logger = logging.getLogger(__name__)
 
 
-class TokenAuth(AuthBase):
-    """Bearer Token Authentication"""
-
-    def __init__(self, token: str) -> None:
-        self._token = token
-
-    def __call__(self, r: requests.PreparedRequest) -> requests.PreparedRequest:
-        r.headers['authorization'] = f'Bearer {self._token}'
-        return r
-
-
 class ClientSecretAuth(AuthBase):
+    """Bearer authentication with Client ID and a Client Secret."""
 
     def __init__(self, base_url: str, client_id: str, client_secret: str) -> None:
         if base_url.endswith('/'):
@@ -62,6 +52,7 @@ class ClientSecretAuth(AuthBase):
 
 
 class ApiKeyAuth(AuthBase):
+    """Personal access token authentication."""
 
     def __init__(self, api_key: str) -> None:
         self.api_key = api_key

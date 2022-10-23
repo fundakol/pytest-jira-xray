@@ -1,10 +1,19 @@
 import datetime as dt
 import os
 from pathlib import Path
-from typing import Dict, List, Optional, Tuple, Union
+from typing import (
+    Dict,
+    List,
+    Optional,
+    Tuple,
+    Union,
+)
 
 import pytest
-from _pytest.config import Config, ExitCode
+from _pytest.config import (
+    Config,
+    ExitCode,
+)
 from _pytest.config.argparsing import Parser
 from _pytest.mark import Mark
 from _pytest.nodes import Item
@@ -13,22 +22,37 @@ from _pytest.terminal import TerminalReporter
 from requests.auth import AuthBase
 
 from pytest_xray import hooks
-from pytest_xray.constant import (JIRA_API_KEY, JIRA_CLIENT_SECRET_AUTH,
-                                  JIRA_CLOUD, JIRA_TOKEN, JIRA_XRAY_FLAG,
-                                  TEST_EXECUTION_ENDPOINT,
-                                  TEST_EXECUTION_ENDPOINT_CLOUD,
-                                  XRAY_ALLOW_DUPLICATE_IDS, XRAY_EXECUTION_ID,
-                                  XRAY_MARKER_NAME, XRAY_PLUGIN,
-                                  XRAY_TEST_PLAN_ID, XRAYPATH)
+from pytest_xray.constant import (
+    JIRA_API_KEY,
+    JIRA_CLIENT_SECRET_AUTH,
+    JIRA_CLOUD,
+    JIRA_XRAY_FLAG,
+    TEST_EXECUTION_ENDPOINT,
+    TEST_EXECUTION_ENDPOINT_CLOUD,
+    XRAY_ALLOW_DUPLICATE_IDS,
+    XRAY_EXECUTION_ID,
+    XRAY_MARKER_NAME,
+    XRAY_PLUGIN,
+    XRAY_TEST_PLAN_ID,
+    XRAYPATH,
+)
 from pytest_xray.exceptions import XrayError
 from pytest_xray.file_publisher import FilePublisher
-from pytest_xray.helper import (STATUS_STR_MAPPER_CLOUD,
-                                STATUS_STR_MAPPER_JIRA, Status, TestCase,
-                                TestExecution, get_api_key_auth,
-                                get_api_token_auth, get_basic_auth,
-                                get_bearer_auth)
-from pytest_xray.xray_publisher import (ApiKeyAuth, ClientSecretAuth,
-                                        TokenAuth, XrayPublisher)
+from pytest_xray.helper import (
+    get_api_key_auth,
+    get_basic_auth,
+    get_bearer_auth,
+    Status,
+    STATUS_STR_MAPPER_CLOUD,
+    STATUS_STR_MAPPER_JIRA,
+    TestCase,
+    TestExecution,
+)
+from pytest_xray.xray_publisher import (
+    ApiKeyAuth,
+    ClientSecretAuth,
+    XrayPublisher,
+)
 
 
 def pytest_addoption(parser: Parser):
@@ -49,13 +73,7 @@ def pytest_addoption(parser: Parser):
         JIRA_API_KEY,
         action='store_true',
         default=False,
-        help='Use API Key authentication',
-    )
-    xray.addoption(
-        JIRA_TOKEN,
-        action='store_true',
-        default=False,
-        help='Use token authentication',
+        help='Use Jira API Key authentication',
     )
     xray.addoption(
         JIRA_CLIENT_SECRET_AUTH,
@@ -114,6 +132,7 @@ def pytest_configure(config: Config) -> None:
         else:
             endpoint = TEST_EXECUTION_ENDPOINT
 
+        #
         if config.getoption(JIRA_CLIENT_SECRET_AUTH):
             options = get_bearer_auth()
             auth: Union[AuthBase, Tuple[str, str]] = ClientSecretAuth(
@@ -124,9 +143,6 @@ def pytest_configure(config: Config) -> None:
         elif config.getoption(JIRA_API_KEY):
             options = get_api_key_auth()
             auth = ApiKeyAuth(options['API_KEY'])
-        elif config.getoption(JIRA_TOKEN):
-            options = get_api_token_auth()
-            auth = TokenAuth(options['TOKEN'])
         else:
             options = get_basic_auth()
             auth = (options['USER'], options['PASSWORD'])

@@ -58,8 +58,7 @@ def test_help_message(xray_tests):
         'Jira Xray report:',
         '*--jira-xray*Upload test results to JIRA XRAY*',
         '*--cloud*Use with JIRA XRAY could server*',
-        '*--api-key-auth*Use API Key authentication*',
-        '*--token-auth*Use token authentication*',
+        '*--api-key-auth*Use Jira API Key authentication*',
         '*--client-secret-auth*Use client secret authentication*',
         '*--execution=ExecutionId*', '*XRAY Test Execution ID*',
         '*--testplan=TestplanId*', '*XRAY Test Plan ID*',
@@ -72,10 +71,9 @@ def test_help_message(xray_tests):
     [
         ('--jira-xray',),
         ('--jira-xray', '--cloud', '--client-secret-auth'),
-        ('--jira-xray', '--cloud', '--token-auth'),
         ('--jira-xray', '--cloud', '--api-key-auth')
     ],
-    ids=['DC Server', 'Cloud client secret', 'Could token', 'Could api key']
+    ids=['DC Server', 'Cloud client secret','Could api key']
 )
 def test_jira_xray_plugin(xray_tests, cli_options):
     result = xray_tests.runpytest(*cli_options)

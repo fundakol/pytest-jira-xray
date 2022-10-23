@@ -10,7 +10,6 @@ XRAY_EXECUTION_ID = '--execution'
 XRAY_ALLOW_DUPLICATE_IDS = '--allow-duplicate-ids'
 JIRA_CLOUD = '--cloud'
 JIRA_API_KEY = '--api-key-auth'
-JIRA_TOKEN = '--token-auth'
 JIRA_CLIENT_SECRET_AUTH = '--client-secret-auth'
 XRAYPATH = '--xraypath'
 # all environment variables used by plugin
