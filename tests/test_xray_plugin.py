@@ -219,32 +219,34 @@ def test_xray_with_all_test_types(testdir):
 
         @pytest.fixture
         def error_fixture():
-            assert 0
+            assert False
 
         @pytest.mark.xray('JIRA-1')
-        def test_ok():
-            print("ok")
+        def test_pass_status():
+            assert True
 
         @pytest.mark.xray('JIRA-2')
-        def test_fail():
-            assert 0
+        def test_fail_status():
+            assert False
 
         @pytest.mark.xray('JIRA-3')
-        def test_error(error_fixture):
-            pass
+        def test_error_in_setup(error_fixture):
+            assert True
 
         @pytest.mark.xray('JIRA-4')
-        def test_skip():
-            pytest.skip("skipping this test")
+        @pytest.mark.skip("skipping this test")
+        def test_skip_status():
+            assert True
 
         @pytest.mark.xray('JIRA-5')
-        def test_xfail():
-            pytest.xfail("xfailing this test")
+        @pytest.mark.xfail(reason='expected fail')
+        def test_xfail_status():
+            assert False
 
-        @pytest.mark.xfail(reason="always xfail")
         @pytest.mark.xray('JIRA-6')
-        def test_xpass():
-            pass
+        @pytest.mark.xfail(reason='expected fail')
+        def test_xpass_status():
+            assert True
         """))
     report_file = testdir.tmpdir / 'xray.json'
 
