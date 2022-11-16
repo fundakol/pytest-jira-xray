@@ -1,11 +1,14 @@
 from threading import Thread
 from uuid import uuid4
 
-import requests
 from flask import (
     Flask,
-    jsonify
+    jsonify,
 )
+from werkzeug.serving import make_server
+
+
+HOST = '127.0.0.1'
 
 
 class MockServer(Thread):
@@ -14,19 +17,11 @@ class MockServer(Thread):
         super().__init__()
         self.port = port
         self.app = Flask(__name__)
-        self.url = f'http://localhost:{self.port}'
-
-        self.app.add_url_rule('/shutdown', view_func=self._shutdown_server)
-
-    def _shutdown_server(self):
-        from flask import request
-        if 'werkzeug.server.shutdown' not in request.environ:
-            raise RuntimeError('Not running the development server')
-        request.environ['werkzeug.server.shutdown']()
-        return 'Server shutting down...'
+        self.server = make_server(HOST, self.port, self.app)
+        self.url = f'http://{HOST}:{self.port}'
 
     def shutdown_server(self):
-        requests.get(f'{self.url}/shutdown')
+        self.server.shutdown()
         self.join()
 
     def add_callback_response(self, url, callback, methods=('GET',)):
@@ -40,4 +35,4 @@ class MockServer(Thread):
         self.add_callback_response(url, callback, methods=methods)
 
     def run(self):
-        self.app.run(port=self.port)
+        self.server.serve_forever()
