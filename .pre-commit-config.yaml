@@ -3,7 +3,7 @@ repos:
     rev: 5.10.1
     hooks:
       - id: isort
-        files: src tests
+        files: ^(src/|tests/)
         stages: [ commit ]
         args: ["--profile", "pycharm", "--filter-files", "--line-length=99"]
 
@@ -11,7 +11,7 @@ repos:
     rev: 4.0.1
     hooks:
       - id: flake8
-        files: src tests
+        files: ^(src/|tests/)
         stages: [ commit ]
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
