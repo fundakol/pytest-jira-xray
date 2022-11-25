@@ -1,19 +1,10 @@
 import datetime as dt
 import os
 from pathlib import Path
-from typing import (
-    Dict,
-    List,
-    Optional,
-    Tuple,
-    Union,
-)
+from typing import Dict, List, Optional, Tuple, Union
 
 import pytest
-from _pytest.config import (
-    Config,
-    ExitCode,
-)
+from _pytest.config import Config, ExitCode
 from _pytest.config.argparsing import Parser
 from _pytest.mark import Mark
 from _pytest.nodes import Item
@@ -39,20 +30,16 @@ from pytest_xray.constant import (
 from pytest_xray.exceptions import XrayError
 from pytest_xray.file_publisher import FilePublisher
 from pytest_xray.helper import (
+    STATUS_STR_MAPPER_CLOUD,
+    STATUS_STR_MAPPER_JIRA,
+    Status,
+    TestCase,
+    TestExecution,
     get_api_key_auth,
     get_basic_auth,
     get_bearer_auth,
-    Status,
-    STATUS_STR_MAPPER_CLOUD,
-    STATUS_STR_MAPPER_JIRA,
-    TestCase,
-    TestExecution,
 )
-from pytest_xray.xray_publisher import (
-    ApiKeyAuth,
-    ClientSecretAuth,
-    XrayPublisher,
-)
+from pytest_xray.xray_publisher import ApiKeyAuth, ClientSecretAuth, XrayPublisher
 
 
 def pytest_addoption(parser: Parser):

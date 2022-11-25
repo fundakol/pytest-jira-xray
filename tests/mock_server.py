@@ -1,10 +1,7 @@
 from threading import Thread
 from uuid import uuid4
 
-from flask import (
-    Flask,
-    jsonify,
-)
+from flask import Flask, jsonify
 from werkzeug.serving import make_server
 
 

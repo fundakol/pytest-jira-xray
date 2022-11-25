@@ -1,9 +1,6 @@
 import pytest
 
-from pytest_xray.helper import (
-    Status,
-    STATUS_STR_MAPPER_CLOUD
-)
+from pytest_xray.helper import STATUS_STR_MAPPER_CLOUD, Status
 from pytest_xray.helper import TestCase as _TestCase  # to avoid warnings from pytest
 from pytest_xray.helper import TestExecution as _TestExecution
 

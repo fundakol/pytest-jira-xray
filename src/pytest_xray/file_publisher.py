@@ -4,6 +4,7 @@ from pathlib import Path
 
 from pytest_xray.exceptions import XrayError
 
+
 logger = logging.getLogger(__name__)
 
 

@@ -8,6 +8,7 @@ from requests.auth import AuthBase
 from pytest_xray.constant import AUTHENTICATE_ENDPOINT
 from pytest_xray.exceptions import XrayError
 
+
 _logger = logging.getLogger(__name__)
 
 

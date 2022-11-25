@@ -14,7 +14,7 @@ from pytest_xray.constant import (
     ENV_XRAY_API_USER,
     ENV_XRAY_API_VERIFY_SSL,
     ENV_XRAY_CLIENT_ID,
-    ENV_XRAY_CLIENT_SECRET
+    ENV_XRAY_CLIENT_SECRET,
 )
 from pytest_xray.exceptions import XrayError
 
