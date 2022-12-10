@@ -45,8 +45,8 @@ Mark a test with JIRA XRAY test ID or list of IDs
         assert True
 
     @pytest.mark.xray(['JIRA-2', 'JIRA-3'])
-        def test_bar():
-            assert True
+    def test_bar():
+        assert True
 
 
 Jira Xray configuration can be provided via Environment Variables:
