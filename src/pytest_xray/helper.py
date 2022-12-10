@@ -99,7 +99,7 @@ class TestCase:
         self.status = _merge_status(self.status, other.status)
 
     def as_dict(self) -> Dict[str, Any]:
-        data = dict(
+        data: Dict[str, Any] = dict(
             testKey=self.test_key,
             status=self.status_str_mapper[self.status],
             comment=self.comment,
@@ -128,7 +128,7 @@ class TestExecution:
         self.user = user or ''
         self.revision = revision or _from_environ_or_none(constant.ENV_TEST_EXECUTION_REVISION)
         self.start_date = dt.datetime.now(tz=dt.timezone.utc)
-        self.finish_date = None
+        self.finish_date = dt.datetime.now(tz=dt.timezone.utc)
         self.tests = tests or []
         self.test_environments = test_environments or _from_environ(
             constant.ENV_TEST_EXECUTION_TEST_ENVIRONMENTS,

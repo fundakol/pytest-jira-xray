@@ -14,7 +14,7 @@ def evidence(data: AnyStr, filename: str, content_type: str) -> Dict[str, str]:
     if isinstance(data, bytes):
         data_base64: str = base64.b64encode(data).decode('utf-8')
     elif isinstance(data, str):
-        data_base64: str = base64.b64encode(data.encode('utf-8')).decode('utf-8')
+        data_base64 = base64.b64encode(data.encode('utf-8')).decode('utf-8')
     else:
         raise XrayError('data must be string or bytes')
 
