@@ -88,7 +88,7 @@ def pytest_configure(config: Config) -> None:
         'markers', 'xray(JIRA_ID): mark test with JIRA XRAY test case ID'
     )
 
-    if not config.getoption(JIRA_XRAY_FLAG) or hasattr(config, 'workerinput'):
+    if not config.getoption(JIRA_XRAY_FLAG):
         return
 
     xray_path = config.getoption(XRAYPATH)

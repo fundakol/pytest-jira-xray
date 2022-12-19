@@ -209,10 +209,10 @@ def test_jira_xray_plugin_multiple_ids_fail(xray_tests_multi_fail):
         data = json.load(f)
 
     assert len(data['tests']) == 2
-    print(data['tests'])
 
 
-def test_xray_with_all_test_types(testdir):
+@pytest.mark.parametrize('extra_args', ['-n 0', '-n 2'], ids=['no_xdist', 'xdist'])
+def test_xray_with_all_test_types(testdir, extra_args):
     testdir.makepyfile(textwrap.dedent(
         """\
         import pytest
@@ -254,6 +254,7 @@ def test_xray_with_all_test_types(testdir):
         '--jira-xray',
         f'--xraypath={report_file}',
         '-v',
+        extra_args
     )
 
     assert result.ret == 1
