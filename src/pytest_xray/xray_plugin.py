@@ -1,7 +1,7 @@
 import datetime as dt
 import os
 from pathlib import Path
-from typing import Dict, List, Optional
+from typing import List, Optional
 
 import pytest
 from _pytest.config import Config, ExitCode
@@ -36,14 +36,11 @@ class XrayPlugin:
         self.test_execution_id: str = self.config.getoption(XRAY_EXECUTION_ID)
         self.test_plan_id: str = self.config.getoption(XRAY_TEST_PLAN_ID)
         self.is_cloud_server: str = self.config.getoption(JIRA_CLOUD)
-        self.allow_duplicate_ids: bool = self.config.getoption(
-            XRAY_ALLOW_DUPLICATE_IDS
-        )
+        self.allow_duplicate_ids: bool = self.config.getoption(XRAY_ALLOW_DUPLICATE_IDS)
         logfile = self.config.getoption(XRAYPATH)
         self.logfile: Optional[str] = self._get_normalize_logfile(logfile) if logfile else None
-        self.test_keys: Dict[str, List[str]] = {}  # store nodeid and TestId
-        self.issue_id = None
-        self.exception = None
+        self.issue_id = None  # issue id returned by XRAY sersver
+        self.exception = None  # keeps an exception if raised by XrayPlublisher
         self.test_execution: TestExecution = TestExecution(
             test_execution_key=self.test_execution_id,
             test_plan_key=self.test_plan_id
@@ -58,23 +55,30 @@ class XrayPlugin:
         logfile = os.path.normpath(os.path.abspath(logfile))
         return logfile
 
-    def _associate_marker_metadata_for_items(self, items: List[Item]) -> None:
-        """Store XRAY test id for test item."""
+    def _get_test_keys(self, item: Item) -> List[str]:
+        """Return JIRA ids associated with test item"""
+        marker = self._get_xray_marker(item)
+        if not marker:
+            return []
+
+        test_keys: List[str]
+        if isinstance(marker.args[0], str):
+            test_keys = [marker.args[0]]
+        elif isinstance(marker.args[0], list):
+            test_keys = list(marker.args[0])
+        else:
+            raise XrayError('xray marker can only accept strings or lists')
+        return test_keys
+
+    def _verify_jira_ids_for_items(self, items: List[Item]) -> None:
+        """Verify duplicated jira ids."""
         jira_ids: List[str] = []
         duplicated_jira_ids: List[str] = []
 
         for item in items:
-            marker = self._get_xray_marker(item)
-            if not marker:
+            test_keys = self._get_test_keys(item)
+            if not test_keys:
                 continue
-
-            test_keys: List[str]
-            if isinstance(marker.args[0], str):
-                test_keys = [marker.args[0]]
-            elif isinstance(marker.args[0], list):
-                test_keys = list(marker.args[0])
-            else:
-                raise XrayError('xray marker can only accept strings or lists')
 
             for test_key in test_keys:
                 if test_key in jira_ids:
@@ -82,14 +86,8 @@ class XrayPlugin:
                 else:
                     jira_ids.append(test_key)
 
-            self.test_keys[item.nodeid] = test_keys
-
             if duplicated_jira_ids and not self.allow_duplicate_ids:
                 raise XrayError(f'Duplicated test case ids: {duplicated_jira_ids}')
-
-    def _get_test_keys_for_nodeid(self, nodeid: str) -> Optional[List[str]]:
-        """Return XRAY test id for nodeid."""
-        return self.test_keys.get(nodeid)
 
     @staticmethod
     def _get_xray_marker(item: Item) -> Optional[Mark]:
@@ -98,12 +96,22 @@ class XrayPlugin:
     def pytest_sessionstart(self, session):
         self.test_execution.start_date = dt.datetime.now(tz=dt.timezone.utc)
 
+    @pytest.hookimpl(tryfirst=True, hookwrapper=True)
+    def pytest_runtest_makereport(self, item, call):
+        outcome = yield
+        report = outcome.get_result()
+        if not hasattr(report, 'test_keys'):
+            report.test_keys = {}
+        test_keys = self._get_test_keys(item)
+        if test_keys and item.nodeid not in report.test_keys:
+            report.test_keys[item.nodeid] = test_keys
+
     def pytest_runtest_logreport(self, report: TestReport):
         status = self._get_status_from_report(report)
         if status is None:
             return
 
-        test_keys = self._get_test_keys_for_nodeid(report.nodeid)
+        test_keys = report.test_keys.get(report.nodeid)
         if test_keys is None:
             return
 
@@ -142,7 +150,7 @@ class XrayPlugin:
         return None
 
     def pytest_collection_modifyitems(self, config: Config, items: List[Item]) -> None:
-        self._associate_marker_metadata_for_items(items)
+        self._verify_jira_ids_for_items(items)
 
     def pytest_sessionfinish(self, session: pytest.Session) -> None:
         results = self.test_execution.as_dict()
