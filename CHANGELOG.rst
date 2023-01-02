@@ -1,3 +1,8 @@
+0.8.3 [2023-01-02]
+==================
+- Fixed using plugin with xdist
+- Removed redundant Token authentication
+
 0.8.2 [2022-08-25]
 ==================
 - Added possibility to attach test evidence
