@@ -157,9 +157,6 @@ class TestExecution:
         raise KeyError(test_key)
 
     def as_dict(self) -> Dict[str, Any]:
-        if self.finish_date is None:
-            self.finish_date = dt.datetime.now(tz=dt.timezone.utc)  # type: ignore
-
         tests = [test.as_dict() for test in self.tests]
         info: Dict[str, Any] = dict(
             startDate=self.start_date.strftime(DATETIME_FORMAT),
