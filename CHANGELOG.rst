@@ -1,3 +1,7 @@
+0.8.4 [2023-02-09]
+==================
+- Fixed wrong finished date in the Xrey report
+
 0.8.3 [2023-01-02]
 ==================
 - Fixed using plugin with xdist
