@@ -101,7 +101,6 @@ def pytest_configure(config: Config) -> None:
         else:
             endpoint = TEST_EXECUTION_ENDPOINT
 
-        #
         if config.getoption(JIRA_CLIENT_SECRET_AUTH):
             options = get_bearer_auth()
             auth: Union[AuthBase, Tuple[str, str]] = ClientSecretAuth(

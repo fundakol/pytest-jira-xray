@@ -39,8 +39,8 @@ class XrayPlugin:
         self.allow_duplicate_ids: bool = self.config.getoption(XRAY_ALLOW_DUPLICATE_IDS)
         logfile = self.config.getoption(XRAYPATH)
         self.logfile: Optional[str] = self._get_normalize_logfile(logfile) if logfile else None
-        self.issue_id = None  # issue id returned by XRAY sersver
-        self.exception = None  # keeps an exception if raised by XrayPlublisher
+        self.issue_id = None  # issue id returned by XRAY server
+        self.exception = None  # keeps an exception if raised by XrayPublisher
         self.test_execution: TestExecution = TestExecution(
             test_execution_key=self.test_execution_id,
             test_plan_key=self.test_plan_id
