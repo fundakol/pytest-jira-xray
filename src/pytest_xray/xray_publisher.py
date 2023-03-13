@@ -15,12 +15,19 @@ _logger = logging.getLogger(__name__)
 class ClientSecretAuth(AuthBase):
     """Bearer authentication with Client ID and a Client Secret."""
 
-    def __init__(self, base_url: str, client_id: str, client_secret: str) -> None:
+    def __init__(
+        self,
+        base_url: str,
+        client_id: str,
+        client_secret: str,
+        verify: Union[bool, str] = True
+    ) -> None:
         if base_url.endswith('/'):
             base_url = base_url[:-1]
         self.base_url = base_url
         self.client_id = client_id
         self.client_secret = client_secret
+        self.verify = verify
 
     @property
     def endpoint_url(self) -> str:
@@ -40,7 +47,8 @@ class ClientSecretAuth(AuthBase):
             response = requests.post(
                 self.endpoint_url,
                 data=json.dumps(auth_data),
-                headers=headers
+                headers=headers,
+                verify=self.verify
             )
         except requests.exceptions.ConnectionError as exc:
             err_message = f'ConnectionError: cannot authenticate with {self.endpoint_url}'

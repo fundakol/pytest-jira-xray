@@ -106,7 +106,8 @@ def pytest_configure(config: Config) -> None:
             auth: Union[AuthBase, Tuple[str, str]] = ClientSecretAuth(
                 options['BASE_URL'],
                 options['CLIENT_ID'],
-                options['CLIENT_SECRET']
+                options['CLIENT_SECRET'],
+                options['VERIFY']
             )
         elif config.getoption(JIRA_API_KEY):
             options = get_api_key_auth()
