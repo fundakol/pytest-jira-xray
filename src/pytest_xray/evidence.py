@@ -21,7 +21,7 @@ def evidence(data: AnyStr, filename: str, content_type: str) -> Dict[str, str]:
     return {
         'data': data_base64,
         'filename': filename,
-        'ContentType': content_type
+        'contentType': content_type
     }
 
 
