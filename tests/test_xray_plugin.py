@@ -115,18 +115,18 @@ def test_if_user_can_attache_evidences(xray_tests):
         {'comment': '',
          'evidences': [
              {
-                 'ContentType': 'plain/text',
+                 'contentType': 'plain/text',
                  'data': 'ZXZpZGVuY2U=',
                  'filename': 'test.log'
              },
              {
-                 'ContentType': 'image/png',
+                 'contentType': 'image/png',
                  'data': 'iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAH'
                          '0lEQVQIW2OcNm3afwY0wEi+ID8/PwOKdpCAjIwMAwBGOw558x9CSQAAAABJRU5ErkJggg==',
                  'filename': 'screenshot.png'
              },
              {
-                 'ContentType': 'image/jpeg',
+                 'contentType': 'image/jpeg',
                  'data': '/9j/4AAQSkZJRgABAQAAAQABAAD/4QBiRXhpZgAATU0AKgAAAAgABQESAAMAAAABAAEAAAEa'
                          'AAUAAAABAAAASgEbAAUAAAABAAAAUgEoAAMAAAABAAEAAAITAAMAAAABAAEAAAAAAAAAAAABA'
                          'AAAAQAAAAEAAAAB/9sAQwADAgICAgIDAgICAwMDAwQGBAQEBAQIBgYFBgkICgoJCAkJCgwPDAo'
