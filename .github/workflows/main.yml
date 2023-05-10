@@ -37,9 +37,9 @@ jobs:
           python: "3.11"
           tox_env: "py311"
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Setup Python ${{ matrix.python }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: ${{ matrix.python }}
       - name: Install packages
@@ -55,7 +55,7 @@ jobs:
         run: python -m coverage xml
       - name: Upload coverage to Codecov
         if: "matrix.use_coverage"
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v3
         with:
           fail_ci_if_error: true
           files: ./coverage.xml
@@ -65,9 +65,9 @@ jobs:
     runs-on: ubuntu-latest
     name: flake8
     steps:
-      - uses: actions/checkout@v2
+      - uses: actions/checkout@v3
       - name: Setup Python
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v4
         with:
           python-version: "3.9"
       - name: Install packages
