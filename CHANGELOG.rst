@@ -1,3 +1,7 @@
+0.8.6 [2023-05-15]
+==================
+- Changed key ``ContentType`` to ``contentType`` in Xray report
+
 0.8.5 [2023-03-13]
 ==================
 - Added possibility to disable certificate verification in client secret authentication
