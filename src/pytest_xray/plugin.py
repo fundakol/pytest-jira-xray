@@ -87,6 +87,8 @@ def pytest_configure(config: Config) -> None:
     config.addinivalue_line(
         'markers', 'xray(JIRA_ID): mark test with JIRA XRAY test case ID'
     )
+    if config.option.collectonly:
+        return
 
     if not config.getoption(JIRA_XRAY_FLAG):
         return
