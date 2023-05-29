@@ -1,3 +1,7 @@
+0.8.7 [2023-05-29]
+==================
+- Fixed sending multiple results while running with xdist
+
 0.8.6 [2023-05-15]
 ==================
 - Changed key ``ContentType`` to ``contentType`` in Xray report
