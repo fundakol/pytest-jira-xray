@@ -153,6 +153,8 @@ class XrayPlugin:
         self._verify_jira_ids_for_items(items)
 
     def pytest_sessionfinish(self, session: pytest.Session) -> None:
+        if hasattr(self.config, 'workerinput'):  # skipping on xdist
+            return
         self.test_execution.finish_date = dt.datetime.now(tz=dt.timezone.utc)
         results = self.test_execution.as_dict()
         session.config.pluginmanager.hook.pytest_xray_results(
