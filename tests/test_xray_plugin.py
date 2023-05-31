@@ -133,6 +133,25 @@ def test_if_user_can_attache_evidences(xray_tests):
                          'LDgsJCQ0RDQ4PEBAREAoMEhMSEBMPEBAQ/8AACwgABQAFAQERAP/EABQAAQAAAAAAAAAAAAAAAA'
                          'AAAAf/xAAcEAACAgIDAAAAAAAAAAAAAAABAgMGBBEAE2H/2gAIAQEAAD8AXKtVorDFkSSZjw9LKoCoDvYPvP/Z',
                  'filename': 'screenshot.jpeg'
+             },
+             {
+                'contentType': 'text/html',
+                'data': 'PGgxPlRlc3Q8L2gxPg==',
+                'filename': 'test.html'
+             },
+             {
+                'contentType': 'application/json',
+                'data': 'eyAidGVzdCIgOiAidGVzdCIgfQ==',
+                'filename': 'test.json'
+             },
+             {
+                'contentType': 'application/zip',
+                'data': 'UEsDBBQAAAAIAC6DvlYWgkkTUwAAAFgAAAAOABwAc2NyZWVuc2hvdC5wbmdVVAkAA1gHdmS4'
+                        'B3ZkdXgLAAEE6AMAAAToAwAA6wzwc+flkuJiYGDg9fRwCQLSrCDMwQYke/PVngIpeU8XxxCO'
+                        '6OQ5Zrm36tlMDnjsU7C3t2fuKpvQ0NPDw8zgZs1X+VneyROolMHT1c9lnVNCEwBQSwECHgMUA'
+                        'AAACAAug75WFoJJE1MAAABYAAAADgAYAAAAAAAAAAAApIEAAAAAc2NyZWVuc2hvdC5wbmdVVA'
+                        'UAA1gHdmR1eAsAAQToAwAABOgDAABQSwUGAAAAAAEAAQBUAAAAmwAAAAAA',
+                'filename': 'test.zip'
              }
          ],
          'status': 'PASS',
@@ -164,6 +183,19 @@ def test_if_user_can_attache_evidences(xray_tests):
                         data=open('{RESOURCE_DIR}/screenshot.jpeg', 'rb').read(),
                         filename='screenshot.jpeg'
                     )
+                )
+                evidences.append(
+                    evidence.html(data='<h1>Test</h1>', filename='test.html')
+                )
+                evidences.append(
+                    evidence.json(
+                        data='{{ "test" : "test" }}',
+                        filename='test.json')
+                )
+                evidences.append(
+                    evidence.zip(
+                        data=open('{RESOURCE_DIR}/test.zip', 'rb').read(),
+                        filename='test.zip')
                 )
                 report.evidences = evidences
     """)
