@@ -57,12 +57,13 @@ def test_help_message(xray_tests):
     result.stdout.fnmatch_lines([
         'Jira Xray report:',
         '*--jira-xray*Upload test results to JIRA XRAY*',
-        '*--cloud*Use with JIRA XRAY could server*',
+        '*--cloud*Use with JIRA XRAY cloud server*',
         '*--api-key-auth*Use Jira API Key authentication*',
         '*--client-secret-auth*Use client secret authentication*',
         '*--execution=ExecutionId*', '*XRAY Test Execution ID*',
         '*--testplan=TestplanId*', '*XRAY Test Plan ID*',
         '*--xraypath=path*Do not upload to a server but create JSON report file at*', '*given path*',
+        '*--allow-duplicate-ids*', '*Allow test ids to be present on multiple pytest tests*',
     ])
 
 
