@@ -1,5 +1,6 @@
 import datetime as dt
 import os
+import re
 from pathlib import Path
 from typing import List, Optional
 
@@ -17,6 +18,7 @@ from pytest_xray.constant import (
     XRAY_MARKER_NAME,
     XRAY_TEST_PLAN_ID,
     XRAYPATH,
+    XRAY_ADD_CAPTURES,
 )
 from pytest_xray.exceptions import XrayError
 from pytest_xray.helper import (
@@ -38,6 +40,7 @@ class XrayPlugin:
         self.is_cloud_server: str = self.config.getoption(JIRA_CLOUD)
         self.allow_duplicate_ids: bool = self.config.getoption(XRAY_ALLOW_DUPLICATE_IDS)
         logfile = self.config.getoption(XRAYPATH)
+        self.add_captures: bool = self.config.getoption(XRAY_ADD_CAPTURES)
         self.logfile: Optional[str] = self._get_normalize_logfile(logfile) if logfile else None
         self.issue_id = None  # issue id returned by XRAY server
         self.exception = None  # keeps an exception if raised by XrayPublisher
@@ -116,11 +119,24 @@ class XrayPlugin:
             return
 
         evidences = getattr(report, 'evidences', [])
+        
+        comment = report.longreprtext
+        if self.add_captures:
+            comment += '\n'
+            if report.capstdout:
+                comment += f"{'-'*29} Captured stdout call {'-'*29}\n{report.capstdout}"
+            if report.capstderr:
+                comment += f"{'-'*29} Captured stderr call {'-'*29}\n{report.capstderr}"
+            if report.caplog:
+                # Remove the ncurses escape chars used to color log level
+                logt = re.subn('\x1b.*?m', '', report.caplog)
+                comment += f"{'-'*30} Captured log call {'-'*31}\n{logt[0]}"
+
         for test_key in test_keys:
             new_test_case = TestCase(
                 test_key=test_key,
                 status=status,
-                comment=report.longreprtext,
+                comment=comment,
                 status_str_mapper=self.status_str_mapper,
                 evidences=evidences
             )

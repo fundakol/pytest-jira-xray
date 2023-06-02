@@ -12,6 +12,7 @@ JIRA_CLOUD = '--cloud'
 JIRA_API_KEY = '--api-key-auth'
 JIRA_CLIENT_SECRET_AUTH = '--client-secret-auth'
 XRAYPATH = '--xraypath'
+XRAY_ADD_CAPTURES = '--add-captures'
 # all environment variables used by plugin
 ENV_XRAY_API_BASE_URL = 'XRAY_API_BASE_URL'
 ENV_XRAY_API_USER = 'XRAY_API_USER'
