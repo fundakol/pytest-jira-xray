@@ -119,7 +119,7 @@ class XrayPlugin:
             return
 
         evidences = getattr(report, 'evidences', [])
-        
+
         comment = report.longreprtext
         if self.add_captures:
             comment += '\n'
