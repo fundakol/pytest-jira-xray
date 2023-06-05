@@ -396,7 +396,5 @@ def test_add_captures(testdir):
 
     assert report_file.exists()
     with open(report_file) as file:
-         data = json.load(file)
-    #print(data)
+        data = json.load(file)
     assert data['tests'] == expected_tests
-
