@@ -39,11 +39,14 @@ def png(data: AnyStr, filename: str) -> Dict[str, str]:
 def text(data: AnyStr, filename: str) -> Dict[str, str]:
     return evidence(data, filename, PLAIN_TEXT)
 
+
 def html(data: AnyStr, filename: str) -> Dict[str, str]:
     return evidence(data, filename, TEXT_HTML)
 
+
 def json(data: AnyStr, filename: str) -> Dict[str, str]:
     return evidence(data, filename, APP_JSON)
+
 
 def zip(data: AnyStr, filename: str) -> Dict[str, str]:
     return evidence(data, filename, APP_ZIP)
