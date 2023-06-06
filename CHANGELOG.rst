@@ -1,3 +1,7 @@
+0.8.8 [2023-05-29]
+==================
+- Added option to capture pytest stdout and logs in Xray report
+
 0.8.7 [2023-05-29]
 ==================
 - Fixed sending multiple results while running with xdist
