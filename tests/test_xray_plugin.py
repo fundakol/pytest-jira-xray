@@ -57,13 +57,14 @@ def test_help_message(xray_tests):
     result.stdout.fnmatch_lines([
         'Jira Xray report:',
         '*--jira-xray*Upload test results to JIRA XRAY*',
-        '*--cloud*Use with JIRA XRAY could server*',
+        '*--cloud*Use with JIRA XRAY cloud server*',
         '*--api-key-auth*Use Jira API Key authentication*',
         '*--client-secret-auth*Use client secret authentication*',
         '*--execution=ExecutionId*', '*XRAY Test Execution ID*',
         '*--testplan=TestplanId*', '*XRAY Test Plan ID*',
         '*--xraypath=path*Do not upload to a server but create JSON report file at*', '*given path*',
         '*--add-captures*Add captures from log, stdout or/and stderr, to the*', '*report comment field*',
+        '*--allow-duplicate-ids*', '*Allow test ids to be present on multiple pytest tests*',
     ])
 
 
@@ -134,6 +135,25 @@ def test_if_user_can_attache_evidences(xray_tests):
                          'LDgsJCQ0RDQ4PEBAREAoMEhMSEBMPEBAQ/8AACwgABQAFAQERAP/EABQAAQAAAAAAAAAAAAAAAA'
                          'AAAAf/xAAcEAACAgIDAAAAAAAAAAAAAAABAgMGBBEAE2H/2gAIAQEAAD8AXKtVorDFkSSZjw9LKoCoDvYPvP/Z',
                  'filename': 'screenshot.jpeg'
+             },
+             {
+                'contentType': 'text/html',
+                'data': 'PGgxPlRlc3Q8L2gxPg==',
+                'filename': 'test.html'
+             },
+             {
+                'contentType': 'application/json',
+                'data': 'eyAidGVzdCIgOiAidGVzdCIgfQ==',
+                'filename': 'test.json'
+             },
+             {
+                'contentType': 'application/zip',
+                'data': 'UEsDBBQAAAAIAC6DvlYWgkkTUwAAAFgAAAAOABwAc2NyZWVuc2hvdC5wbmdVVAkAA1gHdmS4'
+                        'B3ZkdXgLAAEE6AMAAAToAwAA6wzwc+flkuJiYGDg9fRwCQLSrCDMwQYke/PVngIpeU8XxxCO'
+                        '6OQ5Zrm36tlMDnjsU7C3t2fuKpvQ0NPDw8zgZs1X+VneyROolMHT1c9lnVNCEwBQSwECHgMUA'
+                        'AAACAAug75WFoJJE1MAAABYAAAADgAYAAAAAAAAAAAApIEAAAAAc2NyZWVuc2hvdC5wbmdVVA'
+                        'UAA1gHdmR1eAsAAQToAwAABOgDAABQSwUGAAAAAAEAAQBUAAAAmwAAAAAA',
+                'filename': 'test.zip'
              }
          ],
          'status': 'PASS',
@@ -165,6 +185,19 @@ def test_if_user_can_attache_evidences(xray_tests):
                         data=open('{RESOURCE_DIR}/screenshot.jpeg', 'rb').read(),
                         filename='screenshot.jpeg'
                     )
+                )
+                evidences.append(
+                    evidence.html(data='<h1>Test</h1>', filename='test.html')
+                )
+                evidences.append(
+                    evidence.json(
+                        data='{{ "test" : "test" }}',
+                        filename='test.json')
+                )
+                evidences.append(
+                    evidence.zip(
+                        data=open('{RESOURCE_DIR}/test.zip', 'rb').read(),
+                        filename='test.zip')
                 )
                 report.evidences = evidences
     """)

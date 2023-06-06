@@ -8,6 +8,9 @@ from pytest_xray.exceptions import XrayError
 IMAGE_JPEG: str = 'image/jpeg'
 IMAGE_PNG: str = 'image/png'
 PLAIN_TEXT: str = 'plain/text'
+TEXT_HTML: str = 'text/html'
+APP_JSON: str = 'application/json'
+APP_ZIP: str = 'application/zip'
 
 
 def evidence(data: AnyStr, filename: str, content_type: str) -> Dict[str, str]:
@@ -35,3 +38,15 @@ def png(data: AnyStr, filename: str) -> Dict[str, str]:
 
 def text(data: AnyStr, filename: str) -> Dict[str, str]:
     return evidence(data, filename, PLAIN_TEXT)
+
+
+def html(data: AnyStr, filename: str) -> Dict[str, str]:
+    return evidence(data, filename, TEXT_HTML)
+
+
+def json(data: AnyStr, filename: str) -> Dict[str, str]:
+    return evidence(data, filename, APP_JSON)
+
+
+def zip(data: AnyStr, filename: str) -> Dict[str, str]:
+    return evidence(data, filename, APP_ZIP)

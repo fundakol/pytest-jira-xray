@@ -37,7 +37,7 @@ def pytest_addoption(parser: Parser):
         JIRA_CLOUD,
         action='store_true',
         default=False,
-        help='Use with JIRA XRAY could server'
+        help='Use with JIRA XRAY cloud server'
     )
     xray.addoption(
         JIRA_API_KEY,
