@@ -17,6 +17,7 @@ from pytest_xray.constant import (
     XRAY_PLUGIN,
     XRAY_TEST_PLAN_ID,
     XRAYPATH,
+    XRAY_ADD_CAPTURES,
 )
 from pytest_xray.file_publisher import FilePublisher
 from pytest_xray.helper import get_api_key_auth, get_basic_auth, get_bearer_auth
@@ -76,6 +77,12 @@ def pytest_addoption(parser: Parser):
         action='store_true',
         default=False,
         help='Allow test ids to be present on multiple pytest tests'
+    )
+    xray.addoption(
+        XRAY_ADD_CAPTURES,
+        action='store_true',
+        default=False,
+        help='Add captures from log, stdout or/and stderr, to the report comment field'
     )
 
 

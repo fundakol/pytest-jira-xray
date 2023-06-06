@@ -64,6 +64,7 @@ def test_help_message(xray_tests):
         '*--testplan=TestplanId*', '*XRAY Test Plan ID*',
         '*--xraypath=path*Do not upload to a server but create JSON report file at*', '*given path*',
         '*--allow-duplicate-ids*', '*Allow test ids to be present on multiple pytest tests*',
+        '*--add-captures*Add captures from log, stdout or/and stderr, to the*', '*report comment field*',
     ])
 
 
@@ -386,3 +387,47 @@ def test_duplicated_ids(testdir):
     assert xray_statuses == {
         ('JIRA-1', 'FAIL'),
     }
+
+
+def test_add_captures(testdir):
+    testdir.makepyfile(textwrap.dedent(
+        """\
+        import logging
+        import sys
+
+        import pytest
+
+        @pytest.mark.xray('JIRA-1')
+        def test_pass():
+            print('to stdout')
+            print('to stderr', file=sys.stderr)
+            logging.warning('to logger')
+            assert True
+        """)  # noqa: W293,W291
+        )
+    report_file = testdir.tmpdir / 'xray.json'
+
+    expected_tests = [
+        {'testKey': 'JIRA-1',
+         'status': 'PASS',
+         'comment': '\n----------------------------- Captured stdout call -----------------------------\n'
+            'to stdout\n'
+            '----------------------------- Captured stderr call -----------------------------\n'
+            'to stderr\n'
+            '------------------------------ Captured log call -------------------------------\n'
+            'WARNING  root:test_add_captures.py:10 to logger'}
+        ]
+
+    result = testdir.runpytest(
+        '--jira-xray',
+        f'--xraypath={report_file}',
+        '--add-captures',
+        '-v'
+        )
+    assert result.ret == pytest.ExitCode.OK
+    result.assert_outcomes(passed=1)
+
+    assert report_file.exists()
+    with open(report_file) as file:
+        data = json.load(file)
+    assert data['tests'] == expected_tests
