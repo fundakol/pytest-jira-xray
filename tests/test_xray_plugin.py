@@ -64,7 +64,7 @@ def test_help_message(xray_tests):
         '*--testplan=TestplanId*', '*XRAY Test Plan ID*',
         '*--xraypath=path*Do not upload to a server but create JSON report file at*', '*given path*',
         '*--allow-duplicate-ids*', '*Allow test ids to be present on multiple pytest tests*',
-        '*--add-captures*Add captures from log, stdout or/and stderr, to the*', '*report comment field*',    
+        '*--add-captures*Add captures from log, stdout or/and stderr, to the*', '*report comment field*',
     ])
 
 
