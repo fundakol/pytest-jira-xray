@@ -45,9 +45,6 @@ line-length = 120
 skip-string-normalization = true
 target-version = ['py37']
 
-[tool.flake8]
-max-line-length = 120
-
 [tool.isort]
 profile = "black"
 src_paths = ["src", "tests"]
