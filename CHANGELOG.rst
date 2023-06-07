@@ -1,4 +1,4 @@
-0.8.8 [2023-05-29]
+0.8.8 [2023-06-06]
 ==================
 - Added option to capture pytest stdout and logs in Xray report
 
