@@ -1,10 +1,42 @@
 [build-system]
 requires = [
     "setuptools>=45",
-    "wheel",
-    "setuptools_scm>=6.2"
+    "setuptools_scm[toml]>=6.2"
 ]
 build-backend = "setuptools.build_meta"
+
+[project]
+name = "pytest-jira-xray"
+dynamic = ["version"]
+authors = [
+    {name = "Lukasz Fundakowski", email = "fundakol@yahoo.com"}
+]
+description = "pytest plugin to integrate tests with JIRA XRAY"
+readme = "README.rst"
+requires-python = ">=3.6"
+keywords = ["pytest, JIRA, XRAY"]
+classifiers = [
+    "Development Status :: 4 - Beta",
+    "Programming Language :: Python :: 3",
+    "Programming Language :: Python :: 3.6",
+    "Programming Language :: Python :: 3.7",
+    "Programming Language :: Python :: 3.8",
+    "Programming Language :: Python :: 3.9",
+    "Programming Language :: Python :: 3.10",
+    "License :: OSI Approved :: Apache Software License",
+    "Operating System :: OS Independent",
+    "Framework :: Pytest"
+]
+dependencies = [
+    "pytest",
+    "requests"
+]
+
+[project.urls]
+homepage = "https://github.com/fundakol/pytest-jira-xray"
+
+[project.entry-points.pytest11]
+xray = "pytest_xray.plugin"
 
 [tool.setuptools_scm]
 
@@ -12,3 +44,16 @@ build-backend = "setuptools.build_meta"
 line-length = 120
 skip-string-normalization = true
 target-version = ['py37']
+
+[tool.flake8]
+max-line-length = 120
+
+[tool.isort]
+profile = "black"
+src_paths = ["src", "tests"]
+filter_files = true
+multi_line_output = 3
+include_trailing_comma = true
+force_grid_wrap = 0
+use_parentheses = true
+line_length = 88
