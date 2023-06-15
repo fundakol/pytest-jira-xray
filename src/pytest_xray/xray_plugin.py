@@ -13,12 +13,12 @@ from _pytest.terminal import TerminalReporter
 
 from pytest_xray.constant import (
     JIRA_CLOUD,
+    XRAY_ADD_CAPTURES,
     XRAY_ALLOW_DUPLICATE_IDS,
     XRAY_EXECUTION_ID,
     XRAY_MARKER_NAME,
     XRAY_TEST_PLAN_ID,
     XRAYPATH,
-    XRAY_ADD_CAPTURES,
 )
 from pytest_xray.exceptions import XrayError
 from pytest_xray.helper import (

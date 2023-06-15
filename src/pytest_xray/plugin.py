@@ -12,12 +12,12 @@ from pytest_xray.constant import (
     JIRA_XRAY_FLAG,
     TEST_EXECUTION_ENDPOINT,
     TEST_EXECUTION_ENDPOINT_CLOUD,
+    XRAY_ADD_CAPTURES,
     XRAY_ALLOW_DUPLICATE_IDS,
     XRAY_EXECUTION_ID,
     XRAY_PLUGIN,
     XRAY_TEST_PLAN_ID,
     XRAYPATH,
-    XRAY_ADD_CAPTURES,
 )
 from pytest_xray.file_publisher import FilePublisher
 from pytest_xray.helper import get_api_key_auth, get_basic_auth, get_bearer_auth
