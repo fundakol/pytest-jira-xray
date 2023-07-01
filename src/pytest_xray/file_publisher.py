@@ -9,8 +9,9 @@ logger = logging.getLogger(__name__)
 
 
 class FilePublisher:
+    """Exports Xray report to a file."""
 
-    def __init__(self, filepath: str):
+    def __init__(self, filepath: str) -> None:
         self.filepath: Path = Path(filepath)
 
     def publish(self, data: dict) -> str:

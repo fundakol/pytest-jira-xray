@@ -72,6 +72,7 @@ class ApiKeyAuth(AuthBase):
 
 
 class XrayPublisher:
+    """Exports Xray report to a Jira server."""
 
     def __init__(
         self,
@@ -89,6 +90,7 @@ class XrayPublisher:
 
     @property
     def endpoint_url(self) -> str:
+        """Return full URL to the server."""
         return self.base_url + self.endpoint
 
     def _send_data(self, url: str, auth: Union[AuthBase, tuple], data: dict) -> dict:

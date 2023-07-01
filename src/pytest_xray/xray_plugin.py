@@ -31,6 +31,7 @@ from pytest_xray.helper import (
 
 
 class XrayPlugin:
+    """Collects results from pytest and exports to Jira Xray server."""
 
     def __init__(self, config, publisher):
         self.config = config
