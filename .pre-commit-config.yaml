@@ -14,6 +14,13 @@ repos:
         files: ^(src/|tests/)
         stages: [ commit ]
 
+  - repo: https://github.com/pre-commit/mirrors-mypy
+    rev: v1.3.0
+    hooks:
+      - id: mypy
+        files: ^(src/|tests/)
+        stage: [ commit ]
+
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
     hooks:

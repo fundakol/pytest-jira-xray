@@ -33,7 +33,7 @@ class Status(str, enum.Enum):
 # When merging two statuses, the highest will be picked.
 # For example, a PASS and a FAIL will result in a FAIL,
 # A TODO and an ABORTED in an ABORTED, A TODO and a PASS in a TODO.
-STATUS_HIERARCHY = [
+STATUS_HIERARCHY: List[Status] = [
     Status.PASS,
     Status.TODO,
     Status.EXECUTING,
@@ -45,7 +45,7 @@ STATUS_HIERARCHY = [
 
 # Maps the Status from the internal Status enum to the string representations
 # requested by either the Cloud Jira, or the on-site Jira
-STATUS_STR_MAPPER_CLOUD = {
+STATUS_STR_MAPPER_CLOUD: Dict[Status, str] = {
     Status.TODO: 'TODO',
     Status.EXECUTING: 'EXECUTING',
     Status.PENDING: 'PENDING',
@@ -56,10 +56,11 @@ STATUS_STR_MAPPER_CLOUD = {
 }
 
 # On-site jira uses the enum strings directly
-STATUS_STR_MAPPER_JIRA = {x: x.value for x in Status}
+STATUS_STR_MAPPER_JIRA: Dict[Status, str] = {x: x.value for x in Status}
 
 
 class TestCase:
+
     def __init__(
         self,
         test_key: str,
@@ -67,14 +68,14 @@ class TestCase:
         comment: Optional[str] = None,
         status_str_mapper: Optional[Dict[Status, str]] = None,
         evidences: Optional[List[Dict[str, str]]] = None
-    ):
+    ) -> None:
         self.test_key = test_key
         self.status = status
         self.comment = comment or ''
         self.status_str_mapper = status_str_mapper or STATUS_STR_MAPPER_JIRA
         self.evidences = evidences or []
 
-    def merge(self, other: 'TestCase'):
+    def merge(self, other: 'TestCase') -> None:
         """
         Merges this test case with other, in order to obtain
         a combined result. Comments will be just appended one after the other.
@@ -157,6 +158,7 @@ class TestExecution:
         raise KeyError(test_key)
 
     def as_dict(self) -> Dict[str, Any]:
+        """Return test execution result as dictionary."""
         tests = [test.as_dict() for test in self.tests]
         info: Dict[str, Any] = dict(
             startDate=self.start_date.strftime(DATETIME_FORMAT),
@@ -190,6 +192,7 @@ class TestExecution:
 
 
 def get_base_options() -> Dict[str, Any]:
+    """Return authentication configuration from environment variables."""
     options = {}
     try:
         base_url = environ[ENV_XRAY_API_BASE_URL]
@@ -290,7 +293,7 @@ def _from_environ(name: str, separator: Optional[str] = None) -> List[str]:
     return list(filter(lambda x: len(x) > 0, map(lambda x: x.strip(), source)))
 
 
-def _merge_status(status_1: Status, status_2: Status):
+def _merge_status(status_1: Status, status_2: Status) -> Status:
     """Merges the status of two tests."""
 
     return STATUS_HIERARCHY[max(
