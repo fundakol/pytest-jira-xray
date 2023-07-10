@@ -19,7 +19,7 @@ def date_time_now():
 def testcase():
     return _TestCase(
         test_key='JIRA-1',
-        comment='{noformat:borderWidth=0px|bgColor=transparent}Test{noformat}',
+        comment='Test',
         status='PASS'
     )
 

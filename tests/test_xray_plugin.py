@@ -410,12 +410,13 @@ def test_add_captures(testdir):
     expected_tests = [
         {'testKey': 'JIRA-1',
          'status': 'PASS',
-         'comment': '\n----------------------------- Captured stdout call -----------------------------\n'
+         'comment': '{noformat:borderWidth=0px|bgColor=transparent}'
+            '\n----------------------------- Captured stdout call -----------------------------\n'
             'to stdout\n'
             '----------------------------- Captured stderr call -----------------------------\n'
             'to stderr\n'
             '------------------------------ Captured log call -------------------------------\n'
-            'WARNING  root:test_add_captures.py:10 to logger'}
+            'WARNING  root:test_add_captures.py:10 to logger{noformat}'}
         ]
 
     result = testdir.runpytest(
