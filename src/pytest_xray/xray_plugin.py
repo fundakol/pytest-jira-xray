@@ -123,7 +123,8 @@ class XrayPlugin:
 
         comment = report.longreprtext
         if self.add_captures:
-            comment += '\n'
+            if comment != '':
+                comment += '\n'
             if report.capstdout:
                 comment += f"{'-'*29} Captured stdout call {'-'*29}\n{report.capstdout}"
             if report.capstderr:

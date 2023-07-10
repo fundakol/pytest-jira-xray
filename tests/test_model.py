@@ -19,7 +19,7 @@ def date_time_now():
 def testcase():
     return _TestCase(
         test_key='JIRA-1',
-        comment='Test',
+        comment='{noformat:borderWidth=0px|bgColor=transparent}Test{noformat}',
         status='PASS'
     )
 
@@ -27,7 +27,7 @@ def testcase():
 def test_testcase_output_dictionary(testcase):
     assert testcase.as_dict() == {
         'testKey': 'JIRA-1',
-        'comment': 'Test',
+        'comment': '{noformat:borderWidth=0px|bgColor=transparent}Test{noformat}',
         'status': 'PASS'
     }
 
@@ -44,7 +44,7 @@ def test_test_execution_output_dictionary(testcase, date_time_now):
             },
             'tests': [
                 {
-                    'comment': 'Test',
+                    'comment': '{noformat:borderWidth=0px|bgColor=transparent}Test{noformat}',
                     'status': 'PASS',
                     'testKey': 'JIRA-1'
                 }
@@ -65,7 +65,7 @@ def test_test_execution_output_dictionary_with_test_plan_id(testcase, date_time_
             },
             'tests': [
                 {
-                    'comment': 'Test',
+                    'comment': '{noformat:borderWidth=0px|bgColor=transparent}Test{noformat}',
                     'status': 'PASS',
                     'testKey': 'JIRA-1'
                 }
@@ -87,7 +87,7 @@ def test_test_execution_output_dictionary_with_test_execution_id(testcase, date_
             },
             'tests': [
                 {
-                    'comment': 'Test',
+                    'comment': '{noformat:borderWidth=0px|bgColor=transparent}Test{noformat}',
                     'status': 'PASS',
                     'testKey': 'JIRA-1'
                 }
@@ -122,7 +122,7 @@ def test_test_execution_full_model(testcase, date_time_now):
             },
             'tests': [
                 {
-                    'comment': 'Test',
+                    'comment': '{noformat:borderWidth=0px|bgColor=transparent}Test{noformat}',
                     'status': 'PASS',
                     'testKey': 'JIRA-1'
                 }
@@ -157,7 +157,7 @@ def test_test_execution_environ_model(testcase, date_time_now):
             },
             'tests': [
                 {
-                    'comment': 'Test',
+                    'comment': '{noformat:borderWidth=0px|bgColor=transparent}Test{noformat}',
                     'status': 'PASS',
                     'testKey': 'JIRA-1'
                 }

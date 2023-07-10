@@ -103,8 +103,9 @@ class TestCase:
         data: Dict[str, Any] = dict(
             testKey=self.test_key,
             status=self.status_str_mapper[self.status],
-            comment="{noformat:borderWidth=0px|bgColor=transparent}" + self.comment + "{noformat}",
         )
+        if self.comment != '':
+            data['comment'] = "{noformat:borderWidth=0px|bgColor=transparent}" + self.comment + "{noformat}"
         if self.evidences:
             data['evidences'] = self.evidences
         return data
