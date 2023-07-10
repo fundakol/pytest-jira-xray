@@ -114,8 +114,7 @@ def test_if_user_can_modify_results_with_hooks(xray_tests):
 
 def test_if_user_can_attache_evidences(xray_tests):
     expected_tests = [
-        {'comment': '',
-         'evidences': [
+        {'evidences': [
              {
                  'contentType': 'plain/text',
                  'data': 'ZXZpZGVuY2U=',
@@ -411,7 +410,7 @@ def test_add_captures(testdir):
         {'testKey': 'JIRA-1',
          'status': 'PASS',
          'comment': '{noformat:borderWidth=0px|bgColor=transparent}'
-            '\n----------------------------- Captured stdout call -----------------------------\n'
+            '----------------------------- Captured stdout call -----------------------------\n'
             'to stdout\n'
             '----------------------------- Captured stderr call -----------------------------\n'
             'to stderr\n'
