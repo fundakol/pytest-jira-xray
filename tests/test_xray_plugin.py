@@ -112,9 +112,9 @@ def test_if_user_can_modify_results_with_hooks(xray_tests):
     assert xray_result['info']['user'] == 'Test User'
 
 
-def test_if_user_can_attache_evidences(xray_tests):
+def test_if_user_can_attach_evidences(xray_tests):
     expected_tests = [
-        {'comment': '',
+        {'comment': '{noformat:borderWidth=0px|bgColor=transparent}Test{noformat}',
          'evidences': [
              {
                  'contentType': 'plain/text',
@@ -169,6 +169,7 @@ def test_if_user_can_attache_evidences(xray_tests):
         def pytest_runtest_makereport(item, call):
             outcome = yield
             report = outcome.get_result()
+            report.longrepr = "Test"
             evidences = getattr(report, "evidences", [])
             if report.when == "call":
                 evidences.append(
@@ -410,12 +411,13 @@ def test_add_captures(testdir):
     expected_tests = [
         {'testKey': 'JIRA-1',
          'status': 'PASS',
-         'comment': '\n----------------------------- Captured stdout call -----------------------------\n'
+         'comment': '{noformat:borderWidth=0px|bgColor=transparent}'
+            '----------------------------- Captured stdout call -----------------------------\n'
             'to stdout\n'
             '----------------------------- Captured stderr call -----------------------------\n'
             'to stderr\n'
             '------------------------------ Captured log call -------------------------------\n'
-            'WARNING  root:test_add_captures.py:10 to logger'}
+            'WARNING  root:test_add_captures.py:10 to logger{noformat}'}
         ]
 
     result = testdir.runpytest(
