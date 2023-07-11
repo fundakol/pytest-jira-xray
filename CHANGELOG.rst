@@ -1,3 +1,7 @@
+0.8.9 [2023-07-11]
+==================
+- Fixed formatting issues with pytest captures
+
 0.8.8 [2023-06-06]
 ==================
 - Added option to capture pytest stdout and logs in Xray report
