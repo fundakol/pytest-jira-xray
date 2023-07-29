@@ -7,6 +7,12 @@ repos:
         stages: [ commit ]
         args: ["--profile", "pycharm", "--filter-files", "--line-length=99"]
 
+  - repo: https://github.com/pre-commit/mirrors-autopep8
+    rev: v2.0.2
+    hooks:
+      - id: autopep8
+        files: ^(src/|tests/)
+
   - repo: https://github.com/PYCQA/flake8
     rev: 6.0.0
     hooks:
@@ -20,6 +26,7 @@ repos:
       - id: mypy
         files: ^(src/|tests/)
         stage: [ commit ]
+        additional_dependencies: [types-requests]
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
     rev: v4.4.0
