@@ -1,12 +1,16 @@
 import json
 import logging
-from typing import Union
+from typing import Callable, Optional, Tuple, Union
 
 import requests
+from requests import PreparedRequest
 from requests.auth import AuthBase
 
 from pytest_xray.constant import AUTHENTICATE_ENDPOINT
 from pytest_xray.exceptions import XrayError
+
+
+AuthType = Optional[Union[Tuple[str, str], AuthBase, Callable[[PreparedRequest], PreparedRequest]]]
 
 
 _logger = logging.getLogger(__name__)
@@ -78,7 +82,7 @@ class XrayPublisher:
         self,
         base_url: str,
         endpoint: str,
-        auth: Union[AuthBase, tuple],
+        auth: AuthType,
         verify: Union[bool, str] = True
     ) -> None:
         if base_url.endswith('/'):
@@ -93,7 +97,7 @@ class XrayPublisher:
         """Return full URL to the server."""
         return self.base_url + self.endpoint
 
-    def _send_data(self, url: str, auth: Union[AuthBase, tuple], data: dict) -> dict:
+    def _send_data(self, url: str, auth: AuthType, data: dict) -> dict:
         headers = {
             'Accept': 'application/json',
             'Content-Type': 'application/json'

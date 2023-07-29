@@ -137,23 +137,23 @@ def test_if_user_can_attach_evidences(xray_tests):
                  'filename': 'screenshot.jpeg'
              },
              {
-                'contentType': 'text/html',
-                'data': 'PGgxPlRlc3Q8L2gxPg==',
-                'filename': 'test.html'
+                 'contentType': 'text/html',
+                 'data': 'PGgxPlRlc3Q8L2gxPg==',
+                 'filename': 'test.html'
              },
              {
-                'contentType': 'application/json',
-                'data': 'eyAidGVzdCIgOiAidGVzdCIgfQ==',
-                'filename': 'test.json'
+                 'contentType': 'application/json',
+                 'data': 'eyAidGVzdCIgOiAidGVzdCIgfQ==',
+                 'filename': 'test.json'
              },
              {
-                'contentType': 'application/zip',
-                'data': 'UEsDBBQAAAAIAC6DvlYWgkkTUwAAAFgAAAAOABwAc2NyZWVuc2hvdC5wbmdVVAkAA1gHdmS4'
-                        'B3ZkdXgLAAEE6AMAAAToAwAA6wzwc+flkuJiYGDg9fRwCQLSrCDMwQYke/PVngIpeU8XxxCO'
-                        '6OQ5Zrm36tlMDnjsU7C3t2fuKpvQ0NPDw8zgZs1X+VneyROolMHT1c9lnVNCEwBQSwECHgMUA'
-                        'AAACAAug75WFoJJE1MAAABYAAAADgAYAAAAAAAAAAAApIEAAAAAc2NyZWVuc2hvdC5wbmdVVA'
-                        'UAA1gHdmR1eAsAAQToAwAABOgDAABQSwUGAAAAAAEAAQBUAAAAmwAAAAAA',
-                'filename': 'test.zip'
+                 'contentType': 'application/zip',
+                 'data': 'UEsDBBQAAAAIAC6DvlYWgkkTUwAAAFgAAAAOABwAc2NyZWVuc2hvdC5wbmdVVAkAA1gHdmS4'
+                 'B3ZkdXgLAAEE6AMAAAToAwAA6wzwc+flkuJiYGDg9fRwCQLSrCDMwQYke/PVngIpeU8XxxCO'
+                 '6OQ5Zrm36tlMDnjsU7C3t2fuKpvQ0NPDw8zgZs1X+VneyROolMHT1c9lnVNCEwBQSwECHgMUA'
+                 'AAACAAug75WFoJJE1MAAABYAAAADgAYAAAAAAAAAAAApIEAAAAAc2NyZWVuc2hvdC5wbmdVVA'
+                 'UAA1gHdmR1eAsAAQToAwAABOgDAABQSwUGAAAAAAEAAQBUAAAAmwAAAAAA',
+                 'filename': 'test.zip'
              }
          ],
          'status': 'PASS',
@@ -418,14 +418,14 @@ def test_add_captures(testdir):
             'to stderr\n'
             '------------------------------ Captured log call -------------------------------\n'
             'WARNING  root:test_add_captures.py:10 to logger{noformat}'}
-        ]
+    ]
 
     result = testdir.runpytest(
         '--jira-xray',
         f'--xraypath={report_file}',
         '--add-captures',
         '-v'
-        )
+    )
     assert result.ret == pytest.ExitCode.OK
     result.assert_outcomes(passed=1)
 
