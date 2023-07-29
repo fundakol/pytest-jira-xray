@@ -105,7 +105,7 @@ class TestCase:
             status=self.status_str_mapper[self.status],
         )
         if self.comment != '':
-            data['comment'] = "{noformat:borderWidth=0px|bgColor=transparent}" + self.comment + "{noformat}"
+            data['comment'] = '{noformat:borderWidth=0px|bgColor=transparent}' + self.comment + '{noformat}'
         if self.evidences:
             data['evidences'] = self.evidences
         return data
