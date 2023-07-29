@@ -60,7 +60,7 @@ jobs:
 
   lint:
     runs-on: ubuntu-latest
-    name: flake8
+    name: linter
     steps:
       - uses: actions/checkout@v3
       - name: Setup Python
@@ -70,4 +70,4 @@ jobs:
       - name: Install packages
         run: pip install tox
       - name: Run tests
-        run: tox -e flake8
+        run: tox -e linter
