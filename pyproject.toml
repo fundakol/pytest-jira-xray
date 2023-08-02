@@ -28,7 +28,7 @@ classifiers = [
     "Framework :: Pytest"
 ]
 dependencies = [
-    "pytest",
+    "pytest>=6.2.4",
     "requests"
 ]
 
