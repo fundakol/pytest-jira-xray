@@ -25,7 +25,7 @@ repos:
     hooks:
       - id: mypy
         files: ^(src/|tests/)
-        stage: [ commit ]
+        stages: [ commit ]
         additional_dependencies: [types-requests]
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
