@@ -2,7 +2,7 @@ import datetime as dt
 import os
 import re
 from pathlib import Path
-from typing import Dict, Union, List, Optional
+from typing import Dict, List, Optional, Union
 
 import pytest
 from _pytest.config import Config, ExitCode
@@ -189,8 +189,8 @@ class XrayPlugin:
             terminalreporter.ensure_newline()
             terminalreporter.section('Jira XRAY', sep='-', red=True, bold=True)
             terminalreporter.write_line('Could not publish results to Jira XRAY!')
-            if self.exception.message:
-                terminalreporter.write_line(self.exception.message)
+            if self.exception.message:  # type: ignore[attr-defined]
+                terminalreporter.write_line(self.exception.message)  # type: ignore[attr-defined]
         else:
             if self.issue_id and self.logfile:
                 terminalreporter.write_sep(
