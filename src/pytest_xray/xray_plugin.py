@@ -2,7 +2,7 @@ import datetime as dt
 import os
 import re
 from pathlib import Path
-from typing import List, Optional
+from typing import Dict, Union, List, Optional
 
 import pytest
 from _pytest.config import Config, ExitCode
@@ -43,13 +43,13 @@ class XrayPlugin:
         logfile = self.config.getoption(XRAYPATH)
         self.add_captures: bool = self.config.getoption(XRAY_ADD_CAPTURES)
         self.logfile: Optional[str] = self._get_normalize_logfile(logfile) if logfile else None
-        self.issue_id = None  # issue id returned by XRAY server
-        self.exception = None  # keeps an exception if raised by XrayPublisher
+        self.issue_id: Union[str, None] = None  # issue id returned by XRAY server
+        self.exception: Union[Exception, None] = None  # keeps an exception if raised by XrayPublisher
         self.test_execution: TestExecution = TestExecution(
             test_execution_key=self.test_execution_id,
             test_plan_key=self.test_plan_id
         )
-        self.status_str_mapper = STATUS_STR_MAPPER_JIRA
+        self.status_str_mapper: Dict[Status, str] = STATUS_STR_MAPPER_JIRA
         if self.is_cloud_server:
             self.status_str_mapper = STATUS_STR_MAPPER_CLOUD
 
@@ -61,11 +61,12 @@ class XrayPlugin:
 
     def _get_test_keys(self, item: Item) -> List[str]:
         """Return JIRA ids associated with test item"""
+        test_keys: List[str] = []
         marker = self._get_xray_marker(item)
-        if not marker:
-            return []
 
-        test_keys: List[str]
+        if not marker:
+            return test_keys
+
         if isinstance(marker.args[0], str):
             test_keys = [marker.args[0]]
         elif isinstance(marker.args[0], list):
@@ -153,16 +154,14 @@ class XrayPlugin:
         if report.failed:
             if report.when != 'call':
                 return Status.FAIL
-            elif hasattr(report, 'wasxfail'):
+            if hasattr(report, 'wasxfail'):
                 return Status.PASS
-            else:
-                return Status.FAIL
-        elif report.skipped:
+            return Status.FAIL
+        if report.skipped:
             if hasattr(report, 'wasxfail'):
                 return Status.FAIL
-            else:
-                return Status.ABORTED
-        elif report.passed and report.when == 'call':
+            return Status.ABORTED
+        if report.passed and report.when == 'call':
             return Status.PASS
 
         return None

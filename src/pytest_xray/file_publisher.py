@@ -25,8 +25,8 @@ class FilePublisher:
         try:
             with open(self.filepath, 'w', encoding='UTF-8') as file:
                 json.dump(data, file, indent=2)
-        except TypeError as e:
-            logger.exception(e)
-            raise XrayError(f'Cannot save data to file: {self.filepath}') from e
+        except TypeError as exc:
+            logger.exception(exc)
+            raise XrayError(f'Cannot save data to file: {self.filepath}') from exc
         else:
             return f'{self.filepath}'
