@@ -223,27 +223,24 @@ the following rules:
 Attach test evidences
 +++++++++++++++++++++
 
-The following example adds the test evidences to the Xray report
-using a ``pytest_runtest_makereport`` hook.
+You can attach evidences for a test, using the ``evidence`` fixture. It enables the use of the
+``evidence(path: str = '', data: AnyStr = '', ctype: str = '')`` function.
+The following example adds 3 test evidences to the Xray report.
 
 .. code-block:: python
 
-    # FILE: conftest.py
+    # FILE: test_example.py
     import pytest
-    from pytest_xray import evidence
 
-    @pytest.hookimpl(hookwrapper=True)
-    def pytest_runtest_makereport(item, call):
-        outcome = yield
-        report = outcome.get_result()
-        evidences = getattr(report, "evidences", [])
-        if report.when == "call":
-            xfail = hasattr(report, "wasxfail")
-            if (report.skipped and xfail) or (report.failed and not xfail):
-                data = open('screenshot.jpeg', 'rb').read()
-                evidences.append(evidence.jpeg(data=data, filename="screenshot.jpeg"))
-            report.evidences = evidences
+    @pytest..mark.xray('JIRA-1')
+    def test_my_process(evidence):
+        evidence(path="data.txt", data="Test", ctype="text/plain")
+        evidence(data="This is the data")
+        evidence(path="test.xyz", ctype="application/prs.xyz")
+        assert True
 
+Fixture behaviour is determined from the values of the ``path``, ``data`` and ``ctype``, as
+stated `in the doc of function wrapper_evidence (in plugin.py file) <src/pytest_xray/plugin.py>`_.
 
 Hooks
 +++++

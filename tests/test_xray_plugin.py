@@ -50,6 +50,42 @@ def xray_tests_multi_fail(testdir):
     return testdir
 
 
+@pytest.fixture()
+def xray_tests_evidence(testdir):
+    """
+    Copyright © 2023 Orange - All rights reserved
+    """
+    localfile = Path(testdir.makefile('.txt', test='Test')).name
+    emptyfile = testdir.makefile('.txt', empty='')
+    test_example = textwrap.dedent(f"""\
+        import pytest
+        from pytest_xray.exceptions import XrayError
+
+        @pytest.mark.xray('JIRA-1')
+        def test_pass(evidence):
+            evidence(path="data.txt", data="Test", ctype="text/plain")
+            evidence(path="data.bin", data=b"Test\\xb6", ctype="application/octet-stream")
+            evidence(data="Test")
+            evidence(data=b"Test\\xb6")
+            evidence(data="<h1>Test</h1>", ctype="text/html")
+            evidence("{RESOURCE_DIR}/screenshot.png")
+            evidence("{localfile}")
+            evidence("{emptyfile}")
+            evidence(data="--Test", ctype="text/prs.testing")
+            with pytest.raises(XrayError):
+                evidence(ctype="text/plain")            # data or path missing
+            with pytest.raises(XrayError):
+                evidence(path=b"test.txt")              # path is not 'str'
+            with pytest.raises(XrayError):
+                evidence("{RESOURCE_DIR}/test.xyz")     # unknown media type / ctype missing
+            with pytest.raises(XrayError):
+                evidence("{RESOURCE_DIR}/testt.txt")    # file not found
+            assert True
+        """)  # noqa: W293,W291
+    testdir.makepyfile(test_example)
+    return testdir
+
+
 def test_help_message(xray_tests):
     result = xray_tests.runpytest(
         '--help',
@@ -112,97 +148,44 @@ def test_if_user_can_modify_results_with_hooks(xray_tests):
     assert xray_result['info']['user'] == 'Test User'
 
 
-def test_if_user_can_attach_evidences(xray_tests):
+def test_if_user_can_attach_evidences(xray_tests_evidence):
     expected_tests = [
-        {'comment': '{noformat:borderWidth=0px|bgColor=transparent}Test{noformat}',
-         'evidences': [
-             {
-                 'contentType': 'plain/text',
-                 'data': 'ZXZpZGVuY2U=',
-                 'filename': 'test.log'
-             },
-             {
-                 'contentType': 'image/png',
-                 'data': 'iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAH'
-                         '0lEQVQIW2OcNm3afwY0wEi+ID8/PwOKdpCAjIwMAwBGOw558x9CSQAAAABJRU5ErkJggg==',
-                 'filename': 'screenshot.png'
-             },
-             {
-                 'contentType': 'image/jpeg',
-                 'data': '/9j/4AAQSkZJRgABAQAAAQABAAD/4QBiRXhpZgAATU0AKgAAAAgABQESAAMAAAABAAEAAAEa'
-                         'AAUAAAABAAAASgEbAAUAAAABAAAAUgEoAAMAAAABAAEAAAITAAMAAAABAAEAAAAAAAAAAAABA'
-                         'AAAAQAAAAEAAAAB/9sAQwADAgICAgIDAgICAwMDAwQGBAQEBAQIBgYFBgkICgoJCAkJCgwPDAo'
-                         'LDgsJCQ0RDQ4PEBAREAoMEhMSEBMPEBAQ/8AACwgABQAFAQERAP/EABQAAQAAAAAAAAAAAAAAAA'
-                         'AAAAf/xAAcEAACAgIDAAAAAAAAAAAAAAABAgMGBBEAE2H/2gAIAQEAAD8AXKtVorDFkSSZjw9LKoCoDvYPvP/Z',
-                 'filename': 'screenshot.jpeg'
-             },
-             {
-                 'contentType': 'text/html',
-                 'data': 'PGgxPlRlc3Q8L2gxPg==',
-                 'filename': 'test.html'
-             },
-             {
-                 'contentType': 'application/json',
-                 'data': 'eyAidGVzdCIgOiAidGVzdCIgfQ==',
-                 'filename': 'test.json'
-             },
-             {
-                 'contentType': 'application/zip',
-                 'data': 'UEsDBBQAAAAIAC6DvlYWgkkTUwAAAFgAAAAOABwAc2NyZWVuc2hvdC5wbmdVVAkAA1gHdmS4'
-                 'B3ZkdXgLAAEE6AMAAAToAwAA6wzwc+flkuJiYGDg9fRwCQLSrCDMwQYke/PVngIpeU8XxxCO'
-                 '6OQ5Zrm36tlMDnjsU7C3t2fuKpvQ0NPDw8zgZs1X+VneyROolMHT1c9lnVNCEwBQSwECHgMUA'
-                 'AAACAAug75WFoJJE1MAAABYAAAADgAYAAAAAAAAAAAApIEAAAAAc2NyZWVuc2hvdC5wbmdVVA'
-                 'UAA1gHdmR1eAsAAQToAwAABOgDAABQSwUGAAAAAAEAAQBUAAAAmwAAAAAA',
-                 'filename': 'test.zip'
-             }
-         ],
+        {'testKey': 'JIRA-1',
          'status': 'PASS',
-         'testKey': 'JIRA-1'}
+         'evidences': [
+             {'data': 'VGVzdA==',
+              'filename': 'data.txt',
+              'contentType': 'text/plain'},
+             {'data': 'VGVzdLY=',
+                 'filename': 'data.bin',
+                 'contentType': 'application/octet-stream'},
+             {'data': 'VGVzdA==',
+                 'filename': 'attachment1.txt',
+                 'contentType': 'text/plain'},
+             {'data': 'VGVzdLY=',
+                 'filename': 'attachment2.bin',
+                 'contentType': 'application/octet-stream'},
+             {'data': 'PGgxPlRlc3Q8L2gxPg==',
+                 'filename': 'attachment3.html',
+                 'contentType': 'text/html'},
+             {'data': 'iVBORw0KGgoAAAANSUhEUgAAAAUAAAAFCAYAAACNbyblAAAAH0lEQVQIW2OcNm3afwY0wEi+ID'
+                 '8/PwOKdpCAjIwMAwBGOw558x9CSQAAAABJRU5ErkJggg==',
+                 'filename': 'screenshot.png',
+                 'contentType': 'image/png'},
+             {'data': 'VGVzdA==',
+                 'filename': 'test.txt',
+                 'contentType': 'text/plain'},
+             {'data': '',
+                 'filename': 'empty.txt',
+                 'contentType': 'text/plain'},
+             {'data': 'LS1UZXN0',
+                 'filename': 'attachment4',
+                 'contentType': 'text/prs.testing'}
+         ]}
     ]
 
-    xray_file = xray_tests.tmpdir.join('xray.json')
-    xray_tests.makeconftest(f"""
-        import pytest
-        from pytest_xray import evidence
-
-        @pytest.hookimpl(hookwrapper=True)
-        def pytest_runtest_makereport(item, call):
-            outcome = yield
-            report = outcome.get_result()
-            report.longrepr = "Test"
-            evidences = getattr(report, "evidences", [])
-            if report.when == "call":
-                evidences.append(
-                    evidence.text(data='evidence', filename="test.log")
-                )
-                evidences.append(
-                    evidence.png(
-                        data=open('{RESOURCE_DIR}/screenshot.png', 'rb').read(),
-                        filename='screenshot.png'
-                    )
-                )
-                evidences.append(
-                    evidence.jpeg(
-                        data=open('{RESOURCE_DIR}/screenshot.jpeg', 'rb').read(),
-                        filename='screenshot.jpeg'
-                    )
-                )
-                evidences.append(
-                    evidence.html(data='<h1>Test</h1>', filename='test.html')
-                )
-                evidences.append(
-                    evidence.json(
-                        data='{{ "test" : "test" }}',
-                        filename='test.json')
-                )
-                evidences.append(
-                    evidence.zip(
-                        data=open('{RESOURCE_DIR}/test.zip', 'rb').read(),
-                        filename='test.zip')
-                )
-                report.evidences = evidences
-    """)
-    result = xray_tests.runpytest('--jira-xray', '--xraypath', str(xray_file))
+    xray_file = xray_tests_evidence.tmpdir.join('xray.json')
+    result = xray_tests_evidence.runpytest('--jira-xray', '--xraypath', str(xray_file))
     assert result.ret == 0
     xray_result = json.load(xray_file.open())
     assert 'tests' in xray_result
