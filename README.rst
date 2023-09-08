@@ -19,15 +19,23 @@ pytest-jira-xray is a plugin for pytest that uploads test results to JIRA XRAY.
 Installation
 ------------
 
-.. code-block::
-
-    pip install pytest-jira-xray
-
-or
+Installing from pypi repository:
 
 .. code-block::
 
-    python setup.py install
+    pip install -U pytest-jira-xray
+
+Installing from local source:
+
+.. code-block::
+
+    pip install <path>
+
+Installing from local source in development mode:
+
+.. code-block::
+
+    pip install -e <path>
 
 
 Usage
@@ -38,6 +46,7 @@ Mark a test with JIRA XRAY test ID or list of IDs
 .. code-block:: python
 
     # -- FILE: test_example.py
+
     import pytest
 
     @pytest.mark.xray('JIRA-1')
@@ -176,6 +185,7 @@ Tests can be marked to handle multiple Jira tests by adding a list, rather than 
 .. code-block:: python
 
     # -- FILE: test_example.py
+
     import pytest
 
     @pytest.mark.xray([
@@ -200,6 +210,7 @@ the same identifier, like in this case:
 .. code-block:: python
 
     # -- FILE: test_example.py
+
     import pytest
 
     @pytest.mark.xray('JIRA-1')
@@ -228,7 +239,8 @@ using a ``pytest_runtest_makereport`` hook.
 
 .. code-block:: python
 
-    # FILE: conftest.py
+    # -- FILE: conftest.py
+
     import pytest
     from pytest_xray import evidence
 
@@ -240,7 +252,7 @@ using a ``pytest_runtest_makereport`` hook.
         if report.when == "call":
             xfail = hasattr(report, "wasxfail")
             if (report.skipped and xfail) or (report.failed and not xfail):
-                data = open('screenshot.jpeg', 'rb').read()
+                data = open("screenshot.jpeg", "rb").read()
                 evidences.append(evidence.jpeg(data=data, filename="screenshot.jpeg"))
             report.evidences = evidences
 
