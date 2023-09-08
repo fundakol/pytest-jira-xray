@@ -19,6 +19,9 @@ from pytest_xray.constant import (
 from pytest_xray.exceptions import XrayError
 
 
+DEFAULT_SUMMARY_DESCRIPTION: str = 'Execution of automated tests'
+
+
 class Status(str, enum.Enum):
     TODO = 'TODO'
     EXECUTING = 'EXECUTING'
@@ -137,7 +140,11 @@ class TestExecution:
             constant.ENV_MULTI_VALUE_SPLIT_PATTERN
         )
         self.fix_version = fix_version or _first_from_environ(constant.ENV_TEST_EXECUTION_FIX_VERSION)
-        self.summary = summary or _from_environ_or_none(constant.ENV_TEST_EXECUTION_SUMMARY)
+        self.summary = (
+            summary
+            or _from_environ_or_none(constant.ENV_TEST_EXECUTION_SUMMARY)
+            or DEFAULT_SUMMARY_DESCRIPTION
+        )
         self.description = description or _from_environ_or_none(constant.ENV_TEST_EXECUTION_DESC)
 
     def append(self, test: Union[dict, TestCase]) -> None:
