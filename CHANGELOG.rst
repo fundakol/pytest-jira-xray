@@ -1,3 +1,7 @@
+0.8.10 [2023-09-08]
+===================
+- Added default text for mandatory `summary` field if not provided by a user
+
 0.8.9 [2023-07-11]
 ==================
 - Fixed formatting issues with pytest captures
