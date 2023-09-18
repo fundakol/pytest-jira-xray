@@ -62,24 +62,24 @@ def xray_tests_evidence(testdir):
         from pytest_xray.exceptions import XrayError
 
         @pytest.mark.xray('JIRA-1')
-        def test_pass(evidence):
-            evidence(path="data.txt", data="Test", ctype="text/plain")
-            evidence(path="data.bin", data=b"Test\\xb6", ctype="application/octet-stream")
-            evidence(data="Test")
-            evidence(data=b"Test\\xb6")
-            evidence(data="<h1>Test</h1>", ctype="text/html")
-            evidence("{RESOURCE_DIR}/screenshot.png")
-            evidence("{localfile}")
-            evidence("{emptyfile}")
-            evidence(data="--Test", ctype="text/prs.testing")
+        def test_pass(xray_evidence):
+            xray_evidence(path="data.txt", data="Test", ctype="text/plain")
+            xray_evidence(path="data.bin", data=b"Test\\xb6", ctype="application/octet-stream")
+            xray_evidence(data="Test")
+            xray_evidence(data=b"Test\\xb6")
+            xray_evidence(data="<h1>Test</h1>", ctype="text/html")
+            xray_evidence("{RESOURCE_DIR}/screenshot.png")
+            xray_evidence("{localfile}")
+            xray_evidence("{emptyfile}")
+            xray_evidence(data="--Test", ctype="text/prs.testing")
             with pytest.raises(XrayError):
-                evidence(ctype="text/plain")            # data or path missing
+                xray_evidence(ctype="text/plain")            # data or path missing
             with pytest.raises(XrayError):
-                evidence(path=b"test.txt")              # path is not 'str'
+                xray_evidence(path=b"test.txt")              # path is not 'str'
             with pytest.raises(XrayError):
-                evidence("{RESOURCE_DIR}/test.xyz")     # unknown media type / ctype missing
+                xray_evidence("{RESOURCE_DIR}/test.xyz")     # unknown media type / ctype missing
             with pytest.raises(XrayError):
-                evidence("{RESOURCE_DIR}/testt.txt")    # file not found
+                xray_evidence("{RESOURCE_DIR}/testt.txt")    # file not found
             assert True
         """)  # noqa: W293,W291
     testdir.makepyfile(test_example)

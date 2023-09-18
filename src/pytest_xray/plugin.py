@@ -1,6 +1,6 @@
 import base64
 from pathlib import Path
-from typing import Callable, Tuple, Union, overload
+from typing import Callable, Tuple, Union
 
 import pytest
 from _pytest.config import Config
@@ -144,7 +144,7 @@ evidence_nb: int = 1
 
 
 @pytest.fixture
-def evidence(request) -> Callable:
+def xray_evidence(request) -> Callable:
     """ Fixture to add an evidence to the Test Run details of a Test.
     See https://docs.getxray.app/display/XRAY/Import+Execution+Results
 
@@ -170,15 +170,7 @@ def evidence(request) -> Callable:
         'zip': 'application/zip'
     }
 
-    @overload
-    def wrapper_evidence(path: str, *, data: bytes, ctype: str) -> None:
-        pass
-
-    @overload
-    def wrapper_evidence(path: str, *, data: str, ctype: str) -> None:
-        pass
-
-    def wrapper_evidence(path='', *, data='', ctype='') -> None:
+    def wrapper_evidence(path: str | Path = '', *, data: str | bytes = '', ctype: str = '') -> None:
         """
         Behaviour of the fixture from the value of 'path', 'data' and 'ctype'
         arguments:
@@ -239,15 +231,15 @@ def evidence(request) -> Callable:
             evidence_nb += 1
 
         else:
-            if not isinstance(path, str):
+            if not isinstance(path, (str, Path)):
                 raise XrayError('Path must be a string')
             evidence_path: Path = Path(path)
-            # Jira wants non absolute pathname as filename attachment
+            # Jira wants a filename for the attachment
             evidence_name = evidence_path.name
 
             if data == '':
-                if not evidence_path.is_absolute():
-                    evidence_path = request.path.parent.joinpath(evidence_path)
+                #                if not evidence_path.is_absolute():
+                #                    evidence_path = request.path.parent.joinpath(evidence_path)
                 try:
                     with open(evidence_path, 'rb') as f:
                         data_base64 = base64.b64encode(f.read()).decode('utf-8')
