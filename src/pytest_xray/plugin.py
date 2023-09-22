@@ -19,6 +19,7 @@ from pytest_xray.constant import (
     XRAY_TEST_PLAN_ID,
     XRAYPATH,
 )
+from pytest_xray.evidence import xray_evidence  # noqa: F401
 from pytest_xray.file_publisher import FilePublisher
 from pytest_xray.helper import get_api_key_auth, get_basic_auth, get_bearer_auth
 from pytest_xray.xray_plugin import XrayPlugin

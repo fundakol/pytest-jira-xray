@@ -110,6 +110,9 @@ class XrayPlugin:
         test_keys = self._get_test_keys(item)
         if test_keys and item.nodeid not in report.test_keys:
             report.test_keys[item.nodeid] = test_keys
+        if not hasattr(report, 'evidences'):
+            report.evidences = []
+        report.evidences += getattr(item, 'evidences', [])
 
     def pytest_runtest_logreport(self, report: TestReport):
         status = self._get_status_from_report(report)

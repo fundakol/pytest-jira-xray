@@ -231,9 +231,29 @@ the following rules:
   is a ``PASS`` but ``test_my_process_2`` is a ``FAIL``, ``JIRA-1`` will be marked as ``FAIL``.
 
 
+Add output of tests in Comment field
+++++++++++++++++++++++++++++++++++++
+By default, test output to stdout and stderr, and logs are captured by pytest but not shown.
+The option ``--add-captures`` will add them to the "comment" field of a test execution details.
+You will see the same kind of output as using pytest interactively:
+
+::
+
+    ----------------------------- Captured stdout call -----------------------------
+    Starting execution
+    ----------------------------- Captured stderr call -----------------------------
+    This is an error
+    ------------------------------ Captured log call -------------------------------
+    WARNING  logger:test_myfile.py:10 This is a warning
+
+
 Attach test evidences
 +++++++++++++++++++++
 
+There are two ways of adding evidences to your tests.
+
+Global evidence filename for each test
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 The following example adds the test evidences to the Xray report
 using a ``pytest_runtest_makereport`` hook.
 
@@ -255,6 +275,30 @@ using a ``pytest_runtest_makereport`` hook.
                 data = open("screenshot.jpeg", "rb").read()
                 evidences.append(evidence.jpeg(data=data, filename="screenshot.jpeg"))
             report.evidences = evidences
+
+
+Specific evidence filename for each test
+^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
+The following example adds test evidences to the Xray report
+using the ``xray_evidence`` fixture.
+
+.. code-block:: python
+
+    # -- FILE: test_example.py
+    import pytest
+
+    @pytest..mark.xray('JIRA-1')
+    def test_my_process(xray_evidence):
+        try:
+            do_the_test()
+        finally:
+            # contentType is deduced from filename extension: image/jpeg
+            xray_evidence("screenshot.jpeg")
+
+            # file name/path is mandatory and can be str or pathlib.Path
+            # Content (data) can be str or bytes
+            # Content-type (ctype) defaults to "application/octet-stream" if extension is not known
+            xray_evidence("data.log", data=get_my_log(), ctype="text/plain")
 
 
 Hooks

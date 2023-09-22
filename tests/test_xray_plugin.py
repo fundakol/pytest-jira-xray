@@ -1,4 +1,5 @@
 import json
+import os
 import textwrap
 from pathlib import Path
 
@@ -48,6 +49,68 @@ def xray_tests_multi_fail(testdir):
         """)  # noqa: W293,W291
     testdir.makepyfile(test_example)
     return testdir
+
+
+@pytest.fixture()
+def xray_tests_evidence_fixture(pytester):
+    """
+    Copyright © 2023 Orange - All rights reserved
+    """
+    localfile = Path(pytester.makefile('.txt', test='Test')).name
+    abspathfile = pytester.path / localfile
+    emptyfile = pytester.makefile('.txt', empty='')
+    pytester.makepyfile(
+        f"""
+        import pytest
+        from pytest_xray.exceptions import XrayError
+
+        @pytest.mark.xray('JIRA-1')
+        def test_pass(xray_evidence):
+            xray_evidence("{localfile}")
+            xray_evidence("{abspathfile}")
+            xray_evidence("{emptyfile}")
+            xray_evidence("data.txt", data="Test", ctype="text/plain")
+            xray_evidence("data.testing", data=b"Test\\xb6", ctype="application/prs.testing")
+            xray_evidence("data.xyz", data="Test")
+
+            with pytest.raises(XrayError):
+                xray_evidence("")
+            with pytest.raises(XrayError):
+                xray_evidence(None)
+            with pytest.raises(XrayError):
+                xray_evidence("testt.txt")  # file not found
+            assert True
+        """,
+        test_ex2="""
+        import pytest
+
+        @pytest.mark.xray('JIRA-2')
+        def test_pass(xray_evidence):
+            with open("test2.txt", "a") as f:
+                f.write("Test")
+            xray_evidence("test2.txt")
+            assert True
+        """)  # noqa: W293,W291
+    pytester.makeconftest("""
+        import pytest
+        from pytest_xray import evidence
+
+        @pytest.hookimpl(hookwrapper=True)
+        def pytest_runtest_makereport(item, call):
+            outcome = yield
+            report = outcome.get_result()
+            evidences = getattr(report, "evidences", [])
+            if report.when == "call":
+                evidences.append(
+                    evidence.text(data='Test', filename="from_conftest.txt")
+                )
+                report.evidences = evidences
+    """)
+
+    dir = pytester.mkdir('subdir')
+    # move test_ex2.py to subdir
+    os.rename(pytester.path / 'test_ex2.py', pytester.path / dir / 'test_ex2.py')
+    return pytester
 
 
 def test_help_message(xray_tests):
@@ -117,7 +180,7 @@ def test_if_user_can_attach_evidences(xray_tests):
         {'comment': '{noformat:borderWidth=0px|bgColor=transparent}Test{noformat}',
          'evidences': [
              {
-                 'contentType': 'plain/text',
+                 'contentType': 'text/plain',
                  'data': 'ZXZpZGVuY2U=',
                  'filename': 'test.log'
              },
@@ -390,8 +453,8 @@ def test_duplicated_ids(testdir):
     }
 
 
-def test_add_captures(testdir):
-    testdir.makepyfile(textwrap.dedent(
+def test_add_captures(pytester):
+    pytester.makepyfile(textwrap.dedent(
         """\
         import logging
         import sys
@@ -403,15 +466,18 @@ def test_add_captures(testdir):
             print('to stdout')
             print('to stderr', file=sys.stderr)
             logging.warning('to logger')
+            pytest.skip('Test')  # To put something in report.longrepr
             assert True
         """)  # noqa: W293,W291
         )
-    report_file = testdir.tmpdir / 'xray.json'
+    report_file = pytester.path / 'xray.json'
 
     expected_tests = [
         {'testKey': 'JIRA-1',
-         'status': 'PASS',
-         'comment': '{noformat:borderWidth=0px|bgColor=transparent}'
+         'status': 'ABORTED',
+         'comment': '{noformat:borderWidth=0px|bgColor=transparent}(\''
+            + str(pytester.path / 'test_add_captures.py')
+            + '\', 11, \'Skipped: Test\')\n'
             '----------------------------- Captured stdout call -----------------------------\n'
             'to stdout\n'
             '----------------------------- Captured stderr call -----------------------------\n'
@@ -420,16 +486,63 @@ def test_add_captures(testdir):
             'WARNING  root:test_add_captures.py:10 to logger{noformat}'}
     ]
 
-    result = testdir.runpytest(
+    result = pytester.runpytest(
         '--jira-xray',
         f'--xraypath={report_file}',
         '--add-captures',
         '-v'
     )
     assert result.ret == pytest.ExitCode.OK
-    result.assert_outcomes(passed=1)
+    result.assert_outcomes(skipped=1)
 
     assert report_file.exists()
     with open(report_file) as file:
         data = json.load(file)
     assert data['tests'] == expected_tests
+
+
+def test_if_user_can_attach_evidences_with_fixture(xray_tests_evidence_fixture):
+    expected_tests = [
+        {'testKey': 'JIRA-1',
+         'status': 'PASS',
+         'evidences': [
+             {'data': 'VGVzdA==',
+              'filename': 'from_conftest.txt',
+              'contentType': 'text/plain'},
+             {'data': 'VGVzdA==',
+              'filename': 'test.txt',
+              'contentType': 'text/plain'},
+             {'data': 'VGVzdA==',
+              'filename': 'test.txt',
+              'contentType': 'text/plain'},
+             {'data': '',
+                 'filename': 'empty.txt',
+                 'contentType': 'text/plain'},
+             {'data': 'VGVzdA==',
+              'filename': 'data.txt',
+              'contentType': 'text/plain'},
+             {'data': 'VGVzdLY=',
+                 'filename': 'data.testing',
+                 'contentType': 'application/prs.testing'},
+             {'data': 'VGVzdA==',
+              'filename': 'data.xyz',
+              'contentType': 'application/octet-stream'},
+         ]},
+        {'testKey': 'JIRA-2',
+         'status': 'PASS',
+         'evidences': [
+             {'data': 'VGVzdA==',
+              'filename': 'from_conftest.txt',
+              'contentType': 'text/plain'},
+             {'data': 'VGVzdA==',
+                 'filename': 'test2.txt',
+                 'contentType': 'text/plain'},
+         ]}
+    ]
+
+    xray_file = xray_tests_evidence_fixture.path / 'xray.json'
+    result = xray_tests_evidence_fixture.runpytest('--jira-xray', '--xraypath', str(xray_file))
+    assert result.ret == 0
+    xray_result = json.load(xray_file.open())
+    assert 'tests' in xray_result
+    assert xray_result['tests'] == expected_tests
