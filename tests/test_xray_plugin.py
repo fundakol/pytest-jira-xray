@@ -53,9 +53,6 @@ def xray_tests_multi_fail(testdir):
 
 @pytest.fixture()
 def xray_tests_evidence_fixture(pytester):
-    """
-    Copyright © 2023 Orange - All rights reserved
-    """
     localfile = Path(pytester.makefile('.txt', test='Test')).name
     abspathfile = pytester.path / localfile
     emptyfile = pytester.makefile('.txt', empty='')

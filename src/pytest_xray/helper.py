@@ -100,7 +100,7 @@ class TestCase:
                 self.comment += ('\n' + '-'*80 + '\n')
                 self.comment += other.comment
 
-        if other.evidences != []:
+        if other.evidences:
             self.evidences += other.evidences
 
         self.status = _merge_status(self.status, other.status)
