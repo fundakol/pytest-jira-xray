@@ -1,8 +1,9 @@
+import base64
 import datetime as dt
 import os
 import re
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Callable, Dict, List, Optional, Union
 
 import pytest
 from _pytest.config import Config, ExitCode
@@ -28,6 +29,9 @@ from pytest_xray.helper import (
     TestCase,
     TestExecution,
 )
+
+
+evidences_sk = pytest.StashKey[list]()
 
 
 class XrayPlugin:
@@ -110,6 +114,9 @@ class XrayPlugin:
         test_keys = self._get_test_keys(item)
         if test_keys and item.nodeid not in report.test_keys:
             report.test_keys[item.nodeid] = test_keys
+        if not hasattr(report, 'evidences'):
+            report.evidences = []
+        report.evidences += item.stash.get(evidences_sk, [])
 
     def pytest_runtest_logreport(self, report: TestReport):
         status = self._get_status_from_report(report)
@@ -200,3 +207,69 @@ class XrayPlugin:
                 terminalreporter.write_sep(
                     '-', f'Uploaded results to JIRA XRAY. Test Execution Id: {self.issue_id}'
                 )
+
+    @pytest.fixture
+    def xray_evidence(self, request) -> Callable:
+        """ Fixture to add an evidence to the Test Run details of a Test.
+        """
+        media_types = {
+            'bin': 'application/octet-stream',
+            'csv': 'text/csv',
+            'gz': 'application/gzip',
+            'html': 'text/html',
+            'json': 'application/json',
+            'jpeg': 'image/jpeg',
+            'jpg': 'image/jpeg',
+            'js': 'text/javascript',
+            'md': 'text/markdown',
+            'pcap': 'application/vnd.tcdump.pcap',
+            'png': 'image/png',
+            'spdx': 'text/spdx',
+            'txt': 'text/plain',
+            'xml': 'text/xml',
+            'yml': 'application/yaml',
+            'yaml': 'application/yaml',
+            'zip': 'application/zip'
+        }
+
+        def wrapper_evidence(path: Union[str, Path],
+                             *, data: Union[str, bytes] = '',
+                             ctype: str = ''
+                             ) -> None:
+            if not isinstance(path, (str, Path)) or path == '':
+                raise XrayError('Missing path to evidence file')
+            evidence_path: Path = Path(path)
+            # Jira wants just a name for the attachment
+            evidence_name = evidence_path.name
+
+            if data == '':
+                try:
+                    with open(evidence_path, 'rb') as f:
+                        data_base64 = base64.b64encode(f.read())
+                except OSError:
+                    raise XrayError(f'Cannot open or read file {evidence_path}')
+            elif isinstance(data, bytes):
+                data_base64 = base64.b64encode(data)
+            else:
+                data_base64 = base64.b64encode(bytes(data, encoding='utf-8'))
+
+            if ctype == '':
+                extension = evidence_path.suffix[1:]
+                if media_types.get(extension) is None:
+                    content_type = 'application/octet-stream'
+                else:
+                    content_type = str(media_types.get(extension))
+            else:
+                content_type = ctype
+
+            new_evidence = {
+                'data': data_base64.decode('utf-8'),
+                'filename': evidence_name,
+                'contentType': content_type
+            }
+
+            if evidences_sk not in request.node.stash:
+                request.node.stash[evidences_sk] = []
+            request.node.stash[evidences_sk].append(new_evidence)
+
+        return wrapper_evidence
