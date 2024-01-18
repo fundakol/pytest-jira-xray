@@ -117,7 +117,7 @@ def test_if_user_can_attach_evidences(xray_tests):
         {'comment': '{noformat:borderWidth=0px|bgColor=transparent}Test{noformat}',
          'evidences': [
              {
-                 'contentType': 'plain/text',
+                 'contentType': 'text/plain',
                  'data': 'ZXZpZGVuY2U=',
                  'filename': 'test.log'
              },
