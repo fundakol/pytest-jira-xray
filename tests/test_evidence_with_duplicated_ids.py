@@ -30,7 +30,7 @@ def test_attach_evidence_for_tests(pytester: pytest.Pytester):
             {
                 'evidences': [
                     {
-                        'contentType': 'plain/text',
+                        'contentType': 'text/plain',
                         'data': 'SU5GTzogdGVzdA==',
                         'filename': 'test.log'
                     }

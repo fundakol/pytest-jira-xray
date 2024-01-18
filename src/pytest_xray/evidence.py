@@ -7,7 +7,7 @@ from pytest_xray.exceptions import XrayError
 # Content Types
 IMAGE_JPEG: str = 'image/jpeg'
 IMAGE_PNG: str = 'image/png'
-PLAIN_TEXT: str = 'plain/text'
+PLAIN_TEXT: str = 'text/plain'
 TEXT_HTML: str = 'text/html'
 APP_JSON: str = 'application/json'
 APP_ZIP: str = 'application/zip'
