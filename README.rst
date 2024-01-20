@@ -75,7 +75,7 @@ Jira Xray configuration can be provided via Environment Variables:
     $ export XRAY_API_USER=<jria username>
     $ export XRAY_API_PASSWORD=<user password>
 
-* Personal Access Token authentication (`--api-key-auth` option)
+* Personal Access Token authentication (``--api-key-auth`` option)
 
 .. code-block:: bash
 
