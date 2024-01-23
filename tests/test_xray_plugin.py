@@ -9,7 +9,7 @@ RESOURCE_DIR: Path = Path(__file__).parent.joinpath('resources')
 
 
 @pytest.fixture()
-def xray_tests(testdir):
+def xray_tests(pytester: pytest.Pytester) -> pytest.Pytester:
     test_example = textwrap.dedent(
         """\
         import pytest
@@ -18,12 +18,12 @@ def xray_tests(testdir):
         def test_pass():
             assert True
         """)  # noqa: W293,W291
-    testdir.makepyfile(test_example)
-    return testdir
+    pytester.makepyfile(test_example)
+    return pytester
 
 
 @pytest.fixture()
-def xray_tests_multi(testdir):
+def xray_tests_multi(pytester: pytest.Pytester) -> pytest.Pytester:
     test_example = textwrap.dedent(
         """\
         import pytest
@@ -32,12 +32,12 @@ def xray_tests_multi(testdir):
         def test_pass():
             assert True
         """)  # noqa: W293,W291
-    testdir.makepyfile(test_example)
-    return testdir
+    pytester.makepyfile(test_example)
+    return pytester
 
 
 @pytest.fixture()
-def xray_tests_multi_fail(testdir):
+def xray_tests_multi_fail(pytester: pytest.Pytester) -> pytest.Pytester:
     test_example = textwrap.dedent(
         """\
         import pytest
@@ -46,8 +46,8 @@ def xray_tests_multi_fail(testdir):
         def test_fail():
             assert 0 == 1
         """)  # noqa: W293,W291
-    testdir.makepyfile(test_example)
-    return testdir
+    pytester.makepyfile(test_example)
+    return pytester
 
 
 def test_help_message(xray_tests):
@@ -77,7 +77,7 @@ def test_help_message(xray_tests):
     ],
     ids=['DC Server', 'Cloud client secret', 'Cloud api key']
 )
-def test_jira_xray_plugin(xray_tests, cli_options):
+def test_jira_xray_plugin(xray_tests, cli_options, http_server, mocked_environ):
     result = xray_tests.runpytest(*cli_options)
     result.assert_outcomes(passed=1)
     result.stdout.fnmatch_lines([
@@ -88,7 +88,7 @@ def test_jira_xray_plugin(xray_tests, cli_options):
 
 
 def test_jira_xray_plugin_exports_to_file(xray_tests):
-    xray_file = xray_tests.tmpdir.join('xray.json')
+    xray_file = xray_tests.path.joinpath('xray.json')
     result = xray_tests.runpytest('--jira-xray', '--xraypath', str(xray_file))
     result.assert_outcomes(passed=1)
     result.stdout.fnmatch_lines([
@@ -100,7 +100,7 @@ def test_jira_xray_plugin_exports_to_file(xray_tests):
 
 
 def test_if_user_can_modify_results_with_hooks(xray_tests):
-    xray_file = xray_tests.tmpdir.join('xray.json')
+    xray_file = xray_tests.path.joinpath('xray.json')
     xray_tests.makeconftest("""
         def pytest_xray_results(results):
             results['info']['user'] = 'Test User'
@@ -160,7 +160,7 @@ def test_if_user_can_attach_evidences(xray_tests):
          'testKey': 'JIRA-1'}
     ]
 
-    xray_file = xray_tests.tmpdir.join('xray.json')
+    xray_file = xray_tests.path.joinpath('xray.json')
     xray_tests.makeconftest(f"""
         import pytest
         from pytest_xray import evidence
@@ -209,8 +209,8 @@ def test_if_user_can_attach_evidences(xray_tests):
     assert xray_result['tests'] == expected_tests
 
 
-def test_jira_xray_plugin_multiple_ids(xray_tests_multi):
-    xray_file = xray_tests_multi.tmpdir.join('xray.json')
+def test_jira_xray_plugin_multiple_ids(xray_tests_multi: pytest.Pytester):
+    xray_file = xray_tests_multi.path / 'xray.json'
     result = xray_tests_multi.runpytest('--jira-xray', '--xraypath', str(xray_file))
     result.assert_outcomes(passed=1)
     result.stdout.fnmatch_lines([
@@ -227,8 +227,8 @@ def test_jira_xray_plugin_multiple_ids(xray_tests_multi):
     assert data['tests'][1]['testKey'] == 'JIRA-2'
 
 
-def test_jira_xray_plugin_multiple_ids_fail(xray_tests_multi_fail):
-    xray_file = xray_tests_multi_fail.tmpdir.join('xray.json')
+def test_jira_xray_plugin_multiple_ids_fail(xray_tests_multi_fail: pytest.Pytester):
+    xray_file = xray_tests_multi_fail.path / 'xray.json'
     result = xray_tests_multi_fail.runpytest(
         '--jira-xray',
         '--xraypath',
@@ -247,8 +247,8 @@ def test_jira_xray_plugin_multiple_ids_fail(xray_tests_multi_fail):
 
 
 @pytest.mark.parametrize('extra_args', ['-n 0', '-n 2'], ids=['no_xdist', 'xdist'])
-def test_xray_with_all_test_types(testdir, extra_args):
-    testdir.makepyfile(textwrap.dedent(
+def test_xray_with_all_test_types(pytester: pytest.Pytester, extra_args):
+    pytester.makepyfile(textwrap.dedent(
         """\
         import pytest
 
@@ -283,9 +283,9 @@ def test_xray_with_all_test_types(testdir, extra_args):
         def test_xpass_status():
             assert True
         """))
-    report_file = testdir.tmpdir / 'xray.json'
+    report_file = pytester.maketxtfile('xray.json')
 
-    result = testdir.runpytest(
+    result = pytester.runpytest(
         '--jira-xray',
         f'--xraypath={report_file}',
         '-v',
@@ -309,8 +309,8 @@ def test_xray_with_all_test_types(testdir, extra_args):
     }
 
 
-def test_if_tests_without_xray_id_are_not_included(testdir):
-    testdir.makepyfile(textwrap.dedent(
+def test_if_tests_without_xray_id_are_not_included(pytester):
+    pytester.makepyfile(textwrap.dedent(
         """\
         import pytest
 
@@ -323,9 +323,9 @@ def test_if_tests_without_xray_id_are_not_included(testdir):
         """)
     )
 
-    report_file = testdir.tmpdir / 'xray.json'
+    report_file = pytester.maketxtfile('xray.json')
 
-    result = testdir.runpytest(
+    result = pytester.runpytest(
         '--jira-xray',
         f'--xraypath={report_file}',
         '-v',
@@ -343,8 +343,8 @@ def test_if_tests_without_xray_id_are_not_included(testdir):
     }
 
 
-def test_duplicated_ids(testdir):
-    testdir.makepyfile(textwrap.dedent(
+def test_duplicated_ids(pytester: pytest.Pytester):
+    pytester.makepyfile(textwrap.dedent(
         """\
         import pytest
 
@@ -358,9 +358,9 @@ def test_duplicated_ids(testdir):
         """)
     )
 
-    report_file = testdir.tmpdir / 'xray.json'
+    report_file = pytester.path / 'xray.json'
 
-    result = testdir.runpytest(
+    result = pytester.runpytest(
         '--jira-xray',
         f'--xraypath={report_file}',
         '-v',
@@ -369,7 +369,7 @@ def test_duplicated_ids(testdir):
     assert result.ret == 3
     assert 'Duplicated test case ids' in str(result.stdout)
 
-    result = testdir.runpytest(
+    result = pytester.runpytest(
         '--jira-xray',
         '--allow-duplicate-ids',
         f'--xraypath={report_file}',
@@ -390,8 +390,8 @@ def test_duplicated_ids(testdir):
     }
 
 
-def test_add_captures(testdir):
-    testdir.makepyfile(textwrap.dedent(
+def test_add_captures(pytester):
+    pytester.makepyfile(textwrap.dedent(
         """\
         import logging
         import sys
@@ -406,7 +406,7 @@ def test_add_captures(testdir):
             assert True
         """)  # noqa: W293,W291
         )
-    report_file = testdir.tmpdir / 'xray.json'
+    report_file = pytester.maketxtfile('xray.json')
 
     expected_tests = [
         {'testKey': 'JIRA-1',
@@ -420,7 +420,7 @@ def test_add_captures(testdir):
             'WARNING  root:test_add_captures.py:10 to logger{noformat}'}
     ]
 
-    result = testdir.runpytest(
+    result = pytester.runpytest(
         '--jira-xray',
         f'--xraypath={report_file}',
         '--add-captures',
