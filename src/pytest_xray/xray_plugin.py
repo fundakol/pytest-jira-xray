@@ -67,12 +67,22 @@ class XrayPlugin:
         if not marker:
             return test_keys
 
+        if len(marker.kwargs) > 0:
+            raise XrayError(
+                'pytest.mark.xray does not accept any keyword arguments, '
+                f'the test {item.nodeid} does not seem to be decorated in proper way.'
+            )
+        if len(marker.args) == 0:
+            raise XrayError(
+                'pytest.mark.xray needs at least one argument, '
+                f'the test {item.nodeid} does not seem to be decorated in proper way.'
+            )
         if isinstance(marker.args[0], str):
-            test_keys = [marker.args[0]]
+            test_keys = marker.args
         elif isinstance(marker.args[0], list):
             test_keys = list(marker.args[0])
         else:
-            raise XrayError('xray marker can only accept strings or lists')
+            raise XrayError(f'xray marker can only accept strings or lists but got {type(marker.args[0])}')
         return test_keys
 
     def _verify_jira_ids_for_items(self, items: List[Item]) -> None:
