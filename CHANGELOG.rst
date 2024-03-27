@@ -1,3 +1,7 @@
+0.8.11 [2024-03-27]
+===================
+- Improved errors handling
+
 0.8.10 [2023-09-08]
 ===================
 - Added default text for mandatory `summary` field if not provided by a user
