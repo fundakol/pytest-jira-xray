@@ -150,6 +150,11 @@ Upload results
 
 * Use with Jira cloud:
 
+The Xray REST API may use two different endpoints: Server+DC or Cloud.
+There is a difference between formats of test results (test status can be ``PASS`` or ``PASSED``),
+so if you want to use this plugin with Xray Cloud endpoint you should run pytest with additional
+argument ``--cloud``. This will generate test results with the format accepted by the Cloud service.
+
 .. code-block:: bash
 
     $ pytest --jira-xray --cloud
