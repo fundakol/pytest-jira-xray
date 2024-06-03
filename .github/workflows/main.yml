@@ -4,6 +4,7 @@ on:
   push:
     branches:
       - master
+      - testing*
   pull_request:
     branches:
       - master
@@ -37,9 +38,9 @@ jobs:
           python: "3.12"
           tox_env: "py312"
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup Python ${{ matrix.python }}
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: ${{ matrix.python }}
       - name: Install packages
@@ -56,6 +57,8 @@ jobs:
       - name: Upload coverage to Codecov
         if: "matrix.use_coverage"
         uses: codecov/codecov-action@v3
+        env:
+          CODECOV_TOKEN: ${{ secrets.CODECOV_TOKEN }}
         with:
           fail_ci_if_error: true
           files: ./coverage.xml
@@ -65,9 +68,9 @@ jobs:
     runs-on: ubuntu-latest
     name: linter
     steps:
-      - uses: actions/checkout@v3
+      - uses: actions/checkout@v4
       - name: Setup Python
-        uses: actions/setup-python@v4
+        uses: actions/setup-python@v5
         with:
           python-version: "3.9"
       - name: Install packages
