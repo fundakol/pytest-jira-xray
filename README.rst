@@ -253,7 +253,7 @@ Tests can be marked with defects, which will be part of the data uploaded to Xra
     def test_with_defects():
         assert True
 
-Note that defects are always present in the data uploaded to Xray, regardless of the test outcome. 
+Note that defects are always present in the data uploaded to Xray, regardless of the test outcome.
 
 Attach test evidences
 +++++++++++++++++++++

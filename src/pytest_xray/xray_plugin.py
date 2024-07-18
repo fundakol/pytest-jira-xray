@@ -86,12 +86,12 @@ class XrayPlugin:
 
         if not marker:
             return []
-        
+
         defects = marker.kwargs.get('defects', [])
 
         if isinstance(defects, list):
             return defects
-        
+
         raise XrayError(f'xray marker can only accept list of defects but got {type(defects)}')
 
     def _verify_jira_ids_for_items(self, items: List[Item]) -> None:
