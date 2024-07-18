@@ -433,3 +433,46 @@ def test_add_captures(testdir):
     with open(report_file) as file:
         data = json.load(file)
     assert data['tests'] == expected_tests
+
+
+def test_defects(testdir):
+    testdir.makepyfile(
+        textwrap.dedent(
+            """\
+        import pytest
+
+        @pytest.mark.xray('JIRA-1', defects=['BUG-1'])
+        def test_single_defect():
+            assert True
+
+        @pytest.mark.xray('JIRA-2', defects=['BUG-2', 'BUG-3'])
+        def test_multiple_defects():
+            assert True
+
+        @pytest.mark.xray('JIRA-3')
+        def test_no_defects():
+            assert True
+        """
+        )
+    )
+
+    report_file = testdir.tmpdir / 'xray.json'
+
+    result = testdir.runpytest(
+        '--jira-xray',
+        f'--xraypath={report_file}',
+        '-v',
+    )
+
+    assert result.ret == 0
+    result.assert_outcomes(passed=3)
+    assert report_file.exists()
+    with open(report_file) as file:
+        data = json.load(file)
+
+    xray_defects = {t['testKey']: t.get('defects') for t in data['tests']}
+    assert xray_defects == {
+        'JIRA-1': ['BUG-1'],
+        'JIRA-2': ['BUG-2', 'BUG-3'],
+        'JIRA-3': None,
+    }

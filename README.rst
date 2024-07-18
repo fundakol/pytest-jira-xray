@@ -72,7 +72,7 @@ Jira Xray configuration can be provided via Environment Variables:
 
 .. code-block:: bash
 
-    $ export XRAY_API_USER=<jria username>
+    $ export XRAY_API_USER=<jira username>
     $ export XRAY_API_PASSWORD=<user password>
 
 * Personal Access Token authentication (``--api-key-auth`` option)
@@ -235,6 +235,25 @@ the following rules:
 - The status will be the intuitive combination of the individual results: if ``test_my_process_1``
   is a ``PASS`` but ``test_my_process_2`` is a ``FAIL``, ``JIRA-1`` will be marked as ``FAIL``.
 
+Defects support
++++++++++++++++
+
+Tests can be marked with defects, which will be part of the data uploaded to Xray:
+
+.. code-block:: python
+
+    # -- FILE: test_example.py
+
+    import pytest
+
+    @pytest.mark.xray(
+        'JIRA-1',
+        defects=['BUG-1', 'BUG-2']
+    )
+    def test_with_defects():
+        assert True
+
+Note that defects are always present in the data uploaded to Xray, regardless of the test outcome. 
 
 Attach test evidences
 +++++++++++++++++++++
