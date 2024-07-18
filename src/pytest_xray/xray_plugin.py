@@ -67,11 +67,6 @@ class XrayPlugin:
         if not marker:
             return test_keys
 
-        if len(marker.kwargs) > 0:
-            raise XrayError(
-                'pytest.mark.xray does not accept any keyword arguments, '
-                f'the test {item.nodeid} does not seem to be decorated in proper way.'
-            )
         if len(marker.args) == 0:
             raise XrayError(
                 'pytest.mark.xray needs at least one argument, '
@@ -84,6 +79,20 @@ class XrayPlugin:
         else:
             raise XrayError(f'xray marker can only accept strings or lists but got {type(marker.args[0])}')
         return test_keys
+
+    def _get_defects(self, item: Item) -> List[str]:
+        """Return JIRA ids for defects associated with test item"""
+        marker = self._get_xray_marker(item)
+
+        if not marker:
+            return []
+
+        defects = marker.kwargs.get('defects', [])
+
+        if isinstance(defects, list):
+            return defects
+
+        raise XrayError(f'xray marker can only accept list of defects but got {type(defects)}')
 
     def _verify_jira_ids_for_items(self, items: List[Item]) -> None:
         """Verify duplicated jira ids."""
@@ -115,11 +124,18 @@ class XrayPlugin:
     def pytest_runtest_makereport(self, item, call):
         outcome = yield
         report = outcome.get_result()
+
         if not hasattr(report, 'test_keys'):
             report.test_keys = {}
         test_keys = self._get_test_keys(item)
         if test_keys and item.nodeid not in report.test_keys:
             report.test_keys[item.nodeid] = test_keys
+
+        if not hasattr(report, 'defects'):
+            report.defects = {}
+        defects = self._get_defects(item)
+        if defects and item.nodeid not in report.defects:
+            report.defects[item.nodeid] = defects
 
     def pytest_runtest_logreport(self, report: TestReport):
         status = self._get_status_from_report(report)
@@ -130,6 +146,7 @@ class XrayPlugin:
         if test_keys is None:
             return
 
+        defects = report.defects.get(report.nodeid)
         evidences = getattr(report, 'evidences', [])
 
         comment = report.longreprtext
@@ -151,7 +168,8 @@ class XrayPlugin:
                 status=status,
                 comment=comment,
                 status_str_mapper=self.status_str_mapper,
-                evidences=evidences
+                evidences=evidences,
+                defects=defects,
             )
             try:
                 test_case = self.test_execution.find_test_case(test_key)

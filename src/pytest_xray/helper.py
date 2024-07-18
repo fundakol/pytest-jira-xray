@@ -70,13 +70,15 @@ class TestCase:
         status: Status,
         comment: Optional[str] = None,
         status_str_mapper: Optional[Dict[Status, str]] = None,
-        evidences: Optional[List[Dict[str, str]]] = None
+        evidences: Optional[List[Dict[str, str]]] = None,
+        defects: Optional[List[str]] = None,
     ) -> None:
         self.test_key = test_key
         self.status = status
         self.comment = comment or ''
         self.status_str_mapper = status_str_mapper or STATUS_STR_MAPPER_JIRA
         self.evidences = evidences or []
+        self.defects = defects or []
 
     def merge(self, other: 'TestCase') -> None:
         """
@@ -102,6 +104,10 @@ class TestCase:
 
         self.status = _merge_status(self.status, other.status)
 
+        for defect in other.defects:
+            if defect not in self.defects:
+                self.defects.append(defect)
+
     def as_dict(self) -> Dict[str, Any]:
         data: Dict[str, Any] = dict(
             testKey=self.test_key,
@@ -111,6 +117,8 @@ class TestCase:
             data['comment'] = '{noformat:borderWidth=0px|bgColor=transparent}' + self.comment + '{noformat}'
         if self.evidences:
             data['evidences'] = self.evidences
+        if self.defects:
+            data['defects'] = self.defects
         return data
 
 
