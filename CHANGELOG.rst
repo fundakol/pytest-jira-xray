@@ -1,3 +1,7 @@
+0.9.0 [2024-07-19]
+===================
+- Add support for marking tests with defects
+
 0.8.11 [2024-03-27]
 ===================
 - Improved errors handling
