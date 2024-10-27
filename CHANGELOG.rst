@@ -1,6 +1,10 @@
+0.9.1 [2024-10-27]
+===================
+- Improved error handling in Jira response
+
 0.9.0 [2024-07-19]
 ===================
-- Add support for marking tests with defects
+- Added support for marking tests with defects
 
 0.8.11 [2024-03-27]
 ===================
