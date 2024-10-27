@@ -1,6 +1,7 @@
 import json
 import textwrap
 from pathlib import Path
+from unittest import mock
 
 import pytest
 
@@ -476,3 +477,15 @@ def test_defects(testdir):
         'JIRA-2': ['BUG-2', 'BUG-3'],
         'JIRA-3': None,
     }
+
+
+def test_jira_xray_plugin_gets_unexpected_response(xray_tests):
+    response = {'dummy': 'data'}
+    with mock.patch('pytest_xray.xray_publisher.XrayPublisher._send_data', return_value=response):
+        result = xray_tests.runpytest('--jira-xray', '--log-level=DEBUG', '-o', 'log_cli=1')
+    result.assert_outcomes(passed=1)
+    result.stdout.fnmatch_lines([
+        '*Cannot read Test Execution ID from server response*',
+        '*Server response can be found in log file*',
+    ])
+    assert result.ret == 0
