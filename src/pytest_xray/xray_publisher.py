@@ -1,6 +1,8 @@
 import json
 import logging
-from typing import Callable, Optional, Tuple, Union
+import os
+import tempfile
+from typing import Any, Callable, Dict, Optional, Tuple, Union
 
 import requests
 from requests import PreparedRequest
@@ -97,7 +99,7 @@ class XrayPublisher:
         """Return full URL to the server."""
         return self.base_url + self.endpoint
 
-    def _send_data(self, url: str, auth: AuthType, data: dict) -> dict:
+    def _send_data(self, url: str, auth: AuthType, data: Dict[str, Any]) -> Dict[str, Any]:
         headers = {
             'Accept': 'application/json',
             'Content-Type': 'application/json'
@@ -125,7 +127,7 @@ class XrayPublisher:
                 raise XrayError(err_message) from exc
             return response.json()
 
-    def publish(self, data: dict) -> str:
+    def publish(self, data: Dict[str, Any]) -> str:
         """
         Publish results to Jira and return testExecutionId or raise XrayError.
 
@@ -134,5 +136,16 @@ class XrayPublisher:
         """
         response_data = self._send_data(self.endpoint_url, self.auth, data)
         # The Xray cloud response does not include the 'testExecIssue' attribute
-        key = response_data['testExecIssue']['key'] if 'testExecIssue' in response_data else response_data['key']
+        try:
+            key = response_data['testExecIssue']['key'] if 'testExecIssue' in response_data else response_data['key']
+        except KeyError:
+            _logger.error('Cannot read Test Execution ID from server response')
+            _logger.debug('Response from server:\n%s', response_data)
+            log_file = os.path.join(tempfile.gettempdir(), 'jira-xray-response.json')
+            with open(log_file, 'w') as file:
+                json.dump(response_data, file, indent=4)
+            raise XrayError(
+                'Cannot read Test Execution ID from server response. '
+                f'Server response can be found in log file: {log_file}'
+            )
         return key
