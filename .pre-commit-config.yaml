@@ -1,35 +1,35 @@
 repos:
   - repo: https://github.com/PYCQA/isort
-    rev: 5.12.0
+    rev: 5.13.2
     hooks:
       - id: isort
         files: ^(src/|tests/)
-        stages: [ commit ]
+        stages: [ pre-commit ]
         args: ["--profile", "pycharm", "--filter-files", "--line-length=99"]
 
   - repo: https://github.com/pre-commit/mirrors-autopep8
-    rev: v2.0.2
+    rev: v2.0.4
     hooks:
       - id: autopep8
         files: ^(src/|tests/)
 
   - repo: https://github.com/PYCQA/flake8
-    rev: 6.0.0
+    rev: 7.1.1
     hooks:
       - id: flake8
         files: ^(src/|tests/)
-        stages: [ commit ]
+        stages: [ pre-commit ]
 
   - repo: https://github.com/pre-commit/mirrors-mypy
-    rev: v1.3.0
+    rev: v1.13.0
     hooks:
       - id: mypy
         files: ^(src/|tests/)
-        stages: [ commit ]
+        stages: [ pre-commit ]
         additional_dependencies: [types-requests]
 
   - repo: https://github.com/pre-commit/pre-commit-hooks
-    rev: v4.4.0
+    rev: v5.0.0
     hooks:
       - id: requirements-txt-fixer
       - id: double-quote-string-fixer
