@@ -4,6 +4,7 @@ from pathlib import Path
 from unittest import mock
 
 import pytest
+import requests
 
 
 RESOURCE_DIR: Path = Path(__file__).parent.joinpath('resources')
@@ -487,5 +488,27 @@ def test_jira_xray_plugin_gets_unexpected_response(xray_tests):
     result.stdout.fnmatch_lines([
         '*Cannot read Test Execution ID from server response*',
         '*Server response can be found in log file*',
+    ])
+    assert result.ret == 0
+
+
+def test_jira_xray_plugin_authentication_issue(xray_tests):
+    with mock.patch('requests.post', side_effect=requests.exceptions.ConnectionError):
+        result = xray_tests.runpytest('--jira-xray', '--client-secret-auth')
+    result.assert_outcomes(passed=1)
+    result.stdout.fnmatch_lines([
+        '*Could not publish results to Jira XRAY!*',
+        '*ConnectionError: cannot authenticate with http://127.0.0.1:5002/api/v2/authenticate*',
+    ])
+    assert result.ret == 0
+
+
+def test_jira_xray_plugin_connection_error(xray_tests):
+    with mock.patch('requests.request', side_effect=requests.exceptions.ConnectionError):
+        result = xray_tests.runpytest('--jira-xray', '--client-secret-auth')
+    result.assert_outcomes(passed=1)
+    result.stdout.fnmatch_lines([
+        '*Could not publish results to Jira XRAY!*',
+        '*ConnectionError: cannot connect to JIRA service at http://127.0.0.1:5002/rest/raven/2.0/import/execution*',
     ])
     assert result.ret == 0
