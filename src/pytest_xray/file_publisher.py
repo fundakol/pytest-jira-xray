@@ -27,6 +27,6 @@ class FilePublisher:
                 json.dump(data, file, indent=2)
         except TypeError as exc:
             logger.exception(exc)
-            raise XrayError(f'Cannot save data to file: {self.filepath}') from exc
+            raise XrayError(f'Cannot export Xray results to file: {exc}') from exc
         else:
             return f'{self.filepath}'

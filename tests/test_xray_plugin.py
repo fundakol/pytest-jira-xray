@@ -11,7 +11,7 @@ RESOURCE_DIR: Path = Path(__file__).parent.joinpath('resources')
 
 
 @pytest.fixture()
-def xray_tests(testdir):
+def xray_tests(testdir) -> pytest.Testdir:
     test_example = textwrap.dedent(
         """\
         import pytest
@@ -25,7 +25,7 @@ def xray_tests(testdir):
 
 
 @pytest.fixture()
-def xray_tests_multi(testdir):
+def xray_tests_multi(testdir) -> pytest.Testdir:
     test_example = textwrap.dedent(
         """\
         import pytest
@@ -39,7 +39,7 @@ def xray_tests_multi(testdir):
 
 
 @pytest.fixture()
-def xray_tests_multi_fail(testdir):
+def xray_tests_multi_fail(testdir) -> pytest.Testdir:
     test_example = textwrap.dedent(
         """\
         import pytest
@@ -517,7 +517,7 @@ def test_jira_xray_plugin_connection_error(xray_tests):
 def test_jira_xray_plugin_http_error(xray_tests):
     response = mock.Mock(spec=requests.Response)
     response.status_code = 404
-    response.json = mock.Mock(return_value={})
+    response.json = mock.Mock(return_value={'error': 'Not Found for url'})
     response.raise_for_status.side_effect = requests.exceptions.HTTPError
     with mock.patch('requests.request', return_value=response):
         result = xray_tests.runpytest('--jira-xray')
@@ -525,5 +525,19 @@ def test_jira_xray_plugin_http_error(xray_tests):
     result.stdout.fnmatch_lines([
         '*Could not publish results to Jira XRAY!*',
         '*HTTPError: Could not post to JIRA service at http://127.0.0.1:5002/rest/raven/2.0/import/execution*',
+        '*Error message from server: Not Found for url*'
     ])
     assert result.ret == 0
+
+
+def test_export_to_file_when_cannot_serialize_report(xray_tests):
+    xray_tests.makeconftest(textwrap.dedent("""
+        def pytest_xray_results(results, session):
+            results['info']['revision'] = object()
+    """))
+    report_file = xray_tests.tmpdir / 'jira.json'
+    result = xray_tests.runpytest('--jira-xray', f'--xraypath={report_file}')
+    assert result.ret == 0
+    result.stdout.fnmatch_lines([
+        'Cannot export Xray results to file: Object of type object is not JSON serializable'
+    ])
