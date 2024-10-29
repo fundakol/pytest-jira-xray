@@ -512,3 +512,18 @@ def test_jira_xray_plugin_connection_error(xray_tests):
         '*ConnectionError: cannot connect to JIRA service at http://127.0.0.1:5002/rest/raven/2.0/import/execution*',
     ])
     assert result.ret == 0
+
+
+def test_jira_xray_plugin_http_error(xray_tests):
+    response = mock.Mock(spec=requests.Response)
+    response.status_code = 404
+    response.json = mock.Mock(return_value={})
+    response.raise_for_status.side_effect = requests.exceptions.HTTPError
+    with mock.patch('requests.request', return_value=response):
+        result = xray_tests.runpytest('--jira-xray')
+    result.assert_outcomes(passed=1)
+    result.stdout.fnmatch_lines([
+        '*Could not publish results to Jira XRAY!*',
+        '*HTTPError: Could not post to JIRA service at http://127.0.0.1:5002/rest/raven/2.0/import/execution*',
+    ])
+    assert result.ret == 0
