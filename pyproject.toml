@@ -13,13 +13,11 @@ authors = [
 ]
 description = "pytest plugin to integrate tests with JIRA XRAY"
 readme = "README.rst"
-requires-python = ">=3.7"
+requires-python = ">=3.9"
 keywords = ["pytest, JIRA, XRAY"]
 classifiers = [
     "Development Status :: 4 - Beta",
     "Programming Language :: Python :: 3",
-    "Programming Language :: Python :: 3.7",
-    "Programming Language :: Python :: 3.8",
     "Programming Language :: Python :: 3.9",
     "Programming Language :: Python :: 3.10",
     "Programming Language :: Python :: 3.11",
@@ -45,7 +43,7 @@ xray = "pytest_xray.plugin"
 [tool.black]
 line-length = 120
 skip-string-normalization = true
-target-version = ['py37']
+target-version = ['py13']
 
 [tool.isort]
 profile = "black"
