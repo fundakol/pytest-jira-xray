@@ -1,3 +1,4 @@
+import contextlib
 import json
 import logging
 import os
@@ -120,10 +121,11 @@ class XrayPublisher:
                 err_message = (f'HTTPError: Could not post to JIRA service at {url}. '
                                f'Response status code: {response.status_code}')
                 _logger.exception(err_message)
-                if 'error' in response.json():
-                    server_return_error = f"Error message from server: {response.json()['error']}"
-                    err_message += '\n' + server_return_error
-                    _logger.error(server_return_error)
+                with contextlib.suppress(requests.exceptions.JSONDecodeError):
+                    if 'error' in response.json():
+                        server_return_error = f"Error message from server: {response.json()['error']}"
+                        err_message += '\n' + server_return_error
+                        _logger.error(server_return_error)
                 raise XrayError(err_message) from exc
             return response.json()
 
