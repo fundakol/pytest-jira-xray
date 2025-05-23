@@ -79,7 +79,7 @@ def test_help_message(xray_tests):
     ],
     ids=['DC Server', 'Cloud client secret', 'Cloud api key']
 )
-def test_jira_xray_plugin(xray_tests, cli_options):
+def test_jira_xray_plugin(fake_xray_server, xray_tests, cli_options):
     result = xray_tests.runpytest(*cli_options)
     result.assert_outcomes(passed=1)
     result.stdout.fnmatch_lines([
@@ -89,7 +89,7 @@ def test_jira_xray_plugin(xray_tests, cli_options):
     assert not result.errlines
 
 
-def test_jira_xray_plugin_exports_to_file(xray_tests):
+def test_jira_xray_plugin_exports_to_file(fake_xray_server, xray_tests):
     xray_file = xray_tests.tmpdir.join('xray.json')
     result = xray_tests.runpytest('--jira-xray', '--xraypath', str(xray_file))
     result.assert_outcomes(passed=1)
@@ -99,6 +99,21 @@ def test_jira_xray_plugin_exports_to_file(xray_tests):
     assert result.ret == 0
     assert not result.errlines
     assert xray_file.exists()
+
+
+def test_jira_xray_plugin_handles_http_error_504(xray_tests, pytester, httpserver, environment_variables):
+    httpserver.expect_request('/rest/raven/2.0/import/execution').respond_with_data(
+        'Gateway Timeout', status=504
+    )
+
+    result = pytester.runpytest('--jira-xray')
+    result.assert_outcomes(passed=1)
+    result.stdout.fnmatch_lines([
+        '*Could not publish results to Jira XRAY!*',
+        '*Could not post to JIRA service at*Response status code: 504*',
+    ])
+    assert result.ret == 0
+    assert not result.errlines
 
 
 def test_if_user_can_modify_results_with_hooks(xray_tests):
@@ -480,7 +495,7 @@ def test_defects(testdir):
     }
 
 
-def test_jira_xray_plugin_gets_unexpected_response(xray_tests):
+def test_jira_xray_plugin_gets_unexpected_response(xray_tests, fake_xray_server):
     response = {'dummy': 'data'}
     with mock.patch('pytest_xray.xray_publisher.XrayPublisher._send_data', return_value=response):
         result = xray_tests.runpytest('--jira-xray', '--log-level=DEBUG', '-o', 'log_cli=1')
@@ -492,7 +507,7 @@ def test_jira_xray_plugin_gets_unexpected_response(xray_tests):
     assert result.ret == 0
 
 
-def test_jira_xray_plugin_authentication_issue(xray_tests):
+def test_jira_xray_plugin_authentication_issue(xray_tests, environment_variables):
     with mock.patch('requests.post', side_effect=requests.exceptions.ConnectionError):
         result = xray_tests.runpytest('--jira-xray', '--client-secret-auth')
     result.assert_outcomes(passed=1)
@@ -503,7 +518,7 @@ def test_jira_xray_plugin_authentication_issue(xray_tests):
     assert result.ret == 0
 
 
-def test_jira_xray_plugin_connection_error(xray_tests):
+def test_jira_xray_plugin_connection_error(xray_tests, environment_variables):
     with mock.patch('requests.request', side_effect=requests.exceptions.ConnectionError):
         result = xray_tests.runpytest('--jira-xray', '--client-secret-auth')
     result.assert_outcomes(passed=1)
@@ -514,7 +529,7 @@ def test_jira_xray_plugin_connection_error(xray_tests):
     assert result.ret == 0
 
 
-def test_jira_xray_plugin_http_error(xray_tests):
+def test_jira_xray_plugin_http_error(xray_tests, fake_xray_server):
     response = mock.Mock(spec=requests.Response)
     response.status_code = 404
     response.json = mock.Mock(return_value={'error': 'Not Found for url'})
