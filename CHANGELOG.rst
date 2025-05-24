@@ -1,9 +1,14 @@
+0.9.2 [2025-05-24]
+==================
+- Fixed handling 504 http error from server
+- Removed support for Python 3.7 and 3.8
+
 0.9.1 [2024-10-27]
-===================
+==================
 - Improved error handling in Jira response
 
 0.9.0 [2024-07-19]
-===================
+==================
 - Added support for marking tests with defects
 
 0.8.11 [2024-03-27]
