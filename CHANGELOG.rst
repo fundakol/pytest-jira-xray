@@ -1,3 +1,7 @@
+0.9.3 [2025-10-11]
+==================
+- Fixed XRAY report for uploading to existing test execution
+
 0.9.2 [2025-05-24]
 ==================
 - Fixed handling 504 http error from server
