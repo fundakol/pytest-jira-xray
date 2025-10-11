@@ -62,6 +62,7 @@ STATUS_STR_MAPPER_JIRA: Dict[Status, str] = {x: x.value for x in Status}
 
 
 class TestCase:
+    __test__ = False
 
     def __init__(
         self,
@@ -122,6 +123,7 @@ class TestCase:
 
 
 class TestExecution:
+    __test__ = False
 
     def __init__(
         self,
