@@ -5,7 +5,7 @@ repos:
       - id: isort
         files: ^(src/|tests/)
         stages: [pre-commit]
-        args: ["--profile", "pycharm", "--filter-files", "--line-length=99"]
+        args: ["--profile", "black", "--filter-files", "--line-length=88"]
 
   - repo: https://github.com/hhatto/autopep8
     rev: v2.3.2
