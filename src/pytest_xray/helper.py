@@ -137,7 +137,7 @@ class TestExecution:
         description: Optional[str] = None,
     ):
         self.test_execution_key = test_execution_key
-        self.test_plan_key = test_plan_key or ''
+        self.test_plan_key: str = test_plan_key or ''
         self.user = user or ''
         self.revision = revision or _from_environ_or_none(constant.ENV_TEST_EXECUTION_REVISION)
         self.start_date = dt.datetime.now(tz=dt.timezone.utc)
@@ -148,12 +148,17 @@ class TestExecution:
             constant.ENV_MULTI_VALUE_SPLIT_PATTERN
         )
         self.fix_version = fix_version or _first_from_environ(constant.ENV_TEST_EXECUTION_FIX_VERSION)
-        self.summary = (
-            summary
-            or _from_environ_or_none(constant.ENV_TEST_EXECUTION_SUMMARY)
-            or DEFAULT_SUMMARY_DESCRIPTION
-        )
+        self.summary = self._get_summery(summary)
         self.description = description or _from_environ_or_none(constant.ENV_TEST_EXECUTION_DESC)
+
+    def _get_summery(self, summary: Union[str, None]) -> Union[str, None]:
+        summary = summary or _from_environ_or_none(constant.ENV_TEST_EXECUTION_SUMMARY)
+        if summary is not None:
+            return summary
+        # do not set `summary` if uploading to existing test execution
+        if self.test_execution_key is None:
+            return DEFAULT_SUMMARY_DESCRIPTION
+        return None
 
     def append(self, test: Union[dict, TestCase]) -> None:
         if not isinstance(test, TestCase):
@@ -187,13 +192,13 @@ class TestExecution:
         if self.test_environments and len(self.test_environments) > 0:
             info['testEnvironments'] = self.test_environments
 
-        if self.summary:
+        if self.summary is not None:
             info['summary'] = self.summary
 
-        if self.description:
+        if self.description is not None:
             info['description'] = self.description
 
-        if self.revision:
+        if self.revision is not None:
             info['revision'] = self.revision
 
         data: Dict[str, Any] = dict(
@@ -202,7 +207,7 @@ class TestExecution:
         )
         if self.test_plan_key:
             info['testPlanKey'] = self.test_plan_key
-        if self.test_execution_key:
+        if self.test_execution_key is not None:
             data['testExecutionKey'] = self.test_execution_key
         return data
 

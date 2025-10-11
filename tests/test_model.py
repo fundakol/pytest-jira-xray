@@ -86,7 +86,6 @@ def test_test_execution_output_dictionary_with_test_execution_id(testcase, date_
                 'finishDate': '2021-04-23T16:30:02+0000',
                 'startDate': '2021-04-23T16:30:02+0000',
                 'testPlanKey': 'Jira-10',
-                'summary': 'Execution of automated tests'
             },
             'tests': [
                 {
@@ -152,7 +151,6 @@ def test_test_execution_environ_model(testcase, date_time_now):
                 'startDate': '2021-04-23T16:30:02+0000',
                 'testPlanKey': 'Jira-10',
                 'version': '1.1',
-                'summary': 'Execution of automated tests',
                 'testEnvironments': [
                     'MyLocalLaptop',
                     'And',
