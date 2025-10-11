@@ -3,7 +3,6 @@ import textwrap
 
 import pytest
 
-
 CONFTEST_CONTENT: str = textwrap.dedent("""
     from pytest_xray import evidence
     import pytest

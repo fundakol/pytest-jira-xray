@@ -18,7 +18,6 @@ from pytest_xray.constant import (
 )
 from pytest_xray.exceptions import XrayError
 
-
 DEFAULT_SUMMARY_DESCRIPTION: str = 'Execution of automated tests'
 
 

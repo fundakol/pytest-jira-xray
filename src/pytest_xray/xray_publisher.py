@@ -12,7 +12,6 @@ from requests.auth import AuthBase
 from pytest_xray.constant import AUTHENTICATE_ENDPOINT
 from pytest_xray.exceptions import XrayError
 
-
 AuthType = Optional[Union[Tuple[str, str], AuthBase, Callable[[PreparedRequest], PreparedRequest]]]
 
 

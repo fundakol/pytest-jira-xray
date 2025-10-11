@@ -7,7 +7,6 @@ from pytest_xray.constant import (
     TEST_EXECUTION_ENDPOINT_CLOUD,
 )
 
-
 pytest_plugins = ['pytester']
 
 

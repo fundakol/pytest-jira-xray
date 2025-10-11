@@ -6,7 +6,6 @@ from unittest import mock
 import pytest
 import requests
 
-
 RESOURCE_DIR: Path = Path(__file__).parent.joinpath('resources')
 
 

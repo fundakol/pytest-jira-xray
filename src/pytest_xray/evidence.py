@@ -3,7 +3,6 @@ from typing import AnyStr, Dict
 
 from pytest_xray.exceptions import XrayError
 
-
 # Content Types
 IMAGE_JPEG: str = 'image/jpeg'
 IMAGE_PNG: str = 'image/png'
