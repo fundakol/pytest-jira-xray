@@ -1,25 +1,10 @@
 repos:
-  - repo: https://github.com/PYCQA/isort
-    rev: 6.1.0
+  - repo: https://github.com/astral-sh/ruff-pre-commit
+    rev: "v0.13.3"
     hooks:
-      - id: isort
-        files: ^(src/|tests/)
-        stages: [pre-commit]
-        args: ["--profile", "black", "--filter-files", "--line-length=88"]
-
-  - repo: https://github.com/hhatto/autopep8
-    rev: v2.3.2
-    hooks:
-      - id: autopep8
-        files: ^(src/|tests/)
-        stages: [pre-commit]
-
-  - repo: https://github.com/PYCQA/flake8
-    rev: 7.3.0
-    hooks:
-      - id: flake8
-        files: ^(src/|tests/)
-        stages: [pre-commit]
+      - id: ruff-check
+        args: ["--fix"]
+      - id: ruff-format
 
   - repo: https://github.com/pre-commit/mirrors-mypy
     rev: v1.18.2

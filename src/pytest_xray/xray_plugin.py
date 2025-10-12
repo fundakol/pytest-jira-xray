@@ -2,7 +2,7 @@ import datetime as dt
 import os
 import re
 from pathlib import Path
-from typing import Dict, List, Optional, Union
+from typing import Optional, Union
 
 import pytest
 from _pytest.config import Config, ExitCode
@@ -46,10 +46,9 @@ class XrayPlugin:
         self.issue_id: Union[str, None] = None  # issue id returned by XRAY server
         self.exception: Union[Exception, None] = None  # keeps an exception if raised by XrayPublisher
         self.test_execution: TestExecution = TestExecution(
-            test_execution_key=self.test_execution_id,
-            test_plan_key=self.test_plan_id
+            test_execution_key=self.test_execution_id, test_plan_key=self.test_plan_id
         )
-        self.status_str_mapper: Dict[Status, str] = STATUS_STR_MAPPER_JIRA
+        self.status_str_mapper: dict[Status, str] = STATUS_STR_MAPPER_JIRA
         if self.is_cloud_server:
             self.status_str_mapper = STATUS_STR_MAPPER_CLOUD
 
@@ -59,9 +58,9 @@ class XrayPlugin:
         logfile = os.path.normpath(os.path.abspath(logfile))
         return logfile
 
-    def _get_test_keys(self, item: Item) -> List[str]:
+    def _get_test_keys(self, item: Item) -> list[str]:
         """Return JIRA ids associated with test item"""
-        test_keys: List[str] = []
+        test_keys: list[str] = []
         marker = self._get_xray_marker(item)
 
         if not marker:
@@ -80,7 +79,7 @@ class XrayPlugin:
             raise XrayError(f'xray marker can only accept strings or lists but got {type(marker.args[0])}')
         return test_keys
 
-    def _get_defects(self, item: Item) -> List[str]:
+    def _get_defects(self, item: Item) -> list[str]:
         """Return JIRA ids for defects associated with test item"""
         marker = self._get_xray_marker(item)
 
@@ -94,10 +93,10 @@ class XrayPlugin:
 
         raise XrayError(f'xray marker can only accept list of defects but got {type(defects)}')
 
-    def _verify_jira_ids_for_items(self, items: List[Item]) -> None:
+    def _verify_jira_ids_for_items(self, items: list[Item]) -> None:
         """Verify duplicated jira ids."""
-        jira_ids: List[str] = []
-        duplicated_jira_ids: List[str] = []
+        jira_ids: list[str] = []
+        duplicated_jira_ids: list[str] = []
 
         for item in items:
             test_keys = self._get_test_keys(item)
@@ -154,13 +153,13 @@ class XrayPlugin:
             if comment != '':
                 comment += '\n'
             if report.capstdout:
-                comment += f"{'-'*29} Captured stdout call {'-'*29}\n{report.capstdout}"
+                comment += f'{"-" * 29} Captured stdout call {"-" * 29}\n{report.capstdout}'
             if report.capstderr:
-                comment += f"{'-'*29} Captured stderr call {'-'*29}\n{report.capstderr}"
+                comment += f'{"-" * 29} Captured stderr call {"-" * 29}\n{report.capstderr}'
             if report.caplog:
                 # Remove the ncurses escape chars used to color log level
                 logt = re.subn('\x1b.*?m', '', report.caplog)
-                comment += f"{'-'*30} Captured log call {'-'*31}\n{logt[0]}"
+                comment += f'{"-" * 30} Captured log call {"-" * 31}\n{logt[0]}'
 
         for test_key in test_keys:
             new_test_case = TestCase(
@@ -194,7 +193,7 @@ class XrayPlugin:
 
         return None
 
-    def pytest_collection_modifyitems(self, config: Config, items: List[Item]) -> None:
+    def pytest_collection_modifyitems(self, config: Config, items: list[Item]) -> None:
         self._verify_jira_ids_for_items(items)
 
     def pytest_sessionfinish(self, session: pytest.Session) -> None:
@@ -202,17 +201,13 @@ class XrayPlugin:
             return
         self.test_execution.finish_date = dt.datetime.now(tz=dt.timezone.utc)
         results = self.test_execution.as_dict()
-        session.config.pluginmanager.hook.pytest_xray_results(
-            results=results, session=session
-        )
+        session.config.pluginmanager.hook.pytest_xray_results(results=results, session=session)
         try:
             self.issue_id = self.publisher.publish(results)
         except XrayError as exc:
             self.exception = exc
 
-    def pytest_terminal_summary(
-        self, terminalreporter: TerminalReporter, exitstatus: ExitCode, config: Config
-    ) -> None:
+    def pytest_terminal_summary(self, terminalreporter: TerminalReporter, exitstatus: ExitCode, config: Config) -> None:
         if self.exception:
             terminalreporter.ensure_newline()
             terminalreporter.section('Jira XRAY', sep='-', red=True, bold=True)
@@ -225,6 +220,4 @@ class XrayPlugin:
                     '-', f'Generated XRAY execution report file: {Path(self.logfile).absolute()}'
                 )
             elif self.issue_id:
-                terminalreporter.write_sep(
-                    '-', f'Uploaded results to JIRA XRAY. Test Execution Id: {self.issue_id}'
-                )
+                terminalreporter.write_sep('-', f'Uploaded results to JIRA XRAY. Test Execution Id: {self.issue_id}')

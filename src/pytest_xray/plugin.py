@@ -1,4 +1,4 @@
-from typing import Tuple, Union
+from typing import Union
 
 from _pytest.config import Config
 from _pytest.config.argparsing import Parser
@@ -27,18 +27,8 @@ from pytest_xray.xray_publisher import ApiKeyAuth, ClientSecretAuth, XrayPublish
 
 def pytest_addoption(parser: Parser):
     xray = parser.getgroup('Jira Xray report')
-    xray.addoption(
-        JIRA_XRAY_FLAG,
-        action='store_true',
-        default=False,
-        help='Upload test results to JIRA XRAY'
-    )
-    xray.addoption(
-        JIRA_CLOUD,
-        action='store_true',
-        default=False,
-        help='Use with JIRA XRAY cloud server'
-    )
+    xray.addoption(JIRA_XRAY_FLAG, action='store_true', default=False, help='Upload test results to JIRA XRAY')
+    xray.addoption(JIRA_CLOUD, action='store_true', default=False, help='Use with JIRA XRAY cloud server')
     xray.addoption(
         JIRA_API_KEY,
         action='store_true',
@@ -52,37 +42,27 @@ def pytest_addoption(parser: Parser):
         help='Use client secret authentication',
     )
     xray.addoption(
-        XRAY_EXECUTION_ID,
-        action='store',
-        metavar='ExecutionId',
-        default=None,
-        help='XRAY Test Execution ID'
+        XRAY_EXECUTION_ID, action='store', metavar='ExecutionId', default=None, help='XRAY Test Execution ID'
     )
-    xray.addoption(
-        XRAY_TEST_PLAN_ID,
-        action='store',
-        metavar='TestplanId',
-        default=None,
-        help='XRAY Test Plan ID'
-    )
+    xray.addoption(XRAY_TEST_PLAN_ID, action='store', metavar='TestplanId', default=None, help='XRAY Test Plan ID')
     xray.addoption(
         XRAYPATH,
         action='store',
         metavar='path',
         default=None,
-        help='Do not upload to a server but create JSON report file at given path'
+        help='Do not upload to a server but create JSON report file at given path',
     )
     xray.addoption(
         XRAY_ALLOW_DUPLICATE_IDS,
         action='store_true',
         default=False,
-        help='Allow test ids to be present on multiple pytest tests'
+        help='Allow test ids to be present on multiple pytest tests',
     )
     xray.addoption(
         XRAY_ADD_CAPTURES,
         action='store_true',
         default=False,
-        help='Add captures from log, stdout or/and stderr, to the report comment field'
+        help='Add captures from log, stdout or/and stderr, to the report comment field',
     )
 
 
@@ -91,9 +71,7 @@ def pytest_addhooks(pluginmanager):
 
 
 def pytest_configure(config: Config) -> None:
-    config.addinivalue_line(
-        'markers', 'xray(JIRA_ID): mark test with JIRA XRAY test case ID'
-    )
+    config.addinivalue_line('markers', 'xray(JIRA_ID): mark test with JIRA XRAY test case ID')
     if config.option.collectonly:
         return
 
@@ -112,11 +90,8 @@ def pytest_configure(config: Config) -> None:
 
         if config.getoption(JIRA_CLIENT_SECRET_AUTH):
             options = get_bearer_auth()
-            auth: Union[AuthBase, Tuple[str, str]] = ClientSecretAuth(
-                options['BASE_URL'],
-                options['CLIENT_ID'],
-                options['CLIENT_SECRET'],
-                options['VERIFY']
+            auth: Union[AuthBase, tuple[str, str]] = ClientSecretAuth(
+                options['BASE_URL'], options['CLIENT_ID'], options['CLIENT_SECRET'], options['VERIFY']
             )
         elif config.getoption(JIRA_API_KEY):
             options = get_api_key_auth()
@@ -126,10 +101,7 @@ def pytest_configure(config: Config) -> None:
             auth = (options['USER'], options['PASSWORD'])
 
         publisher = XrayPublisher(  # type: ignore
-            base_url=options['BASE_URL'],
-            endpoint=endpoint,
-            auth=auth,
-            verify=options['VERIFY']
+            base_url=options['BASE_URL'], endpoint=endpoint, auth=auth, verify=options['VERIFY']
         )
 
     plugin = XrayPlugin(config, publisher)

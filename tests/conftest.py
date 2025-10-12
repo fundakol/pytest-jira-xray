@@ -30,7 +30,8 @@ def httpserver_listen_address():
 def fake_xray_server(httpserver: HTTPServer, environment_variables):
     """Create fake Jira XRAY server."""
     httpserver.expect_request(TEST_EXECUTION_ENDPOINT, method='POST').respond_with_json(
-        {'testExecIssue': {'key': '1000'}})
+        {'testExecIssue': {'key': '1000'}}
+    )
     # cloud server
     httpserver.expect_request(TEST_EXECUTION_ENDPOINT_CLOUD, method='POST').respond_with_json({'key': '1000'})
     httpserver.expect_request(AUTHENTICATE_ENDPOINT, 'POST').respond_with_data('dummy_token')

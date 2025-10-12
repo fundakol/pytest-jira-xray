@@ -3,7 +3,7 @@ import enum
 import os
 import re
 from os import environ
-from typing import Any, Dict, List, Optional, Union
+from typing import Any, Optional, Union
 
 from pytest_xray import constant
 from pytest_xray.constant import (
@@ -35,7 +35,7 @@ class Status(str, enum.Enum):
 # When merging two statuses, the highest will be picked.
 # For example, a PASS and a FAIL will result in a FAIL,
 # A TODO and an ABORTED in an ABORTED, A TODO and a PASS in a TODO.
-STATUS_HIERARCHY: List[Status] = [
+STATUS_HIERARCHY: list[Status] = [
     Status.PASS,
     Status.TODO,
     Status.EXECUTING,
@@ -47,7 +47,7 @@ STATUS_HIERARCHY: List[Status] = [
 
 # Maps the Status from the internal Status enum to the string representations
 # requested by either the Cloud Jira, or the on-site Jira
-STATUS_STR_MAPPER_CLOUD: Dict[Status, str] = {
+STATUS_STR_MAPPER_CLOUD: dict[Status, str] = {
     Status.TODO: 'TODO',
     Status.EXECUTING: 'EXECUTING',
     Status.PENDING: 'PENDING',
@@ -58,7 +58,7 @@ STATUS_STR_MAPPER_CLOUD: Dict[Status, str] = {
 }
 
 # On-site jira uses the enum strings directly
-STATUS_STR_MAPPER_JIRA: Dict[Status, str] = {x: x.value for x in Status}
+STATUS_STR_MAPPER_JIRA: dict[Status, str] = {x: x.value for x in Status}
 
 
 class TestCase:
@@ -69,9 +69,9 @@ class TestCase:
         test_key: str,
         status: Status,
         comment: Optional[str] = None,
-        status_str_mapper: Optional[Dict[Status, str]] = None,
-        evidences: Optional[List[Dict[str, str]]] = None,
-        defects: Optional[List[str]] = None,
+        status_str_mapper: Optional[dict[Status, str]] = None,
+        evidences: Optional[list[dict[str, str]]] = None,
+        defects: Optional[list[str]] = None,
     ) -> None:
         self.test_key = test_key
         self.status = status
@@ -89,17 +89,14 @@ class TestCase:
         """
 
         if self.test_key != other.test_key:
-            raise ValueError(
-                f'Cannot merge test with different test keys: '
-                f'{self.test_key} {other.test_key}'
-            )
+            raise ValueError(f'Cannot merge test with different test keys: {self.test_key} {other.test_key}')
 
         if self.comment == '':
             if other.comment != '':
                 self.comment = other.comment
         else:
             if other.comment != '':
-                self.comment += ('\n' + '-'*80 + '\n')
+                self.comment += '\n' + '-' * 80 + '\n'
                 self.comment += other.comment
 
         self.status = _merge_status(self.status, other.status)
@@ -108,8 +105,8 @@ class TestCase:
             if defect not in self.defects:
                 self.defects.append(defect)
 
-    def as_dict(self) -> Dict[str, Any]:
-        data: Dict[str, Any] = dict(
+    def as_dict(self) -> dict[str, Any]:
+        data: dict[str, Any] = dict(
             testKey=self.test_key,
             status=self.status_str_mapper[self.status],
         )
@@ -131,8 +128,8 @@ class TestExecution:
         test_plan_key: Optional[str] = None,
         user: Optional[str] = None,
         revision: Optional[str] = None,
-        tests: Optional[List[TestCase]] = None,
-        test_environments: Optional[List[str]] = None,
+        tests: Optional[list[TestCase]] = None,
+        test_environments: Optional[list[str]] = None,
         fix_version: Optional[str] = None,
         summary: Optional[str] = None,
         description: Optional[str] = None,
@@ -145,8 +142,7 @@ class TestExecution:
         self.finish_date = dt.datetime.now(tz=dt.timezone.utc)
         self.tests = tests or []
         self.test_environments = test_environments or _from_environ(
-            constant.ENV_TEST_EXECUTION_TEST_ENVIRONMENTS,
-            constant.ENV_MULTI_VALUE_SPLIT_PATTERN
+            constant.ENV_TEST_EXECUTION_TEST_ENVIRONMENTS, constant.ENV_MULTI_VALUE_SPLIT_PATTERN
         )
         self.fix_version = fix_version or _first_from_environ(constant.ENV_TEST_EXECUTION_FIX_VERSION)
         self.summary = self._get_summery(summary)
@@ -179,10 +175,10 @@ class TestExecution:
 
         raise KeyError(test_key)
 
-    def as_dict(self) -> Dict[str, Any]:
+    def as_dict(self) -> dict[str, Any]:
         """Return test execution result as dictionary."""
         tests = [test.as_dict() for test in self.tests]
-        info: Dict[str, Any] = dict(
+        info: dict[str, Any] = dict(
             startDate=self.start_date.strftime(DATETIME_FORMAT),
             finishDate=self.finish_date.strftime(DATETIME_FORMAT),  # type: ignore
         )
@@ -202,10 +198,7 @@ class TestExecution:
         if self.revision is not None:
             info['revision'] = self.revision
 
-        data: Dict[str, Any] = dict(
-            info=info,
-            tests=tests
-        )
+        data: dict[str, Any] = dict(info=info, tests=tests)
         if self.test_plan_key:
             info['testPlanKey'] = self.test_plan_key
         if self.test_execution_key is not None:
@@ -213,15 +206,13 @@ class TestExecution:
         return data
 
 
-def get_base_options() -> Dict[str, Any]:
+def get_base_options() -> dict[str, Any]:
     """Return authentication configuration from environment variables."""
     options = {}
     try:
         base_url = environ[ENV_XRAY_API_BASE_URL]
-    except KeyError as e:
-        raise XrayError(
-            f'pytest-jira-xray plugin requires environment variable: {ENV_XRAY_API_BASE_URL}'
-        ) from e
+    except KeyError:
+        raise XrayError(f'pytest-jira-xray plugin requires environment variable: {ENV_XRAY_API_BASE_URL}') from None
 
     verify = os.environ.get(ENV_XRAY_API_VERIFY_SSL, 'True')
 
@@ -238,49 +229,45 @@ def get_base_options() -> Dict[str, Any]:
     return options
 
 
-def get_basic_auth() -> Dict[str, Any]:
+def get_basic_auth() -> dict[str, Any]:
     """Return basic authentication setup with username and password."""
     options = get_base_options()
     try:
         user = environ[ENV_XRAY_API_USER]
         password = environ[ENV_XRAY_API_PASSWORD]
-    except KeyError as e:
+    except KeyError:
         raise XrayError(
-            'Basic authentication requires environment variables: '
-            f'{ENV_XRAY_API_USER}, {ENV_XRAY_API_PASSWORD}'
-        ) from e
+            f'Basic authentication requires environment variables: {ENV_XRAY_API_USER}, {ENV_XRAY_API_PASSWORD}'
+        ) from None
 
     options['USER'] = user
     options['PASSWORD'] = password
     return options
 
 
-def get_bearer_auth() -> Dict[str, Any]:
+def get_bearer_auth() -> dict[str, Any]:
     """Return bearer authentication setup with Client ID and a Client Secret."""
     options = get_base_options()
     try:
         client_id = environ[ENV_XRAY_CLIENT_ID]
         client_secret = environ[ENV_XRAY_CLIENT_SECRET]
-    except KeyError as e:
+    except KeyError:
         raise XrayError(
-            'Bearer authentication requires environment variables: '
-            f'{ENV_XRAY_CLIENT_ID}, {ENV_XRAY_CLIENT_SECRET}'
-        ) from e
+            f'Bearer authentication requires environment variables: {ENV_XRAY_CLIENT_ID}, {ENV_XRAY_CLIENT_SECRET}'
+        ) from None
 
     options['CLIENT_ID'] = client_id
     options['CLIENT_SECRET'] = client_secret
     return options
 
 
-def get_api_key_auth() -> Dict[str, Any]:
+def get_api_key_auth() -> dict[str, Any]:
     """Return personal access token authentication."""
     options = get_base_options()
     try:
         api_key = environ[ENV_XRAY_API_KEY]
-    except KeyError as e:
-        raise XrayError(
-            f'API Key authentication requires environment variable: {ENV_XRAY_API_KEY}'
-        ) from e
+    except KeyError:
+        raise XrayError(f'API Key authentication requires environment variable: {ENV_XRAY_API_KEY}') from None
 
     options['API_KEY'] = api_key
     return options
@@ -300,7 +287,7 @@ def _first_from_environ(name: str, separator: Optional[str] = None) -> Optional[
     return next(iter(_from_environ(name, separator)), None)
 
 
-def _from_environ(name: str, separator: Optional[str] = None) -> List[str]:
+def _from_environ(name: str, separator: Optional[str] = None) -> list[str]:
     if name not in environ:
         return []
 
@@ -318,7 +305,4 @@ def _from_environ(name: str, separator: Optional[str] = None) -> List[str]:
 def _merge_status(status_1: Status, status_2: Status) -> Status:
     """Merges the status of two tests."""
 
-    return STATUS_HIERARCHY[max(
-        STATUS_HIERARCHY.index(status_1),
-        STATUS_HIERARCHY.index(status_2)
-    )]
+    return STATUS_HIERARCHY[max(STATUS_HIERARCHY.index(status_1), STATUS_HIERARCHY.index(status_2))]

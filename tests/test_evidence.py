@@ -8,7 +8,7 @@ def test_if_evidence_return_proper_dict_for_string():
     assert evidence('text', 'file.txt', 'text/plain') == {
         'data': 'dGV4dA==',
         'filename': 'file.txt',
-        'contentType': 'text/plain'
+        'contentType': 'text/plain',
     }
 
 
@@ -16,7 +16,7 @@ def test_if_evidence_return_proper_dict_for_bytes():
     assert evidence(b'text', 'file.txt', 'text/plain') == {
         'data': 'dGV4dA==',
         'filename': 'file.txt',
-        'contentType': 'text/plain'
+        'contentType': 'text/plain',
     }
 
 
