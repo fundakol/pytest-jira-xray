@@ -23,30 +23,26 @@ def test_attach_evidence_for_tests(pytester: pytest.Pytester):
         'info': {
             'finishDate': '2023-10-18T18:34:50+0000',
             'startDate': '2023-10-18T18:34:50+0000',
-            'summary': 'Execution of automated tests'
+            'summary': 'Execution of automated tests',
         },
         'tests': [
             {
-                'evidences': [
-                    {
-                        'contentType': 'text/plain',
-                        'data': 'SU5GTzogdGVzdA==',
-                        'filename': 'test.log'
-                    }
-                ],
+                'evidences': [{'contentType': 'text/plain', 'data': 'SU5GTzogdGVzdA==', 'filename': 'test.log'}],
                 'status': 'PASS',
-                'testKey': 'JIRA-1'
+                'testKey': 'JIRA-1',
             }
-        ]
+        ],
     }
 
-    pytester.makepyfile(textwrap.dedent("""
+    pytester.makepyfile(
+        textwrap.dedent("""
         import pytest
 
         @pytest.mark.xray('JIRA-1')
         def test_foo():
             assert True
-    """))
+    """)
+    )
 
     pytester.makeconftest(CONFTEST_CONTENT)
 
@@ -72,40 +68,27 @@ def test_attach_evidence_for_tests_with_duplicated_ids(pytester: pytest.Pytester
         'info': {
             'finishDate': '2023-10-18T18:34:50+0000',
             'startDate': '2023-10-18T18:34:50+0000',
-            'summary': 'Execution of automated tests'
+            'summary': 'Execution of automated tests',
         },
         'tests': [
             {
                 'evidences': [
-                    {
-                        'contentType': 'plain/text',
-                        'data': 'SU5GTzogdGVzdA==',
-                        'filename': 'test.log'
-                    },
-                    {
-                        'contentType': 'plain/text',
-                        'data': 'SU5GTzogdGVzdA==',
-                        'filename': 'test.log'
-                    }
+                    {'contentType': 'plain/text', 'data': 'SU5GTzogdGVzdA==', 'filename': 'test.log'},
+                    {'contentType': 'plain/text', 'data': 'SU5GTzogdGVzdA==', 'filename': 'test.log'},
                 ],
                 'status': 'PASS',
-                'testKey': 'JIRA-1'
+                'testKey': 'JIRA-1',
             },
             {
-                'evidences': [
-                    {
-                        'contentType': 'plain/text',
-                        'data': 'SU5GTzogdGVzdA==',
-                        'filename': 'test.log'
-                    }
-                ],
+                'evidences': [{'contentType': 'plain/text', 'data': 'SU5GTzogdGVzdA==', 'filename': 'test.log'}],
                 'status': 'PASS',
-                'testKey': 'JIRA-2'
-            }
-        ]
+                'testKey': 'JIRA-2',
+            },
+        ],
     }
 
-    pytester.makepyfile(textwrap.dedent("""
+    pytester.makepyfile(
+        textwrap.dedent("""
         import pytest
 
         @pytest.mark.xray('JIRA-1')
@@ -119,7 +102,8 @@ def test_attach_evidence_for_tests_with_duplicated_ids(pytester: pytest.Pytester
         @pytest.mark.xray('JIRA-2')
         def test_baz():
             assert True
-    """))
+    """)
+    )
 
     pytester.makeconftest(CONFTEST_CONTENT)
 

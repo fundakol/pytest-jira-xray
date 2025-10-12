@@ -1,37 +1,18 @@
 import pytest
 
-from pytest_xray.helper import (
-    STATUS_STR_MAPPER_CLOUD,
-    Status,
-    TestCase,
-    TestExecution,
-)
+from pytest_xray.helper import STATUS_STR_MAPPER_CLOUD, Status, TestCase, TestExecution
 
 
 @pytest.mark.parametrize(
-    'status, expected_status',
-    [
-        (Status.PASS, 'PASS'),
-        (Status.FAIL, 'FAIL'),
-        (Status.ABORTED, 'ABORTED')
-    ]
+    'status, expected_status', [(Status.PASS, 'PASS'), (Status.FAIL, 'FAIL'), (Status.ABORTED, 'ABORTED')]
 )
 def test_testcase_returns_correct_status(status, expected_status):
-    test = TestCase(
-        'JIRA-1',
-        status,
-        'hello'
-    )
+    test = TestCase('JIRA-1', status, 'hello')
     assert str(test.as_dict()['status']) == expected_status
 
 
 @pytest.mark.parametrize(
-    'status, expected_status',
-    [
-        (Status.PASS, 'PASSED'),
-        (Status.FAIL, 'FAILED'),
-        (Status.ABORTED, 'ABORTED')
-    ]
+    'status, expected_status', [(Status.PASS, 'PASSED'), (Status.FAIL, 'FAILED'), (Status.ABORTED, 'ABORTED')]
 )
 def test_status_builder_for_cloud_server_returns_correct_status(status, expected_status):
     test = TestCase(
@@ -44,23 +25,11 @@ def test_status_builder_for_cloud_server_returns_correct_status(status, expected
 
 
 def test_merge_test_cases():
-    t1 = TestCase(
-        'JIRA-1',
-        Status.PASS,
-        'hello'
-    )
+    t1 = TestCase('JIRA-1', Status.PASS, 'hello')
 
-    t2 = TestCase(
-        'JIRA-1',
-        Status.FAIL,
-        'hi'
-    )
+    t2 = TestCase('JIRA-1', Status.FAIL, 'hi')
 
-    t3 = TestCase(
-        'JIRA-2',
-        Status.FAIL,
-        'hi'
-    )
+    t3 = TestCase('JIRA-2', Status.FAIL, 'hi')
 
     t1.merge(t2)
 
@@ -74,21 +43,9 @@ def test_merge_test_cases():
 
 def test_find_test_case():
     execution = TestExecution()
-    execution.append(
-        TestCase(
-            'JIRA-1',
-            Status.PASS,
-            ''
-        )
-    )
+    execution.append(TestCase('JIRA-1', Status.PASS, ''))
 
-    execution.append(
-        TestCase(
-            'JIRA-2',
-            Status.FAIL,
-            'hi'
-        )
-    )
+    execution.append(TestCase('JIRA-2', Status.FAIL, 'hi'))
 
     res = execution.find_test_case('JIRA-2')
 

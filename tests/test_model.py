@@ -16,18 +16,14 @@ def date_time_now():
 
 @pytest.fixture
 def testcase():
-    return TestCase(
-        test_key='JIRA-1',
-        comment='Test',
-        status='PASS'
-    )
+    return TestCase(test_key='JIRA-1', comment='Test', status='PASS')
 
 
 def test_testcase_output_dictionary(testcase):
     assert testcase.as_dict() == {
         'testKey': 'JIRA-1',
         'comment': '{noformat:borderWidth=0px|bgColor=transparent}Test{noformat}',
-        'status': 'PASS'
+        'status': 'PASS',
     }
 
 
@@ -40,15 +36,15 @@ def test_test_execution_output_dictionary(testcase, date_time_now):
             'info': {
                 'finishDate': '2021-04-23T16:30:02+0000',
                 'startDate': '2021-04-23T16:30:02+0000',
-                'summary': 'Execution of automated tests'
+                'summary': 'Execution of automated tests',
             },
             'tests': [
                 {
                     'comment': '{noformat:borderWidth=0px|bgColor=transparent}Test{noformat}',
                     'status': 'PASS',
-                    'testKey': 'JIRA-1'
+                    'testKey': 'JIRA-1',
                 }
-            ]
+            ],
         }
 
 
@@ -62,15 +58,15 @@ def test_test_execution_output_dictionary_with_test_plan_id(testcase, date_time_
                 'finishDate': '2021-04-23T16:30:02+0000',
                 'startDate': '2021-04-23T16:30:02+0000',
                 'testPlanKey': 'Jira-10',
-                'summary': 'Execution of automated tests'
+                'summary': 'Execution of automated tests',
             },
             'tests': [
                 {
                     'comment': '{noformat:borderWidth=0px|bgColor=transparent}Test{noformat}',
                     'status': 'PASS',
-                    'testKey': 'JIRA-1'
+                    'testKey': 'JIRA-1',
                 }
-            ]
+            ],
         }
 
 
@@ -90,9 +86,9 @@ def test_test_execution_output_dictionary_with_test_execution_id(testcase, date_
                 {
                     'comment': '{noformat:borderWidth=0px|bgColor=transparent}Test{noformat}',
                     'status': 'PASS',
-                    'testKey': 'JIRA-1'
+                    'testKey': 'JIRA-1',
                 }
-            ]
+            ],
         }
 
 
@@ -105,7 +101,7 @@ def test_test_execution_full_model(testcase, date_time_now):
             test_environments=['My local laptop'],
             fix_version='1.0',
             summary='My Test Suite',
-            description='Im doing stuff'
+            description='Im doing stuff',
         )
         te.tests = [testcase]
         assert te.as_dict() == {
@@ -115,26 +111,27 @@ def test_test_execution_full_model(testcase, date_time_now):
                 'startDate': '2021-04-23T16:30:02+0000',
                 'testPlanKey': 'Jira-10',
                 'version': '1.0',
-                'testEnvironments': [
-                    'My local laptop'
-                ],
+                'testEnvironments': ['My local laptop'],
                 'summary': 'My Test Suite',
-                'description': 'Im doing stuff'
+                'description': 'Im doing stuff',
             },
             'tests': [
                 {
                     'comment': '{noformat:borderWidth=0px|bgColor=transparent}Test{noformat}',
                     'status': 'PASS',
-                    'testKey': 'JIRA-1'
+                    'testKey': 'JIRA-1',
                 }
-            ]
+            ],
         }
 
 
-@mock.patch.dict(os.environ, {
-    constant.ENV_TEST_EXECUTION_FIX_VERSION: '1.1',
-    constant.ENV_TEST_EXECUTION_TEST_ENVIRONMENTS: 'MyLocalLaptop And TheLiveSystem',
-})
+@mock.patch.dict(
+    os.environ,
+    {
+        constant.ENV_TEST_EXECUTION_FIX_VERSION: '1.1',
+        constant.ENV_TEST_EXECUTION_TEST_ENVIRONMENTS: 'MyLocalLaptop And TheLiveSystem',
+    },
+)
 def test_test_execution_environ_model(testcase, date_time_now):
     with patch('datetime.datetime') as dt_mock:
         dt_mock.now.return_value = date_time_now
@@ -154,13 +151,13 @@ def test_test_execution_environ_model(testcase, date_time_now):
                     'MyLocalLaptop',
                     'And',
                     'TheLiveSystem',
-                ]
+                ],
             },
             'tests': [
                 {
                     'comment': '{noformat:borderWidth=0px|bgColor=transparent}Test{noformat}',
                     'status': 'PASS',
-                    'testKey': 'JIRA-1'
+                    'testKey': 'JIRA-1',
                 }
-            ]
+            ],
         }

@@ -3,7 +3,7 @@ import json
 import logging
 import os
 import tempfile
-from typing import Any, Callable, Dict, Optional, Tuple, Union
+from typing import Any, Callable, Optional, Union
 
 import requests
 from requests import PreparedRequest
@@ -12,7 +12,7 @@ from requests.auth import AuthBase
 from pytest_xray.constant import AUTHENTICATE_ENDPOINT
 from pytest_xray.exceptions import XrayError
 
-AuthType = Optional[Union[Tuple[str, str], AuthBase, Callable[[PreparedRequest], PreparedRequest]]]
+AuthType = Optional[Union[tuple[str, str], AuthBase, Callable[[PreparedRequest], PreparedRequest]]]
 
 
 _logger = logging.getLogger(__name__)
@@ -21,13 +21,7 @@ _logger = logging.getLogger(__name__)
 class ClientSecretAuth(AuthBase):
     """Bearer authentication with Client ID and a Client Secret."""
 
-    def __init__(
-        self,
-        base_url: str,
-        client_id: str,
-        client_secret: str,
-        verify: Union[bool, str] = True
-    ) -> None:
+    def __init__(self, base_url: str, client_id: str, client_secret: str, verify: Union[bool, str] = True) -> None:
         if base_url.endswith('/'):
             base_url = base_url[:-1]
         self.base_url = base_url
@@ -40,22 +34,11 @@ class ClientSecretAuth(AuthBase):
         return f'{self.base_url}{AUTHENTICATE_ENDPOINT}'
 
     def __call__(self, r: requests.PreparedRequest) -> requests.PreparedRequest:
-        headers = {
-            'Content-type': 'application/json',
-            'Accept': 'text/plain'
-        }
-        auth_data = {
-            'client_id': self.client_id,
-            'client_secret': self.client_secret
-        }
+        headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
+        auth_data = {'client_id': self.client_id, 'client_secret': self.client_secret}
 
         try:
-            response = requests.post(
-                self.endpoint_url,
-                data=json.dumps(auth_data),
-                headers=headers,
-                verify=self.verify
-            )
+            response = requests.post(self.endpoint_url, data=json.dumps(auth_data), headers=headers, verify=self.verify)
         except requests.exceptions.ConnectionError as exc:
             err_message = f'ConnectionError: cannot authenticate with {self.endpoint_url}'
             _logger.exception(err_message)
@@ -80,13 +63,7 @@ class ApiKeyAuth(AuthBase):
 class XrayPublisher:
     """Exports Xray report to a Jira server."""
 
-    def __init__(
-        self,
-        base_url: str,
-        endpoint: str,
-        auth: AuthType,
-        verify: Union[bool, str] = True
-    ) -> None:
+    def __init__(self, base_url: str, endpoint: str, auth: AuthType, verify: Union[bool, str] = True) -> None:
         if base_url.endswith('/'):
             base_url = base_url[:-1]
         self.base_url = base_url
@@ -99,15 +76,11 @@ class XrayPublisher:
         """Return full URL to the server."""
         return self.base_url + self.endpoint
 
-    def _send_data(self, url: str, auth: AuthType, data: Dict[str, Any]) -> Dict[str, Any]:
-        headers = {
-            'Accept': 'application/json',
-            'Content-Type': 'application/json'
-        }
+    def _send_data(self, url: str, auth: AuthType, data: dict[str, Any]) -> dict[str, Any]:
+        headers = {'Accept': 'application/json', 'Content-Type': 'application/json'}
         try:
             response = requests.request(
-                method='POST', url=url, headers=headers, json=data,
-                auth=auth, verify=self.verify
+                method='POST', url=url, headers=headers, json=data, auth=auth, verify=self.verify
             )
         except requests.exceptions.ConnectionError as exc:
             err_message = f'ConnectionError: cannot connect to JIRA service at {url}'
@@ -117,18 +90,19 @@ class XrayPublisher:
             try:
                 response.raise_for_status()
             except requests.exceptions.HTTPError as exc:
-                err_message = (f'HTTPError: Could not post to JIRA service at {url}. '
-                               f'Response status code: {response.status_code}')
+                err_message = (
+                    f'HTTPError: Could not post to JIRA service at {url}. Response status code: {response.status_code}'
+                )
                 _logger.exception(err_message)
                 with contextlib.suppress(requests.exceptions.JSONDecodeError):
                     if 'error' in response.json():
-                        server_return_error = f"Error message from server: {response.json()['error']}"
+                        server_return_error = f'Error message from server: {response.json()["error"]}'
                         err_message += '\n' + server_return_error
                         _logger.error(server_return_error)
                 raise XrayError(err_message) from exc
             return response.json()
 
-    def publish(self, data: Dict[str, Any]) -> str:
+    def publish(self, data: dict[str, Any]) -> str:
         """
         Publish results to Jira and return testExecutionId or raise XrayError.
 
@@ -148,5 +122,5 @@ class XrayPublisher:
             raise XrayError(
                 'Cannot read Test Execution ID from server response. '
                 f'Server response can be found in log file: {log_file}'
-            )
+            ) from None
         return key
