@@ -72,9 +72,9 @@ class XrayPlugin:
                 f'the test {item.nodeid} does not seem to be decorated in proper way.'
             )
         if isinstance(marker.args[0], str):
-            test_keys = marker.args
+            test_keys = list(marker.args)
         elif isinstance(marker.args[0], list):
-            test_keys = list(marker.args[0])
+            test_keys = marker.args[0]
         else:
             raise XrayError(f'xray marker can only accept strings or lists but got {type(marker.args[0])}')
         return test_keys

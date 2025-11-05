@@ -31,7 +31,11 @@ def xray_tests_multi(testdir) -> pytest.Testdir:
         import pytest
 
         @pytest.mark.xray(['JIRA-1', 'JIRA-2'])
-        def test_pass():
+        def test_foo():
+            assert True
+
+        @pytest.mark.xray("JIRA-3", "JIRA-4")
+        def test_bar():
             assert True
         """
     )  # noqa: W293,W291
@@ -232,7 +236,7 @@ def test_if_user_can_attach_evidences(xray_tests):
 def test_jira_xray_plugin_multiple_ids(xray_tests_multi):
     xray_file = xray_tests_multi.tmpdir.join('xray.json')
     result = xray_tests_multi.runpytest('--jira-xray', '--xraypath', str(xray_file))
-    result.assert_outcomes(passed=1)
+    result.assert_outcomes(passed=2)
     result.stdout.fnmatch_lines(
         [
             '*Generated XRAY execution report file:*xray.json*',
@@ -244,9 +248,8 @@ def test_jira_xray_plugin_multiple_ids(xray_tests_multi):
     with open(xray_file) as f:
         data = json.load(f)
 
-    assert len(data['tests']) == 2
-    assert data['tests'][0]['testKey'] == 'JIRA-1'
-    assert data['tests'][1]['testKey'] == 'JIRA-2'
+    assert len(data['tests']) == 4
+    assert {test['testKey'] for test in data['tests']} == {'JIRA-1', 'JIRA-2', 'JIRA-3', 'JIRA-4'}
 
 
 def test_jira_xray_plugin_multiple_ids_fail(xray_tests_multi_fail):
