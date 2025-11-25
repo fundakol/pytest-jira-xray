@@ -49,7 +49,7 @@ jobs:
         run: "python -m tox -e ${{ matrix.tox_env }}"
       - name: Run tests with coverage
         if: "matrix.use_coverage"
-        run: "python -m tox -e ${{ matrix.tox_env }}-coverage"
+        run: "python -m tox -e ${{ matrix.tox_env }}-coverage -- --junitxml=junit.xml -o junit_family=legacy"
       - name: Generate coverage report
         if: "matrix.use_coverage"
         run: python -m coverage xml
