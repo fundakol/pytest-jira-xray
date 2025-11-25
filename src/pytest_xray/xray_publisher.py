@@ -14,9 +14,7 @@ from pytest_xray.exceptions import XrayError
 
 AuthType = Optional[Union[tuple[str, str], AuthBase, Callable[[PreparedRequest], PreparedRequest]]]
 
-
 _logger = logging.getLogger(__name__)
-
 
 class ClientSecretAuth(AuthBase):
     """Bearer authentication with Client ID and a Client Secret."""
@@ -36,7 +34,6 @@ class ClientSecretAuth(AuthBase):
     def __call__(self, r: requests.PreparedRequest) -> requests.PreparedRequest:
         headers = {'Content-type': 'application/json', 'Accept': 'text/plain'}
         auth_data = {'client_id': self.client_id, 'client_secret': self.client_secret}
-
         try:
             response = requests.post(self.endpoint_url, data=json.dumps(auth_data), headers=headers, verify=self.verify)
         except requests.exceptions.ConnectionError as exc:
@@ -91,6 +88,28 @@ class XrayPublisher:
                 response.raise_for_status()
             except requests.exceptions.HTTPError as exc:
                 err_message = (
+                    f'HTTPError: Could not post to JIRA service at {url}. '
+                    f'Response status code: {response.status_code}'
+                )
+                # 🔎 dump server body (json or plain) so we see *why* the fixture 403’d
+                try:
+                    j = response.json()
+                    if 'error' in j:
+                        err_message += '\nError message from server: ' + j['error']
+                except ValueError:
+                    _logger.error("XRAY: server plain error body: %s", response.text)
+
+                # 🔎 dump what we actually sent
+                try:
+                    _logger.error("XRAY: request headers: %r", dict(response.request.headers))
+                    _logger.error("XRAY: request body: %s", response.request.body)
+                except Exception:
+                    pass
+
+                _logger.exception(err_message)
+                raise XrayError(err_message) from exc
+            """
+                err_message = (
                     f'HTTPError: Could not post to JIRA service at {url}. Response status code: {response.status_code}'
                 )
                 _logger.exception(err_message)
@@ -99,7 +118,7 @@ class XrayPublisher:
                         server_return_error = f'Error message from server: {response.json()["error"]}'
                         err_message += '\n' + server_return_error
                         _logger.error(server_return_error)
-                raise XrayError(err_message) from exc
+                raise XrayError(err_message) from exc"""
             return response.json()
 
     def publish(self, data: dict[str, Any]) -> str:
@@ -124,3 +143,28 @@ class XrayPublisher:
                 f'Server response can be found in log file: {log_file}'
             ) from None
         return key
+    
+    def publish_multipart(self, results: dict, issue_fields: dict, multipart_endpoint: str) -> str:
+        headers = {'Accept': 'application/json'}
+        # Wrap issue_fields if needed as {"fields": {...}}
+        info_payload = issue_fields if 'fields' in issue_fields else {'fields': issue_fields}
+        json_results = json.dumps(results)
+        json_info    = json.dumps(info_payload)
+        lower_ep = multipart_endpoint.lower()
+        is_dc     = "/rest/raven/1.0/" in lower_ep
+        is_cloud  = "/api/v2/" in lower_ep
+        if is_dc:
+            # Xray JSON (Server/DC) multipart expects 'result' + 'info'
+            files = {
+                'result': ('results.json', json_results, 'application/json'),
+                'info':   ('info.json',    json_info,    'application/json'),
+            }
+        elif is_cloud:
+            # Xray JSON (Cloud v2) multipart expects 'results' + 'info'
+            files = {
+                'results': ('results.json', json_results, 'application/json'),
+                'info':    ('info.json',    json_info,    'application/json'),
+            }
+        resp = requests.post(multipart_endpoint, headers=headers, files=files, auth=self.auth, verify=self.verify)
+        data = resp.json()
+        return data['testExecIssue']['key'] if 'testExecIssue' in data else data.get('key')

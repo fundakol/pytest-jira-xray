@@ -1,3 +1,4 @@
+import os
 from typing import Union
 
 from _pytest.config import Config
@@ -12,6 +13,9 @@ from pytest_xray.constant import (
     JIRA_XRAY_FLAG,
     TEST_EXECUTION_ENDPOINT,
     TEST_EXECUTION_ENDPOINT_CLOUD,
+    TEST_EXECUTION_ENDPOINT_MULTIPART,
+    TEST_EXECUTION_ENDPOINT_CLOUD_MULTIPART,
+    ENV_TEST_EXECUTION_FIELDS,
     XRAY_ADD_CAPTURES,
     XRAY_ALLOW_DUPLICATE_IDS,
     XRAY_EXECUTION_ID,
@@ -23,7 +27,6 @@ from pytest_xray.file_publisher import FilePublisher
 from pytest_xray.helper import get_api_key_auth, get_basic_auth, get_bearer_auth
 from pytest_xray.xray_plugin import XrayPlugin
 from pytest_xray.xray_publisher import ApiKeyAuth, ClientSecretAuth, XrayPublisher
-
 
 def pytest_addoption(parser: Parser):
     xray = parser.getgroup('Jira Xray report')
@@ -83,10 +86,9 @@ def pytest_configure(config: Config) -> None:
     if xray_path:
         publisher = FilePublisher(xray_path)  # type: ignore
     else:
-        if config.getoption(JIRA_CLOUD):
-            endpoint = TEST_EXECUTION_ENDPOINT_CLOUD
-        else:
-            endpoint = TEST_EXECUTION_ENDPOINT
+        use_cloud = config.getoption(JIRA_CLOUD)
+        endpoint = TEST_EXECUTION_ENDPOINT_CLOUD if use_cloud else TEST_EXECUTION_ENDPOINT
+        multipart_endpoint = (TEST_EXECUTION_ENDPOINT_CLOUD_MULTIPART if use_cloud else TEST_EXECUTION_ENDPOINT_MULTIPART)
 
         if config.getoption(JIRA_CLIENT_SECRET_AUTH):
             options = get_bearer_auth()
@@ -105,4 +107,17 @@ def pytest_configure(config: Config) -> None:
         )
 
     plugin = XrayPlugin(config, publisher)
+    
+    if os.getenv("XRAY_EXECUTION_FIELDS"):
+        base_url = getattr(publisher, "base_url", None)
+        multipart_path = getattr(plugin, "_MULTIPART_ENDPOINT_PATH", "/api/internal/import/execution/multipart")
+        if base_url:
+            plugin._multipart_endpoint = base_url + multipart_path
+        else:
+            # No base_url => file publisher or unsupported transport. Avoid crashing.
+            plugin._multipart_endpoint = None
+            log.debug("XRAY: multipart disabled (publisher has no base_url).")
+    else:
+        plugin._multipart_endpoint = None
+    plugin._custom_fields_env = os.environ.get(ENV_TEST_EXECUTION_FIELDS)
     config.pluginmanager.register(plugin=plugin, name=XRAY_PLUGIN)

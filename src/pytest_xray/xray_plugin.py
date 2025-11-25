@@ -1,6 +1,7 @@
 import datetime as dt
 import os
 import re
+import json
 from pathlib import Path
 from typing import Optional, Union
 
@@ -201,23 +202,127 @@ class XrayPlugin:
             return
         self.test_execution.finish_date = dt.datetime.now(tz=dt.timezone.utc)
         results = self.test_execution.as_dict()
+        # Allow user hooks to modify results
         session.config.pluginmanager.hook.pytest_xray_results(results=results, session=session)
         try:
-            self.issue_id = self.publisher.publish(results)
+            resp = None
+            # If XRAY_EXECUTION_FIELDS is present, prefer multipart (when endpoint is available)
+            if getattr(self, "_custom_fields_env", None):
+                try:
+                    fields_json = json.loads(self._custom_fields_env)
+                except Exception as exc:
+                    raise XrayError(
+                        "XRAY_EXECUTION_FIELDS must be valid JSON (either {'fields': {...}} or the inner fields object)"
+                    ) from exc
+                # Accept both wrapper and inner 'fields' shape
+                fields_obj = fields_json.get("fields", fields_json)
+                # Inject Test Plan link if user passed --testplan and has set the XRAY_TEST_PLAN_FIELD_ID to the customfield_id used in Xray
+                tp_field_id = os.getenv("XRAY_TEST_PLAN_FIELD_ID")  # e.g., customfield_102345
+                if tp_field_id and self.test_plan_id:
+                    if tp_field_id not in fields_obj:
+                        # Default to labels-like (array of strings)
+                        fields_obj[tp_field_id] = [self.test_plan_id]
+                    else:
+                        val = fields_obj[tp_field_id]
+                        if isinstance(val, list):
+                            # Decide element shape by peeking at the first element
+                            if not val:  # empty list → assume labels-like
+                                fields_obj[tp_field_id] = [self.test_plan_id]
+                            else:
+                                first = val[0]
+                                if isinstance(first, dict) and "key" in first:
+                                    # issue-picker (multi)
+                                    entry = {"key": self.test_plan_id}
+                                    if entry not in val:
+                                        val.append(entry)
+                                elif isinstance(first, dict) and "value" in first:
+                                    # multi-select (options)
+                                    entry = {"value": self.test_plan_id}
+                                    if entry not in val:
+                                        val.append(entry)
+                                else:
+                                    # labels-like (strings)
+                                    if self.test_plan_id not in val:
+                                        val.append(self.test_plan_id)
+                        elif isinstance(val, dict):
+                            # Single picker stored as object: keep your original normalization
+                            # (change to {"key": self.test_plan_id} if you later confirm single picker)
+                            fields_obj[tp_field_id] = self.test_plan_id
+                        else:
+                            # Unexpected → overwrite with labels-like array
+                            fields_obj[tp_field_id] = [self.test_plan_id]
+                # Only use multipart when endpoint is available (e.g., HTTP publishers)
+                endpoint = getattr(self, "_multipart_endpoint", None)
+                if endpoint:
+                    resp = self.publisher.publish_multipart(
+                        results=results,
+                        issue_fields=fields_json,
+                        multipart_endpoint=endpoint,
+                    )
+                else:
+                    # Fallback to legacy publish (e.g., FilePublisher or when endpoint not prepared)
+                    resp = self.publisher.publish(results)
+            else:
+                # No custom fields env → legacy path
+                resp = self.publisher.publish(results)
+            # Normalize the publisher response to set issue_id so the terminal hook can print success line
+            if resp is not None:
+                issue_id = None
+                if isinstance(resp, str):
+                    issue_id = resp
+                elif isinstance(resp, dict):
+                    issue_id = (
+                        resp.get("key")
+                        or resp.get("id")
+                        or (resp.get("testExecIssue") or {}).get("key")
+                        or (resp.get("issue") or {}).get("key")
+                    )
+                if issue_id:
+                    self.issue_id = issue_id
         except XrayError as exc:
+            # Keep existing behavior: surface user/config errors in terminal summary
+            self.exception = exc
+        except Exception as exc:
+            # **Minimal but critical**: prevent INTERNAL_ERROR on network/transport problems
+            # This lets pytest finish and print its terminal summary so tests can parse outcomes.
             self.exception = exc
 
     def pytest_terminal_summary(self, terminalreporter: TerminalReporter, exitstatus: ExitCode, config: Config) -> None:
-        if self.exception:
-            terminalreporter.ensure_newline()
-            terminalreporter.section('Jira XRAY', sep='-', red=True, bold=True)
-            terminalreporter.write_line('Could not publish results to Jira XRAY!')
-            if self.exception.message:  # type: ignore[attr-defined]
-                terminalreporter.write_line(self.exception.message)  # type: ignore[attr-defined]
-        else:
-            if self.issue_id and self.logfile:
-                terminalreporter.write_sep(
-                    '-', f'Generated XRAY execution report file: {Path(self.logfile).absolute()}'
-                )
-            elif self.issue_id:
-                terminalreporter.write_sep('-', f'Uploaded results to JIRA XRAY. Test Execution Id: {self.issue_id}')
+        try:
+            if self.exception:
+                terminalreporter.ensure_newline()
+                terminalreporter.section('Jira XRAY', sep='-', red=True, bold=True)
+                terminalreporter.write_line('Could not publish results to Jira XRAY!')
+                # Python 3-safe exception printing
+                msg = getattr(self.exception, "message", None)
+                details = msg if msg else str(self.exception)
+                if details:
+                    terminalreporter.write_line(details)
+            else:
+                if self.issue_id and self.logfile:
+                    terminalreporter.write_sep(
+                        '-', f'Generated XRAY execution report file: {Path(self.logfile).absolute()}'
+                    )
+                elif self.issue_id:
+                    terminalreporter.write_sep(
+                        '-', f'Uploaded results to JIRA XRAY. Test Execution Id: {self.issue_id}'
+                    )
+        except Exception as e:
+            # Never let terminal summary crash the session
+            import logging
+            logging.getLogger(__name__).warning(
+                "XRAY: error in pytest_terminal_summary: %s", e, exc_info=True
+            )
+            if self.exception:
+                terminalreporter.ensure_newline()
+                terminalreporter.section('Jira XRAY', sep='-', red=True, bold=True)
+                terminalreporter.write_line('Could not publish results to Jira XRAY!')
+                if self.exception.message:  # type: ignore[attr-defined]
+                    terminalreporter.write_line(self.exception.message)  # type: ignore[attr-defined]
+            else:
+                if self.issue_id and self.logfile:
+                    terminalreporter.write_sep(
+                        '-', f'Generated XRAY execution report file: {Path(self.logfile).absolute()}'
+                    )
+                elif self.issue_id:
+                    terminalreporter.write_sep('-', f'Uploaded results to JIRA XRAY. Test Execution Id: {self.issue_id}')
