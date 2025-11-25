@@ -3,7 +3,8 @@ include =
     src/*
     */lib/python*/site-packages/pytest_xray/*
     *\Lib\site-packages\pytest_xray\*
-parallel = 1
+; FIXME: it shows wrong coverage report
+; parallel = true
 
 [paths]
 source = src/
