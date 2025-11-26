@@ -22,4 +22,4 @@ def test_if_evidence_return_proper_dict_for_bytes():
 
 def test_if_evidence_raises_an_exception_for_unsuported_content():
     with pytest.raises(XrayError, match='data must be string or bytes'):
-        evidence(10, 'file.txt', 'text/plain')
+        evidence(10, 'file.txt', 'text/plain')  # type: ignore
