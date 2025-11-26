@@ -6,7 +6,7 @@ from unittest.mock import patch
 import pytest
 
 from pytest_xray import constant
-from pytest_xray.helper import TestCase, TestExecution
+from pytest_xray.helper import Status, TestCase, TestExecution
 
 
 @pytest.fixture
@@ -16,7 +16,7 @@ def date_time_now():
 
 @pytest.fixture
 def testcase():
-    return TestCase(test_key='JIRA-1', comment='Test', status='PASS')
+    return TestCase(test_key='JIRA-1', comment='Test', status=Status.PASS)
 
 
 def test_testcase_output_dictionary(testcase):
