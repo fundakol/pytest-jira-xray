@@ -281,6 +281,35 @@ using a ``pytest_runtest_makereport`` hook.
             report.evidences = evidences
 
 
+Test execution custom fields support
++++++++++++++++++++++++++++++++++++++++++
+
+To include Jira custom fields when publishing results to Xray:
+
+Set the environment variable XRAY_EXECUTION_FIELDS to a JSON string of your fields.
+
+If you wrap them in "fields", they’ll be sent as-is.
+If not wrapped, the plugin will wrap them for you.
+
+.. code-block:: bash
+
+    # Wrapped (Server/DC)
+    $ export XRAY_EXECUTION_FIELDS='{"fields": {"customfield_12345": "foo", "labels": ["smoke"]}}'
+    pytest --jira-xray
+
+    # Unwrapped (Cloud)    
+    $ export XRAY_EXECUTION_FIELDS='{"labels": ["cloud"]}'
+    pytest --jira-xray --cloud --api-key-auth
+
+    # Optional: Inject a Test Plan key into a custom field:
+    $ export XRAY_EXECUTION_FIELDS='{"labels": ["e2e"]}'
+    $ export XRAY_TEST_PLAN_FIELD_ID='customfield_10627'
+    pytest --jira-xray --cloud --testplan TP-9
+
+
+The plugin will publish results using the multipart endpoint, adding your custom fields to the info part of the request.
+
+
 Hooks
 +++++
 
