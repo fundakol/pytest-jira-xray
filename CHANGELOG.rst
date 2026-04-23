@@ -1,3 +1,7 @@
+0.9.4 [2026-04-24]
+==================
+- Fixed missing test evidences for tests with same Jira XRAY ID
+
 0.9.3 [2025-10-11]
 ==================
 - Fixed XRAY report for uploading to existing test execution
