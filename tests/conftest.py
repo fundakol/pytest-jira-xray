@@ -1,3 +1,6 @@
+import datetime as dt
+from unittest import mock
+
 import pytest
 from pytest_httpserver import HTTPServer
 
@@ -6,8 +9,26 @@ from pytest_xray.constant import (
     TEST_EXECUTION_ENDPOINT,
     TEST_EXECUTION_ENDPOINT_CLOUD,
 )
+from pytest_xray.helper import Status, TestCase
 
 pytest_plugins = ['pytester']
+
+
+@pytest.fixture
+def date_time_now() -> dt.datetime:
+    return dt.datetime(2021, 4, 23, 16, 30, 2, 0, tzinfo=dt.timezone.utc)
+
+
+@pytest.fixture
+def mock_datetime(date_time_now):
+    with mock.patch('datetime.datetime') as dt_mock:
+        dt_mock.now.return_value = date_time_now
+        yield
+
+
+@pytest.fixture
+def testcase():
+    return TestCase(test_key='JIRA-1', comment='Test', status=Status.PASS)
 
 
 @pytest.fixture

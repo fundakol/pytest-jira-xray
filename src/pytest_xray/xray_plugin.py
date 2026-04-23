@@ -2,7 +2,7 @@ import datetime as dt
 import os
 import re
 from pathlib import Path
-from typing import Optional, Union
+from typing import Any, Optional, Protocol, Union
 
 import pytest
 from _pytest.config import Config, ExitCode
@@ -30,10 +30,14 @@ from pytest_xray.helper import (
 )
 
 
+class Publisher(Protocol):
+    def publish(self, data: dict[str, Any]) -> str: ...
+
+
 class XrayPlugin:
     """Collects results from pytest and exports to Jira Xray server."""
 
-    def __init__(self, config, publisher):
+    def __init__(self, config: pytest.Config, publisher: Publisher) -> None:
         self.config = config
         self.publisher = publisher
         self.test_execution_id: str = self.config.getoption(XRAY_EXECUTION_ID)
