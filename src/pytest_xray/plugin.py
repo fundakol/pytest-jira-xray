@@ -1,7 +1,6 @@
 from typing import Union
 
-from _pytest.config import Config
-from _pytest.config.argparsing import Parser
+import pytest
 from requests.auth import AuthBase
 
 from pytest_xray import hooks
@@ -21,11 +20,11 @@ from pytest_xray.constant import (
 )
 from pytest_xray.file_publisher import FilePublisher
 from pytest_xray.helper import get_api_key_auth, get_basic_auth, get_bearer_auth
-from pytest_xray.xray_plugin import XrayPlugin
+from pytest_xray.xray_plugin import Publisher, XrayPlugin
 from pytest_xray.xray_publisher import ApiKeyAuth, ClientSecretAuth, XrayPublisher
 
 
-def pytest_addoption(parser: Parser):
+def pytest_addoption(parser: pytest.Parser) -> None:
     xray = parser.getgroup('Jira Xray report')
     xray.addoption(JIRA_XRAY_FLAG, action='store_true', default=False, help='Upload test results to JIRA XRAY')
     xray.addoption(JIRA_CLOUD, action='store_true', default=False, help='Use with JIRA XRAY cloud server')
@@ -70,7 +69,7 @@ def pytest_addhooks(pluginmanager):
     pluginmanager.add_hookspecs(hooks)
 
 
-def pytest_configure(config: Config) -> None:
+def pytest_configure(config: pytest.Config) -> None:
     config.addinivalue_line('markers', 'xray(JIRA_ID): mark test with JIRA XRAY test case ID')
     if config.option.collectonly:
         return
@@ -81,12 +80,9 @@ def pytest_configure(config: Config) -> None:
     xray_path = config.getoption(XRAYPATH)
 
     if xray_path:
-        publisher = FilePublisher(xray_path)  # type: ignore
+        publisher: Publisher = FilePublisher(xray_path)
     else:
-        if config.getoption(JIRA_CLOUD):
-            endpoint = TEST_EXECUTION_ENDPOINT_CLOUD
-        else:
-            endpoint = TEST_EXECUTION_ENDPOINT
+        endpoint = TEST_EXECUTION_ENDPOINT_CLOUD if config.getoption(JIRA_CLOUD) else TEST_EXECUTION_ENDPOINT
 
         if config.getoption(JIRA_CLIENT_SECRET_AUTH):
             options = get_bearer_auth()
@@ -100,9 +96,7 @@ def pytest_configure(config: Config) -> None:
             options = get_basic_auth()
             auth = (options['USER'], options['PASSWORD'])
 
-        publisher = XrayPublisher(  # type: ignore
-            base_url=options['BASE_URL'], endpoint=endpoint, auth=auth, verify=options['VERIFY']
-        )
+        publisher = XrayPublisher(base_url=options['BASE_URL'], endpoint=endpoint, auth=auth, verify=options['VERIFY'])
 
     plugin = XrayPlugin(config, publisher)
     config.pluginmanager.register(plugin=plugin, name=XRAY_PLUGIN)

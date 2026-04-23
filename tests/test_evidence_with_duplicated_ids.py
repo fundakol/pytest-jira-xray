@@ -13,11 +13,12 @@ CONFTEST_CONTENT: str = textwrap.dedent("""
         report = outcome.get_result()
         evidences = getattr(report, "evidences", [])
         if report.when == "call":
-            evidences.append(evidence.text(data="INFO: test", filename=f"test.log"))
+            evidences.append(evidence.text(data="INFO: test", filename="test.log"))
             report.evidences = evidences
 """)
 
 
+@pytest.mark.usefixtures('mock_datetime')
 def test_attach_evidence_for_tests(pytester: pytest.Pytester):
     expected_xray_report = {
         'info': {
@@ -62,12 +63,12 @@ def test_attach_evidence_for_tests(pytester: pytest.Pytester):
     assert xray_report['tests'] == expected_xray_report['tests']
 
 
-@pytest.mark.xfail(reason='Bug')
+@pytest.mark.usefixtures('mock_datetime')
 def test_attach_evidence_for_tests_with_duplicated_ids(pytester: pytest.Pytester):
     expected_xray_report = {
         'info': {
-            'finishDate': '2023-10-18T18:34:50+0000',
-            'startDate': '2023-10-18T18:34:50+0000',
+            'finishDate': '2021-04-23T16:30:02+0000',
+            'startDate': '2021-04-23T16:30:02+0000',
             'summary': 'Execution of automated tests',
         },
         'tests': [
@@ -120,4 +121,4 @@ def test_attach_evidence_for_tests_with_duplicated_ids(pytester: pytest.Pytester
     with open(report_file) as file:
         xray_report = json.load(file)
 
-    assert xray_report['tests'] == expected_xray_report['tests']
+    assert xray_report == expected_xray_report

@@ -9,7 +9,7 @@ import requests
 RESOURCE_DIR: Path = Path(__file__).parent.joinpath('resources')
 
 
-@pytest.fixture()
+@pytest.fixture
 def xray_tests(testdir) -> pytest.Testdir:
     test_example = textwrap.dedent(
         """\
@@ -24,7 +24,7 @@ def xray_tests(testdir) -> pytest.Testdir:
     return testdir
 
 
-@pytest.fixture()
+@pytest.fixture
 def xray_tests_multi(testdir) -> pytest.Testdir:
     test_example = textwrap.dedent(
         """\
@@ -43,7 +43,7 @@ def xray_tests_multi(testdir) -> pytest.Testdir:
     return testdir
 
 
-@pytest.fixture()
+@pytest.fixture
 def xray_tests_multi_fail(testdir) -> pytest.Testdir:
     test_example = textwrap.dedent(
         """\
