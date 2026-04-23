@@ -105,6 +105,9 @@ class TestCase:
             if defect not in self.defects:
                 self.defects.append(defect)
 
+        for evidence in other.evidences:
+            self.evidences.append(evidence)
+
     def as_dict(self) -> dict[str, Any]:
         data: dict[str, Any] = dict(
             testKey=self.test_key,

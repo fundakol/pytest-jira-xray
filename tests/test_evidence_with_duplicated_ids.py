@@ -73,14 +73,14 @@ def test_attach_evidence_for_tests_with_duplicated_ids(pytester: pytest.Pytester
         'tests': [
             {
                 'evidences': [
-                    {'contentType': 'plain/text', 'data': 'SU5GTzogdGVzdA==', 'filename': 'test.log'},
-                    {'contentType': 'plain/text', 'data': 'SU5GTzogdGVzdA==', 'filename': 'test.log'},
+                    {'contentType': 'text/plain', 'data': 'SU5GTzogdGVzdA==', 'filename': 'test.log'},
+                    {'contentType': 'text/plain', 'data': 'SU5GTzogdGVzdA==', 'filename': 'test.log'},
                 ],
                 'status': 'PASS',
                 'testKey': 'JIRA-1',
             },
             {
-                'evidences': [{'contentType': 'plain/text', 'data': 'SU5GTzogdGVzdA==', 'filename': 'test.log'}],
+                'evidences': [{'contentType': 'text/plain', 'data': 'SU5GTzogdGVzdA==', 'filename': 'test.log'}],
                 'status': 'PASS',
                 'testKey': 'JIRA-2',
             },
