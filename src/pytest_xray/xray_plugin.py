@@ -1,15 +1,12 @@
+from __future__ import annotations
+
 import datetime as dt
 import os
 import re
 from pathlib import Path
-from typing import Any, Optional, Protocol, Union
+from typing import TYPE_CHECKING, Any, Protocol
 
 import pytest
-from _pytest.config import Config, ExitCode
-from _pytest.mark import Mark
-from _pytest.nodes import Item
-from _pytest.reports import TestReport
-from _pytest.terminal import TerminalReporter
 
 from pytest_xray.constant import (
     JIRA_CLOUD,
@@ -29,6 +26,13 @@ from pytest_xray.helper import (
     TestExecution,
 )
 
+if TYPE_CHECKING:
+    from _pytest.config import Config, ExitCode
+    from _pytest.mark import Mark
+    from _pytest.nodes import Item
+    from _pytest.reports import TestReport
+    from _pytest.terminal import TerminalReporter
+
 
 class Publisher(Protocol):
     def publish(self, data: dict[str, Any]) -> str: ...
@@ -46,9 +50,9 @@ class XrayPlugin:
         self.allow_duplicate_ids: bool = self.config.getoption(XRAY_ALLOW_DUPLICATE_IDS)
         logfile = self.config.getoption(XRAYPATH)
         self.add_captures: bool = self.config.getoption(XRAY_ADD_CAPTURES)
-        self.logfile: Optional[str] = self._get_normalize_logfile(logfile) if logfile else None
-        self.issue_id: Union[str, None] = None  # issue id returned by XRAY server
-        self.exception: Union[Exception, None] = None  # keeps an exception if raised by XrayPublisher
+        self.logfile: str | None = self._get_normalize_logfile(logfile) if logfile else None
+        self.issue_id: str | None = None  # issue id returned by XRAY server
+        self.exception: Exception | None = None  # keeps an exception if raised by XrayPublisher
         self.test_execution: TestExecution = TestExecution(
             test_execution_key=self.test_execution_id, test_plan_key=self.test_plan_id
         )
@@ -117,7 +121,7 @@ class XrayPlugin:
                 raise XrayError(f'Duplicated test case ids: {duplicated_jira_ids}')
 
     @staticmethod
-    def _get_xray_marker(item: Item) -> Optional[Mark]:
+    def _get_xray_marker(item: Item) -> Mark | None:
         return item.get_closest_marker(XRAY_MARKER_NAME)
 
     def pytest_sessionstart(self, session):
@@ -181,7 +185,7 @@ class XrayPlugin:
             else:
                 test_case.merge(new_test_case)
 
-    def _get_status_from_report(self, report) -> Optional[Status]:
+    def _get_status_from_report(self, report) -> Status | None:
         if report.failed:
             if report.when != 'call':
                 return Status.FAIL

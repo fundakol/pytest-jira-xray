@@ -1,6 +1,7 @@
-from typing import Union
+from __future__ import annotations
 
-import pytest
+from typing import TYPE_CHECKING
+
 from requests.auth import AuthBase
 
 from pytest_xray import hooks
@@ -22,6 +23,9 @@ from pytest_xray.file_publisher import FilePublisher
 from pytest_xray.helper import get_api_key_auth, get_basic_auth, get_bearer_auth
 from pytest_xray.xray_plugin import Publisher, XrayPlugin
 from pytest_xray.xray_publisher import ApiKeyAuth, ClientSecretAuth, XrayPublisher
+
+if TYPE_CHECKING:
+    import pytest
 
 
 def pytest_addoption(parser: pytest.Parser) -> None:
@@ -86,7 +90,7 @@ def pytest_configure(config: pytest.Config) -> None:
 
         if config.getoption(JIRA_CLIENT_SECRET_AUTH):
             options = get_bearer_auth()
-            auth: Union[AuthBase, tuple[str, str]] = ClientSecretAuth(
+            auth: AuthBase | tuple[str, str] = ClientSecretAuth(
                 options['BASE_URL'], options['CLIENT_ID'], options['CLIENT_SECRET'], options['VERIFY']
             )
         elif config.getoption(JIRA_API_KEY):

@@ -67,6 +67,10 @@ line_length = 88
 [tool.mypy]
 files = ["src", "tests"]
 
+[tool.pyright]
+pythonVersion = "3.9"
+typeCheckingMode = "standard"
+
 [tool.ruff]
 target-version = "py39"
 line-length = 120
